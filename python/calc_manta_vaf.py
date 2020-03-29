@@ -46,7 +46,9 @@ def parse_args():
     # Command-line parsing
     parser = argparse.ArgumentParser()
     parser.add_argument("vcf", type=argparse.FileType("r"))
-    parser.add_argument("--output", "-o", type=argparse.FileType("w"), default=sys.stdout)
+    parser.add_argument(
+        "--output", "-o", type=argparse.FileType("w"), default=sys.stdout
+    )
     args = parser.parse_args()
     # No validation required so far
     return args
@@ -59,9 +61,15 @@ def process_vcf(vcf_file):
     """
     is_compressed = vcf_file.name.endswith(".gz")
     vcf_reader = pyvcf.Reader(vcf_file, compressed=is_compressed)
-    vcf_reader.formats["VAF"] = pyvcf.parser._Format("VAF", 1, "Float", "Variant allele fraction")
-    vcf_reader.infos["TVAF"] = pyvcf.parser._Format("TVAF", 1, "Float", "Tumour variant allele fraction")
-    vcf_reader.infos["NVAF"] = pyvcf.parser._Format("NVAF", 1, "Float", "Normal variant allele fraction")
+    vcf_reader.formats["VAF"] = pyvcf.parser._Format(
+        "VAF", 1, "Float", "Variant allele fraction"
+    )
+    vcf_reader.infos["TVAF"] = pyvcf.parser._Format(
+        "TVAF", 1, "Float", "Tumour variant allele fraction"
+    )
+    vcf_reader.infos["NVAF"] = pyvcf.parser._Format(
+        "NVAF", 1, "Float", "Normal variant allele fraction"
+    )
     return vcf_reader
 
 
@@ -117,5 +125,5 @@ def process_record(record):
     return record
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
