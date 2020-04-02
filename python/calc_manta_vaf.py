@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 calc_manta_vaf.py
@@ -35,8 +35,12 @@ def main():
     args = parse_args()
     vcf = process_vcf(args.vcf)
     vcf_writer = pyvcf.Writer(args.output, template=vcf)
-    for record in imap(process_record, vcf):
-        vcf_writer.write_record(record)
+    if len(vcf.samples) == 0:
+        for record in vcf:
+            vcf_writer.write_record(record)
+    else:
+        for record in imap(process_record, vcf):
+            vcf_writer.write_record(record)
 
 
 def parse_args():
@@ -73,28 +77,23 @@ def process_vcf(vcf_file):
     return vcf_reader
 
 
-def add_vaf(record, tumour_vaf, normal_vaf, ndigits=2):
+def add_vaf(record, vaf, index, label, ndigits=2):
     """
     Add VAF field to tumour and normal samples in VCF record
     """
     # Round VAF
-    tumour_vaf = round(tumour_vaf, ndigits)
-    normal_vaf = round(normal_vaf, ndigits)
+    vaf = round(vaf, ndigits)
     # Edit FORMAT and sample fields
     # Create new calldata class that includes VAF
     new_fields = record.FORMAT.split(":") + ["VAF"]
     calldata = pyvcf.model.make_calldata_tuple(new_fields)
     # Update data for tumour and normal
-    new_tumour_data = vars(record.samples[1].data)
-    new_tumour_data["VAF"] = tumour_vaf
-    new_normal_data = vars(record.samples[0].data)
-    new_normal_data["VAF"] = normal_vaf
+    new_data = vars(record.samples[index].data)
+    new_data["VAF"] = vaf
     # Assign new data to samples
-    record.samples[1].data = calldata(**new_tumour_data)
-    record.samples[0].data = calldata(**new_normal_data)
+    record.samples[index].data = calldata(**new_data)
     # Edit INFO fields
-    record.INFO["TVAF"] = tumour_vaf
-    record.INFO["NVAF"] = normal_vaf
+    record.INFO[label] = vaf
     return record
 
 
@@ -104,24 +103,31 @@ def process_record(record):
     field.
     """
     TUMOUR_IDX, NORMAL_IDX = 1, 0
+    if len(record.samples) == 1:
+        TUMOUR_IDX, NORMAL_IDX = 0, None
     REF_IDX, ALT_IDX = 0, 1
     fields = record.FORMAT.split(":")
     tumour_data = record.samples[TUMOUR_IDX].data
-    normal_data = record.samples[NORMAL_IDX].data
+    if NORMAL_IDX is not None:
+        normal_data = record.samples[NORMAL_IDX].data
     tref, talt, nref, nalt = 0, 0, 0, 0
     if "PR" in fields:
         tref += tumour_data.PR[REF_IDX]
         talt += tumour_data.PR[ALT_IDX]
-        nref += normal_data.PR[REF_IDX]
-        nalt += normal_data.PR[ALT_IDX]
+        if NORMAL_IDX is not None:
+            nref += normal_data.PR[REF_IDX]
+            nalt += normal_data.PR[ALT_IDX]
     if "SR" in fields:
         tref += tumour_data.SR[REF_IDX]
         talt += tumour_data.SR[ALT_IDX]
-        nref += normal_data.SR[REF_IDX]
-        nalt += normal_data.SR[ALT_IDX]
+        if NORMAL_IDX is not None:
+            nref += normal_data.SR[REF_IDX]
+            nalt += normal_data.SR[ALT_IDX]
     tvaf = talt / (talt + tref) if talt + tref != 0 else 0
-    nvaf = nalt / (nalt + nref) if nalt + nref != 0 else 0
-    record = add_vaf(record, tvaf, nvaf)
+    record = add_vaf(record, tvaf, TUMOUR_IDX, "TVAF")
+    if NORMAL_IDX is not None:
+        nvaf = nalt / (nalt + nref) if nalt + nref != 0 else 0
+        record = add_vaf(record, nvaf, NORMAL_IDX, "NVAF")
     return record
 
 
