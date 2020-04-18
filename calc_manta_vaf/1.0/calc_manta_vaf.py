@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 """
 calc_manta_vaf.py
@@ -24,10 +24,8 @@ Caveats
   file using zcat through standard input.
 """
 
-from __future__ import print_function, division
 import sys
 import argparse
-from itertools import imap
 import vcf as pyvcf
 
 
@@ -39,7 +37,7 @@ def main():
         for record in vcf:
             vcf_writer.write_record(record)
     else:
-        for record in imap(process_record, vcf):
+        for record in map(process_record, vcf):
             vcf_writer.write_record(record)
 
 
@@ -88,7 +86,7 @@ def add_vaf(record, vaf, index, label, ndigits=2):
     new_fields = record.FORMAT.split(":") + ["VAF"]
     calldata = pyvcf.model.make_calldata_tuple(new_fields)
     # Update data for tumour and normal
-    new_data = vars(record.samples[index].data)
+    new_data = record.samples[index].data._asdict()
     new_data["VAF"] = vaf
     # Assign new data to samples
     record.samples[index].data = calldata(**new_data)

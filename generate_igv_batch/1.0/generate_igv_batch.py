@@ -1,8 +1,11 @@
-import vcf
+#!/usr/bin/env python3
+
 import re
 import os
 import glob
 import argparse
+
+import vcf
 import pandas as pd
 import numpy as np
 
