@@ -4,16 +4,30 @@
 augment_manta_vcf.py
 ====================
 
-This script augments Manta VCF files with additional information. Namely:
+This script augments Manta VCF files with additional information. The following
+fields are added to the INFO and FORMAT/SAMPLE columns where applicable:
+
     1) TR (FORMAT field): Sum of the SR and PR FORMAT fields per allele.
     2) DP (FORMAT field): Sum of the SR and PR FORMAT fields across all alleles.
     3) VAF (FORMAT field): Variant allele fraction for the alternate allele.
     4) REGIONS (INFO field): List of regions from the given BED files that
-       overlap each variant position.
+       overlap each variant position. One example use case is labelling
+       breakpoints occuring in loci of interest such as MYC, BCL2, BCL6,
+       and the three IG loci. This can readily be done downstream, but
+       having the breakpoints labelled in the VCF file can enable quick
+       exploratory analyses.
 
-If also updates the sample IDs in the VCF file with any values specified using
-the `--tumour-id` and `--normal-id` arguments based on the "VCF type" with the
-following rules:
+The script can optionally update the sample IDs in the VCF header, namely
+the row with "#CHROM". Unfortunately, different Manta output VCF files
+include different combinations of the tumour and/or normal samples used
+in the analysis. Based on existing Manta output files, it was found that
+the sample present in the VCF files follow the rules below. The script
+will attempt to infer the "VCF type" (e.g., "somaticSV") based on the
+input VCF file path. If this isn't possible for whatever reason, the
+user can provide a value for the `--vcf_type` argument. Depending on
+the VCF type, the user will need to provide values for `--tumour_id`
+and/or `--normal_id`.
+
     1) candidateSV: No samples
     2) candidateSmallIndels: No samples
     3) rnaSV: Tumour sample only
