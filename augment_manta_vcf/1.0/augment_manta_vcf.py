@@ -46,6 +46,7 @@ Caveats
 # Import standard modules
 import os
 import sys
+import shutil
 import warnings
 import argparse
 import tempfile
@@ -56,6 +57,7 @@ import numpy as np
 from cyvcf2 import VCF, Writer
 
 
+# Track verbosity globally (to avoid countless function parameters)
 IS_QUIET = False
 
 
@@ -70,14 +72,14 @@ def main():
     IS_QUIET = args.quiet
 
     # Add new fields to each variant
-    augment_vcf(args.vcf, args.output, args.regions, args.decimals)
+    augment_vcf(args.vcf_input, args.vcf_output, args.bed_regions, args.decimals)
 
     # Parse VCF type if not provided
     if args.vcf_type is None:
-        args.vcf_type = parse_vcf_type(args.vcf)
+        args.vcf_type = parse_vcf_type(args.vcf_input)
 
     # Update sample IDs (will skip if both are None)
-    update_sample_ids(args.output, args.vcf_type, args.tumour_id, args.normal_id)
+    update_sample_ids(args.vcf_output, args.vcf_type, args.tumour_id, args.normal_id)
 
 
 def parse_arguments():
@@ -86,9 +88,9 @@ def parse_arguments():
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("vcf_input", help="Manta VCF file (gzip-compressed or not).")
-    parser.add_argument("output", help="Output (augmented) VCF file.")
+    parser.add_argument("vcf_output", help="Output (augmented) VCF file.")
     parser.add_argument(
-        "regions",
+        "bed_regions",
         nargs="*",
         default=[],
         help="Regions BED file(s). Names (column 4) must be unique across all files.",
@@ -121,7 +123,9 @@ def parse_arguments():
     args = parser.parse_args()
 
     # Validate command-line arguments
-    assert not args.output.endswith(".gz"), "Cannot output gzip-compressed VCF file."
+    assert not args.vcf_output.endswith(
+        ".gz"
+    ), "Cannot output gzip-compressed VCF file."
 
     return args
 
@@ -398,7 +402,7 @@ def update_sample_ids(vcf_file, vcf_type, tumour_id, normal_id):
             temp.write(line)
 
     # Replace the old VCF file with the updated file
-    os.replace(temp_file, vcf_file)
+    shutil.move(temp_file, vcf_file)
 
 
 if __name__ == "__main__":
