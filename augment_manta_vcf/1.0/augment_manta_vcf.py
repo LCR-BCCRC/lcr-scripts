@@ -8,7 +8,8 @@ This script augments Manta VCF files with additional information. Namely:
     1) TR (FORMAT field): Sum of the SR and PR FORMAT fields per allele.
     2) DP (FORMAT field): Sum of the SR and PR FORMAT fields across all alleles.
     3) VAF (FORMAT field): Variant allele fraction for the alternate allele.
-    4) REGIONS (INFO field): List of regions overlapping current position.
+    4) REGIONS (INFO field): List of regions from the given BED files that
+       overlap each variant position.
 
 If also updates the sample IDs in the VCF file with any values specified using
 the `--tumour-id` and `--normal-id` arguments based on the "VCF type" with the
