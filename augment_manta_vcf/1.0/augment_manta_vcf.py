@@ -98,7 +98,7 @@ def main():
 
 
 def parse_arguments():
-    """Parses and validate command-line arguments"""
+    """Parses and validates command-line arguments."""
 
     # Parse command-line arguments
     parser = argparse.ArgumentParser()
@@ -202,7 +202,7 @@ def modify_header(vcf, bed_files):
 
 
 def parse_bed_files(bed_files):
-    """Create PyRanges objects from the BED files."""
+    """Creates PyRanges objects from the BED files."""
 
     # Skip if no BED files are provided
     if len(bed_files) == 0:
@@ -227,7 +227,7 @@ def parse_bed_files(bed_files):
 
 
 def get_overlapping_region_names(variant, bed):
-    """Get list of overlapping region names from a BED file."""
+    """Gets list of overlapping region names from a BED file."""
 
     # Generate 0-based region for querying regions
     sv_type = variant.INFO["SVTYPE"]
@@ -253,10 +253,10 @@ def get_overlapping_region_names(variant, bed):
     return overlapping_regions.Name.tolist()
 
 
-def augment_variant(variant, bed, decimals):
-    """Augments the given variant with additional fields.
+def add_fields_to_variant(variant, bed, decimals):
+    """Adds the given variant with additional fields.
 
-    The new fields are described in the top-level doctring.
+    The new fields are described in the top-level docstring.
     """
 
     # Extract split read (sr) and read pair (pr) counts
@@ -300,7 +300,7 @@ def augment_variant(variant, bed, decimals):
 
 
 def augment_vcf(vcf_in_file, vcf_out_file, bed_files, decimals):
-    """Parse and augment VCF file."""
+    """Parses and augments VCF file."""
 
     # Read in the input VCF file
     vcf_in = VCF(vcf_in_file)
@@ -319,7 +319,7 @@ def augment_vcf(vcf_in_file, vcf_out_file, bed_files, decimals):
         # Augment the variant by adding new fields (if there are samples)
         num_samples = len(vcf_in.samples)
         if num_samples > 0:
-            variant = augment_variant(variant, bed, decimals)
+            variant = add_fields_to_variant(variant, bed, decimals)
         # Output the augmented variant
         vcf_out.write_record(variant)
 
@@ -329,7 +329,7 @@ def augment_vcf(vcf_in_file, vcf_out_file, bed_files, decimals):
 
 
 def parse_vcf_type(filename):
-    """Extract VCF type from the file path."""
+    """Extracts VCF type from the file path."""
 
     # Create list of all possible Manta VCF types
     vcf_types = [
@@ -356,7 +356,7 @@ def parse_vcf_type(filename):
 
 
 def update_header_line(line, vcf_type, tumour_id, normal_id):
-    """Update header line based on VCF type.
+    """Updates header line based on VCF type.
 
     See top-level docstring for more details.
     """
@@ -399,7 +399,7 @@ def update_header_line(line, vcf_type, tumour_id, normal_id):
 
 
 def update_sample_ids(vcf_file, vcf_type, tumour_id, normal_id):
-    """Process VCF file to update sample IDs in header."""
+    """Processes VCF file to update sample IDs in header."""
 
     # Skip if both tumour_id and normal_id are None
     if tumour_id is None and normal_id is None:
