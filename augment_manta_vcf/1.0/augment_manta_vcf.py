@@ -105,8 +105,9 @@ def parse_arguments():
     parser.add_argument("vcf_input", help="Manta VCF file (gzip-compressed or not).")
     parser.add_argument("vcf_output", help="Output (augmented) VCF file.")
     parser.add_argument(
-        "bed_regions",
-        nargs="*",
+        "--bed_regions",
+        "-b",
+        nargs="+",
         default=[],
         help="Regions BED file(s). Names (column 4) must be unique across all files.",
     )
