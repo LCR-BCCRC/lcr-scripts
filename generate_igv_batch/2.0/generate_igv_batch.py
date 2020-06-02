@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 
 """
-generate_igv_batch.py
-=====================
+This script creates IGV batch scripts, which automate the
+process of taking IGV screenshots for regions of interest
+(e.g., point mutations and structural variations). For
+more information, check out this link:
 
-Long description
+    https://software.broadinstitute.org/software/igv/batch.
 
-Inputs
-------
-- N/A
+The following command will print usage information, including
+the various command-line options and the list of supported
+file formats:
 
-Outputs
--------
-- N/A
+    generate_igv_batch.py --help;
 
-Caveats
--------
-- N/A
+The script takes the following as inputs:
+
+(1) File specifying mutation sites (the list of supported file
+    formats is listed in the usage information when you run
+    the script with `--help`);
+(2) List of BAM files, which can be provided at the command line
+    with `--bam_list` or in a table format using `--bam_table`;
+(3) (Optional) List of genes to filter on (not all formats are
+    supported);
+(4) Additional parameters (check out the help page using
+    `--help` to find out more).
 """
 
 # Import standard libraries
@@ -66,21 +74,22 @@ def main():
 def parse_arguments():
     """Parses command-line arguments."""
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument(
         "input_file",
         type=argparse.FileType("r"),
         default="-",
-        help=f"Input file {FILE_FORMATS}.",
+        help=f"Input file {FILE_FORMATS}. Can be '-' for stdin.",
     )
 
     parser.add_argument(
         "--output",
         "-o",
+        metavar="OUTPUT_FILE",
         type=argparse.FileType("w"),
         default="-",
-        help="Output IGV batch script.",
+        help="Output IGV batch script. Can be '-' for stdout.",
     )
 
     parser.add_argument(
@@ -88,20 +97,25 @@ def parse_arguments():
         "-f",
         choices=FILE_FORMATS,
         dest="file_format",
-        help="Format of the input file(s).",
+        help=(
+            "Format of the input file. Otherwise, the format "
+            "will be inferred from the file extension."
+        ),
     )
 
     parser.add_argument(
         "--bam_table",
         "-bt",
+        metavar="BAM_TABLE_FILE",
         type=argparse.FileType("r"),
-        help="Tab-delimited table mapping sample IDs to BAM files.",
+        help="Two-column tab-delimited table mapping sample IDs to BAM files paths.",
     )
 
     parser.add_argument(
         "--bam_list",
         "-bl",
         nargs="+",
+        metavar=("BAM_FILE_1", "BAM_FILE_2"),
         default=[],
         help="Space-delimited list of BAM files.",
     )
@@ -109,53 +123,77 @@ def parse_arguments():
     parser.add_argument(
         "--gene_column",
         "-gt",
+        metavar="GENE_COLUMN_FILE",
         type=argparse.FileType("r"),
-        help="Single-column file with gene symbols (no header).",
+        help=(
+            "Single-column file with gene symbols (no header). "
+            "Used to filter input file. Supported formats: MAF."
+        ),
     )
 
     parser.add_argument(
         "--gene_list",
         "-gl",
         nargs="+",
+        metavar=("GENE_1", "GENE_2"),
         default=[],
-        help="Space-delimited list of gene symbols.",
+        help=(
+            "Space-delimited list of gene symbols. Used to "
+            "filter input file. Supported formats: MAF."
+        ),
     )
 
+    default_padding = 300
     parser.add_argument(
         "--padding",
         "-p",
         type=int,
-        default=300,
-        help="Amount of padding added before and after each locus.",
+        default=default_padding,
+        help=(
+            "Amount of padding added before and after each locus. "
+            f"Default padding is {default_padding}."
+        ),
     )
 
+    default_max_height = 400
     parser.add_argument(
         "--max_height",
         "-m",
         type=int,
-        default=400,
-        help="Maximum panel height in IGV.",
+        default=default_max_height,
+        help=(
+            "Maximum panel height in IGV. Default max "
+            f"height is {default_max_height}."
+        ),
     )
 
     parser.add_argument(
         "--snapshot_dir",
         "-d",
         required=True,
-        help="Directory where all of the IGV snapshots will be stored.",
+        help=(
+            "Directory where all of the IGV snapshots will "
+            "be stored once IGV is run subsequently."
+        ),
     )
 
     parser.add_argument(
         "--genome_build",
         "-g",
         required=True,
-        help="Specify IGV genome (e.g., hg19 or hg38)",
+        help="Specify IGV genome build (e.g., 'hg19' or 'hg38')",
     )
 
     parser.add_argument(
         "--pass_only",
         "-po",
         action="store_true",
-        help="Filter for records with FILTER = PASS (supported formats: VCF)",
+        help=(
+            "Filter for records that have passed any filters. "
+            "For example, for VCF files, this would filter for "
+            "mutations where the FILTER column contains 'PASS'. "
+            "Supported formats: VCF."
+        ),
     )
 
     args = parser.parse_args()
@@ -495,4 +533,5 @@ def close_files(args):
 
 
 if __name__ == "__main__":
+    """Run the main function only if this file is run as a script."""
     main()
