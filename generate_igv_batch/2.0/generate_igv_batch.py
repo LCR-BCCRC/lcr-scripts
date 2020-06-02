@@ -344,6 +344,24 @@ def get_regions_maf(maf_file, padding, gene_list, **kwargs):
 
     maf = pd.read_table(maf_file, comment="#")
 
+    # Check for issues with input file
+    columns = [
+        "Chromosome",
+        "Start_Position",
+        "End_Position",
+        "Hugo_Symbol",
+        "Tumor_Sample_Barcode",
+    ]
+    for column in columns:
+        column_values = maf[column]
+        is_any_na = pd.isna(column_values).any()
+        assert not is_any_na, (
+            f"The '{column}' column contains NA values. This might be caused "
+            "by an incorrectly formatted input MAF file. Please ensure that "
+            f"all of the following columns have values: {', '.join(columns)}."
+            f"Here's a preview of the MAF file after being parsed:\n\n {maf}"
+        )
+
     if gene_list:
         maf = maf[maf.Hugo_Symbol.isin(gene_list)]
 
