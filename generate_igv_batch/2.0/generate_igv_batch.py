@@ -429,11 +429,11 @@ def generate_igv_batch_header(bam_files, max_height, snapshot_dir, genome_build)
 def generate_igv_batch_per_row(regions, snapshot_filename):
     """Generates a list of lines that form the body of an IGV batch file."""
     lines = []
-    lines.append("new")
     lines.append(f"goto {regions}")
     lines.append("sort")
     lines.append("collapse")
     lines.append(f"snapshot {snapshot_filename}")
+    lines.append("new")
     return lines
 
 
@@ -461,15 +461,15 @@ def generate_igv_batch_per_sample(
     if not bam_files:
         return
 
-    header = generate_igv_batch_header(
-        bam_files, max_height, snapshot_dir, genome_build
-    )
-    lines.extend(header)
-
     for _, row in regions.iterrows():
         filename = []
 
         filename.append(row.regions)
+
+        header = generate_igv_batch_header(
+            bam_files, max_height, snapshot_dir, genome_build
+        )
+        lines.extend(header)
 
         if "region_name" in row:
             filename.append(row.region_name)
