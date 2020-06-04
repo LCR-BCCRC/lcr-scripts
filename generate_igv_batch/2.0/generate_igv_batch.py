@@ -481,10 +481,7 @@ def generate_igv_batch_per_sample(
 
         lines.extend(row_lines)
 
-    footer = generate_igv_batch_footer()
-    lines.extend(footer)
-
-    output_lines(lines, output)
+    return lines
 
 
 def generate_igv_batch(
@@ -498,6 +495,9 @@ def generate_igv_batch(
     genome_build,
 ):
     """Generate IGV batch file."""
+
+    all_lines = []
+
     if file_format == "maf":
 
         samples = regions.sample_id.unique()
@@ -524,7 +524,7 @@ def generate_igv_batch(
 
             sample_snapshot_dir = os.path.join(snapshot_dir, sample, "")
 
-            generate_igv_batch_per_sample(
+            lines = generate_igv_batch_per_sample(
                 sample_regions,
                 bam_files,
                 output,
@@ -533,13 +533,22 @@ def generate_igv_batch(
                 genome_build,
             )
 
+            all_lines.extend(lines)
+
     else:
 
         assert bam_list, "Please provide list of BAM files using --bam_list."
 
-        generate_igv_batch_per_sample(
+        lines = generate_igv_batch_per_sample(
             regions, bam_list, output, max_height, snapshot_dir, genome_build,
         )
+
+        all_lines.extend(lines)
+
+    footer = generate_igv_batch_footer()
+    all_lines.extend(footer)
+
+    output_lines(all_lines, output)
 
 
 def close_files(args):
