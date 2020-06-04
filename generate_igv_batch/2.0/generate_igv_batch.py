@@ -419,6 +419,7 @@ def generate_igv_batch_header(bam_files, max_height, snapshot_dir, genome_build)
     """Generates a list of lines that form the header of an IGV batch file."""
     lines = []
     for bam_file in bam_files:
+        bam_file = os.path.realpath(bam_file)
         lines.append(f"load {bam_file}")
     lines.append(f"maxPanelHeight {max_height}")
     lines.append(f"snapshotDirectory {snapshot_dir}")
