@@ -114,7 +114,7 @@ class BattenbergParser(Parser):
 
     def is_header(self, line):
         chrm = line.split('\t', 1)[0]
-        return True if chrm.startswith("chr") else False
+        return True if chrm == "chr" else False
 
     def parse_segment(self, line):
         _line = line.split('\t')
