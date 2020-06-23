@@ -30,7 +30,7 @@ required_packages <- c("xml2",
 
 for (pkg in required_packages){
   if (!requireNamespace(pkg)) {
-    install.packages(pkg)
+    install.packages(pkg, repos = "https://mirror.rcg.sfu.ca/mirror/CRAN/")
   }
 }
 
