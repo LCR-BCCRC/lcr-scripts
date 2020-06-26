@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import re
 import math
@@ -109,7 +110,7 @@ class SequenzaParser(Parser):
         return(loh_flag)
 
 class BattenbergParser(Parser):
-    def __init__(self, stream, sample, loh_type=None):
+    def __init__(self, stream, sample, loh_type):
         super().__init__(stream, sample, loh_type)
 
     def is_header(self, line):
@@ -118,15 +119,26 @@ class BattenbergParser(Parser):
 
     def parse_segment(self, line):
         _line = line.split('\t')
-        chrm, start, end, BAF, pval, orig_logr, cn = _line[0:7]
+        chrm, start, end, BAF, pval, orig_logr, cn, a, b = _line[0:9]
         if not chrm.startswith("chr"):
             chrm = "chr"+ str(chrm) 
-        loh_flag = self.get_loh_flag()
+        loh_flag = self.get_loh_flag(a, b)
         logr = self.calculate_logratio(float(cn))
         return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
-
-    def get_loh_flag(self):
-        return('NA')
+ 
+    #actually use the LOH information from Battenberg, The column is nMin1_A (if < 1, LOH)
+    def get_loh_flag(self, a, b):
+        loh_flag = '0'
+        if self.loh_type == 'neutral':
+            if int(a) == 2 and int(b) == 1:
+                loh_flag = '1'
+        elif self.loh_type == 'deletion':
+           if (int(a) + int(b)) == 1:
+                loh_flag = '1'
+        elif self.loh_type == 'any':
+            if int(b) == 0:
+                loh_flag = '1'
+        return(loh_flag)
 
 class SClustParser(Parser):
     def __init__(self, stream, sample, loh_type):
@@ -202,6 +214,7 @@ class Segment:
             cn_state = 'HOMD'
         return(cn_state)
 
+    
     def to_igv(self, prepend):
         if prepend:
             self.chrm = "chr"+self.chrm
