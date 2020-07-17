@@ -22,37 +22,31 @@ suppressWarnings(suppressPackageStartupMessages({
 
 message("Loading packages...")
 
-required_packages <- c("xml2", 
-              "getPass", 
-              "tidyverse", 
-              "httr", 
-              "jsonlite")
+required_packages <- c(
+  # Included to avoid mysterious error
+  "xml2",
+  # Password prompt
+  "getPass",
+  # Data handling
+  "readr",
+  "dplyr",
+  "purrr",
+  "tidyr",
+  "lubridate",
+  # Web requests
+  "httr",
+  "jsonlite"
+)
+
+installed_packages <- rownames(installed.packages())
 
 for (pkg in required_packages){
-  if (!requireNamespace(pkg)) {
+  if (!pkg %in% installed_packages) {
+    message(paste0("Installing ", pkg, "..."))
     install.packages(pkg, repos = "https://mirror.rcg.sfu.ca/mirror/CRAN/")
   }
+  library(pkg, character.only = TRUE)
 }
-
-
-  # Included to avoid mysterious error
-  library(xml2)
-
-  # Password prompt
-  library(getPass)
-
-  # Data handling
-  library(readr)
-  library(dplyr)
-  library(purrr)
-  library(tidyr)
-  library(lubridate)
-
-  # Web requests
-  library(httr)
-  library(jsonlite)
-
-
 
 
 # Determine arguments -----------------------------------------------------
@@ -164,7 +158,7 @@ library_ids_vec <- libraries[[names(join_vector)]]
 library_ids <- paste(library_ids_vec, collapse = ",")
 
 # Check that library IDs are valid
-existing_libs <- query("library", name = library_ids, as_df = list(name = "A47818")) 
+existing_libs <- query("library", name = library_ids, as_df = list(name = "A47818"))
 if ( length(library_ids_vec) > length(existing_libs$name) ) {
   missing_libs_vec <- setdiff(library_ids_vec, existing_libs$name)
   missing_libs     <- paste(missing_libs_vec, collapse = ", ")
@@ -269,15 +263,15 @@ bam_files <-
 
 message("Retrieving library preparation protocols...")
 
-lib_protocols <- 
-  existing_libs$protocol_id %>% 
-  paste(collapse = ",") %>% 
-  query("protocol", id = ., as_df = list(id = "123")) %>% 
-  select(id, protocol_name = name) %>% 
-  right_join(select(existing_libs, name, protocol_id, ffpe, strandedness), 
-             by = c("id" = "protocol_id")) %>% 
+lib_protocols <-
+  existing_libs$protocol_id %>%
+  paste(collapse = ",") %>%
+  query("protocol", id = ., as_df = list(id = "123")) %>%
+  select(id, protocol_name = name) %>%
+  right_join(select(existing_libs, name, protocol_id, ffpe, strandedness),
+             by = c("id" = "protocol_id")) %>%
   mutate(ffpe = ifelse(is.na(ffpe), "false", ffpe)) %>%
-  select(-id) %>% 
+  select(-id) %>%
   rename_all(~ paste0("lb.", .))
 
 
@@ -374,12 +368,12 @@ bio_qc_comments <-
          status = paste0("lc.comments_", status),
          comment = sub('"', "", comment),
          comment = trimws(comment),
-         comment = paste0(aln_libcore_id, "={", comment, "}")) %>% 
+         comment = paste0(aln_libcore_id, "={", comment, "}")) %>%
   group_by(status) %>%
   mutate(row = row_number()) %>%
-  pivot_wider(names_from = status, values_from = comment) %>% 
-  dplyr::select(-row) %>% 
-  group_by(bam_id) %>% 
+  pivot_wider(names_from = status, values_from = comment) %>%
+  dplyr::select(-row) %>%
+  group_by(bam_id) %>%
   summarise_at(vars(contains("comments_")),
                ~ paste(sort(na.omit(unique(.))), collapse = "|"))
 
@@ -409,15 +403,15 @@ if (nrow(missing_merges) == 0){
 if (nrow(missing_merges) > 0) {
 message("Retrieving data paths and bio QC for libraries without merges...")
 
-no_merge_raw <- 
+no_merge_raw <-
   missing_merges[[args$library_id_column]] %>%
   paste(collapse = ",") %>%
-  query("aligned_libcore/info", library = ., as_df = list(library = "A34795")) %>% 
+  query("aligned_libcore/info", library = ., as_df = list(library = "A34795")) %>%
   mutate(bam_id = row_number())
 
-no_merge_tidy <- 
-  no_merge_raw %>% 
-  filter(successful, !is.na(data_path), libcore.billable) %>% 
+no_merge_tidy <-
+  no_merge_raw %>%
+  filter(successful, !is.na(data_path), libcore.billable) %>%
   transmute(library_id = libcore.library.name,
             gsc_external_id = libcore.library.external_identifier,
             gsc_patient_id = libcore.library.patient_identifier,
@@ -439,19 +433,19 @@ no_merge_tidy <-
             aligner_name_full = analysis_software.name,
             sequence_length = sequence_length,
             bam_id,
-            data_path) %>% 
+            data_path) %>%
   rename_at(vars(construction_date, seq_strategy,
                  gsc_external_id, gsc_patient_id),
             ~ paste0("lb.", .)) %>%
   rename_at(vars(-ends_with("_id"), -bam_id, -contains(".")),
             ~ paste0("al.", .))
 
-no_merge_bio_qc_comments <- 
-  no_merge_raw %>% 
-  transmute(bam_id, 
-            library_id = libcore.library.name, 
+no_merge_bio_qc_comments <-
+  no_merge_raw %>%
+  transmute(bam_id,
+            library_id = libcore.library.name,
             aln_libcore_id = id,
-            bio_qc_comments = libcore.bio_qc_comments, 
+            bio_qc_comments = libcore.bio_qc_comments,
             bio_qc_comments = sub("^.*[(](N/A|\\w+) -> (N/A|\\w+)[)] ?;? ?;?",
                                   "", bio_qc_comments)) %>%
   separate_rows(bio_qc_comments, sep = "; ?(?=Failed|Warning|Manual)") %>%
@@ -466,14 +460,14 @@ no_merge_bio_qc_comments <-
          comment = sub('"', "", comment),
          comment = trimws(comment),
          comment = paste0(aln_libcore_id, "={", comment, "}")) %>%
-  pivot_wider(names_from = status, values_from = comment) %>% 
+  pivot_wider(names_from = status, values_from = comment) %>%
   group_by(bam_id) %>%
   summarise_at(vars(contains("comments_")),
                ~ paste(na.omit(unique(.)), collapse = "|"))
 
 no_merge_bio_qc_status <-
   no_merge_raw %>%
-  select(bam_id, 
+  select(bam_id,
          bio_qc_status = libcore.bio_qc_status) %>%
   count(bam_id, bio_qc_status) %>%
   mutate(bio_qc_status = tolower(bio_qc_status),
@@ -500,7 +494,7 @@ no_merge_bams_with_bioqc <-
 
 # Combine merge ane no-merge tables --------------------------------------
 
-all_bams_with_bioqc <- 
+all_bams_with_bioqc <-
   bind_rows(no_merge_bams_with_bioqc, bam_files_with_bioqc)
 
 
