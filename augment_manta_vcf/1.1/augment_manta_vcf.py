@@ -62,6 +62,7 @@ Caveats
 # Import standard modules
 import os
 import sys
+import gzip
 import shutil
 import warnings
 import argparse
@@ -91,15 +92,14 @@ def main():
     if args.vcf_type is None:
         args.vcf_type = parse_vcf_type(args.vcf_input)
 
-    # Copy VCF file in case the input VCF file isn't editable
-    _, temp_vcf_file = tempfile.mkstemp()
-    shutil.copy(args.vcf_input, temp_vcf_file)
+    # Decompress input VCF file (if applicable)
+    vcf_file = decompress_gz_file(args.vcf_input)
 
     # Update sample IDs (will skip if both are None)
-    update_sample_ids(temp_vcf_file, args.vcf_type, args.tumour_id, args.normal_id)
+    update_sample_ids(vcf_file, args.vcf_type, args.tumour_id, args.normal_id)
 
     # Add new fields to each variant
-    augment_vcf(temp_vcf_file, args.vcf_output, args.bed_regions, args.decimals)
+    augment_vcf(vcf_file, args.vcf_output, args.bed_regions, args.decimals)
 
 
 def parse_arguments():
@@ -359,6 +359,23 @@ def parse_vcf_type(filename):
     )
 
     return vcf_types[0]
+
+
+def decompress_gz_file(gz_file):
+    """Decompresses input GZ file (if applicable) into temporary location."""
+
+    # Create temporary file storing decompressed version
+    _, temp_file = tempfile.mkstemp()
+
+    # Decompress input file into temporary location (if applicable)
+    if gz_file.endswith(".gz"):
+        with gzip.open(gz_file, "rt") as in_file, open(temp_file, "w") as out_file:
+            shutil.copyfileobj(in_file, out_file)
+    else:
+        shutil.copy(gz_file, temp_file)
+
+    # Return temporary location to the calling function
+    return temp_file
 
 
 def update_header_line(line, vcf_type, tumour_id, normal_id):
