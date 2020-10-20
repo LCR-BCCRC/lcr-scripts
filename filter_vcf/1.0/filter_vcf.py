@@ -1,3 +1,12 @@
+### Filter VCF files directly based on VAF ###
+# requires 3 arguments: input file, output file, and cut-off value for filtering 
+# this script will only filter based on VAF, and assumes the VCF is already filtered on PASS value
+# currently works with strelka2 outputs only. Support for other variant callers will be added as needed
+# Calculation of VAF for both snvs and indels is based on formulas from strelka2 documentation, and strelka2 github issue #3
+
+# example usage: python filter_vcf.py --input <input_file> --output <output_file> --cutoff <value>
+
+
 #!/usr/bin/env python3
 
 import vcf
