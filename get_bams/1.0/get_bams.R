@@ -47,7 +47,7 @@ for (pkg in required_packages){
   }
   library(pkg, character.only = TRUE)
 }
-
+}))
 
 # Determine arguments -----------------------------------------------------
 
@@ -176,7 +176,7 @@ merges_raw <-
   {
     multi_lib_alignments <- map_int(.$libraries, nrow) > 1
     if (sum(multi_lib_alignments) > 0) {
-      warning("Dropping some multi-library alignments...")
+      message("Dropping some multi-library alignments...")
     }
     .[!multi_lib_alignments,]
   } %>%
@@ -270,7 +270,6 @@ lib_protocols <-
   select(id, protocol_name = name) %>%
   right_join(select(existing_libs, name, protocol_id, ffpe, strandedness),
              by = c("id" = "protocol_id")) %>%
-  mutate(ffpe = ifelse(is.na(ffpe), "false", ffpe)) %>%
   select(-id) %>%
   rename_all(~ paste0("lb.", .))
 
@@ -299,9 +298,7 @@ aln_libcore_ids_for_repositions <-
             object_type = "repo.analysis",
             aln_libcore_id = aligned_libcore.id)
 
-# Check that the number of aligned_libcore IDs matches the number of
-# reposition IDs
-stopifnot(nrow(reposition_ids) == nrow(aln_libcore_ids_for_repositions))
+
 
 # Replace reposition IDs with corresponding aligned_libcore IDs
 aln_libcore_ids <-
@@ -391,6 +388,14 @@ bam_files_with_bioqc <-
   select(one_of(colnames(libraries)), starts_with("al."), starts_with("lc."),
          starts_with("lb."), starts_with("sp."), starts_with("bp."),
          starts_with("pt."), everything())
+
+# Check that the number of aligned_libcore IDs matches the number of
+# reposition IDs
+duplicate_merges <- bam_files_with_bioqc[duplicated(bam_files_with_bioqc$library_id), ]$library_id
+if(length(duplicate_merges) != 0){
+  duplicate_merges <- paste0(duplicate_merges, collapse = ", ")
+  warning(paste("Warning: Duplicate merges identified for these libraries: ", duplicate_merges, "Check your output carefully. "))
+}
 
 # If no mising merges, output this table ------------------------------
 
@@ -507,4 +512,4 @@ write_tsv(all_bams_with_bioqc, args$output_table)
 
 }
 
-}))
+
