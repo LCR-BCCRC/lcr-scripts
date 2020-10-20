@@ -400,6 +400,7 @@ if(length(duplicate_merges) != 0){
 # If no mising merges, output this table ------------------------------
 
 if (nrow(missing_merges) == 0){
+  message("Outputting final table...")
   write_tsv(bam_files_with_bioqc, args$output_table)
 }
 
