@@ -270,7 +270,6 @@ lib_protocols <-
   select(id, protocol_name = name) %>%
   right_join(select(existing_libs, name, protocol_id, ffpe, strandedness),
              by = c("id" = "protocol_id")) %>%
-  mutate(ffpe = ifelse(is.na(ffpe), "false", ffpe)) %>%
   select(-id) %>%
   rename_all(~ paste0("lb.", .))
 
