@@ -1,13 +1,11 @@
 #!/usr/bin/env Rscript
 #
 # Usage:
-#   get_bams.R <input_table> <output_table> [<library_id_column>]
+#   Within an R script: 
+#     source("get_bams_function.R")
+#     lib_paths <- get_bams(input_table, library_id_column)
 #
 # Notes:
-#   - <library_id_column> can be a name or the number 1. If it is the
-#     number 1, the script assumes that the input file has no header
-#     and only has a single column. The default value is 'library_id'
-#     (i.e., the script assumes a file header).
 #
 #   - The column names are prefixed with 'al.', 'lc.', and 'lb.' for
 #     designating alignment-, libcore-, and library-specific columns.
@@ -47,35 +45,19 @@ for (pkg in required_packages){
   }
   library(pkg, character.only = TRUE)
 }
-
-
-# Determine arguments -----------------------------------------------------
-
-# Parse command-line arguments (when running non-interactively)
-args <- commandArgs(trailingOnly = TRUE) %>% as.list()
-arg_names <- c("input_table", "output_table", "library_id_column")
-args <- setNames(args, arg_names[1:length(args)])
-
-# Set default value
-if (is.null(args$library_id_column)) args$library_id_column <- "library_id"
-
-# Check if table or single-column list
-is_single_column <- args$library_id_column == "1"
+}))
 
 
 # Load data ---------------------------------------------------------------
 
-message("Loading data...")
+get_bams <- function(input_table, library_id_column){
+  
+libraries <- input_table
+join_vector <- setNames("library_id", library_id_column)
+join_vector_2 <- setNames("lb.name", library_id_column)
+  
+  message("Loading data...")
 
-if (is_single_column) {
-  libraries <- read_tsv(args$input_table, col_names = "library_id",
-                        col_types = cols())
-  join_vector <- c("library_id" = "library_id")
-} else {
-  libraries <- read_tsv(args$input_table, col_types = cols())
-  join_vector <- setNames("library_id", args$library_id_column)
-  join_vector_2 <- setNames("lb.name", args$library_id_column)
-}
 
 message("Prompting for GSC/GIN credentials...")
 
@@ -176,7 +158,7 @@ merges_raw <-
   {
     multi_lib_alignments <- map_int(.$libraries, nrow) > 1
     if (sum(multi_lib_alignments) > 0) {
-      warning("Dropping some multi-library alignments...")
+      message("Dropping some multi-library alignments...")
     }
     .[!multi_lib_alignments,]
   } %>%
@@ -184,7 +166,7 @@ merges_raw <-
             gsc_external_id = map_chr(libraries, "external_identifier"),
             gsc_patient_id = map_chr(libraries, "patient_identifier"),
             construction_date = map_chr(libraries, "library_started"),
-            construction_date = as_date(construction_date, tz = "PT"),
+            construction_date = as_date(construction_date),
             seq_strategy = map_chr(libraries, "library_strategy"),
             seq_strategy = case_when(seq_strategy == "miRNA-Seq" ~ "mirna",
                                      seq_strategy == "RNA-Seq" ~ "mrna",
@@ -195,7 +177,7 @@ merges_raw <-
             merge_status = status,
             num_merged = alc_count,
             analysis_type,
-            removal_date = as_date(removed, tz = "PT"),
+            removal_date = as_date(removed),
             reference_name = lims_genome_reference.symlink_name,
             reference_name_full = lims_genome_reference.name,
             aligner_name = aligner_software.path_string,
@@ -298,9 +280,7 @@ aln_libcore_ids_for_repositions <-
             object_type = "repo.analysis",
             aln_libcore_id = aligned_libcore.id)
 
-# Check that the number of aligned_libcore IDs matches the number of
-# reposition IDs
-stopifnot(nrow(reposition_ids) == nrow(aln_libcore_ids_for_repositions))
+
 
 # Replace reposition IDs with corresponding aligned_libcore IDs
 aln_libcore_ids <-
@@ -391,10 +371,19 @@ bam_files_with_bioqc <-
          starts_with("lb."), starts_with("sp."), starts_with("bp."),
          starts_with("pt."), everything())
 
+# Check that the number of aligned_libcore IDs matches the number of
+# reposition IDs
+duplicate_merges <- bam_files_with_bioqc[duplicated(bam_files_with_bioqc$library_id), ]$library_id
+if(length(duplicate_merges) != 0){
+  duplicate_merges <- paste0(duplicate_merges, collapse = ", ")
+  warning(paste("Warning: Duplicate merges identified for these libraries: ", duplicate_merges, "Check your output carefully. "))
+}
+
 # If no mising merges, output this table ------------------------------
 
 if (nrow(missing_merges) == 0){
-  write_tsv(bam_files_with_bioqc, args$output_table)
+  message("Generating final table...")
+  return(bam_files_with_bioqc)
 }
 
 # Retrieve non-merge data paths if any---------------------------------
@@ -403,7 +392,7 @@ if (nrow(missing_merges) > 0) {
 message("Retrieving data paths and bio QC for libraries without merges...")
 
 no_merge_raw <-
-  missing_merges[[args$library_id_column]] %>%
+  missing_merges[[library_id_column]] %>%
   paste(collapse = ",") %>%
   query("aligned_libcore/info", library = ., as_df = list(library = "A34795")) %>%
   mutate(bam_id = row_number())
@@ -415,7 +404,7 @@ no_merge_tidy <-
             gsc_external_id = libcore.library.external_identifier,
             gsc_patient_id = libcore.library.patient_identifier,
             construction_date = libcore.library.library_started,
-            construction_date = as_date(construction_date, tz = "PT"),
+            construction_date = as_date(construction_date),
             seq_strategy = libcore.library.library_strategy,
             seq_strategy = case_when(seq_strategy == "miRNA-Seq" ~ "mirna",
                                      seq_strategy == "RNA-Seq" ~ "mrna",
@@ -425,7 +414,7 @@ no_merge_tidy <-
             merge_status = "no_merge",
             num_merged = NA,
             analysis_type = NA,
-            removal_date = as_date(removed, tz = "PT"),
+            removal_date = as_date(removed),
             reference_name = lims_genome_reference.symlink_name,
             reference_name_full = lims_genome_reference.name,
             aligner_name = analysis_software.path_string,
@@ -500,10 +489,11 @@ all_bams_with_bioqc <-
 
 # Output table ------------------------------------------------------------
 
-message("Outputting final table...")
+message("Generating final table...")
 
-write_tsv(all_bams_with_bioqc, args$output_table)
+return(all_bams_with_bioqc)
 
 }
+}
 
-}))
+
