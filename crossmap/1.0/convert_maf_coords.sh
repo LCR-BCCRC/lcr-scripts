@@ -86,7 +86,7 @@ fi
 
 DATE=$(date --rfc-3339 seconds | cut -c1-19)
 echo "[${DATE}] INFO: Converting output BED file (${OUTPUT_BED}) to MAF format."
-grep "^Hugo_Symbol" "${INPUT_MAF}" > "${OUTPUT_MAF}"
+head "${INPUT_MAF}" | grep "^Hugo_Symbol" "${INPUT_MAF}" > "${OUTPUT_MAF}"
 awk 'BEGIN {FS=OFS="\t"} \
 		{row = gensub(/['"${MAFCOLSEP}"']/, "\t", "g", $4)} \
 		{print $1, $2, $3, row}' \
