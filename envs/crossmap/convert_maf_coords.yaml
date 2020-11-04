@@ -36,7 +36,7 @@ dependencies:
   - libstdcxx-ng=9.3.0
   - libuuid=2.32.1
   - lzo=2.10
-  - mysql-connector-c=6.1.6
+  - mysql-connector-c=6.1.11
   - ncurses=6.2
   - numpy=1.19.2
   - openssl=1.1.1h
@@ -51,6 +51,7 @@ dependencies:
   - six=1.15.0
   - sqlite=3.33.0
   - tk=8.6.10
+  - ucsc-liftover=377
   - ucsc-wigtobigwig=357
   - wheel=0.35.1
   - xz=5.2.5
