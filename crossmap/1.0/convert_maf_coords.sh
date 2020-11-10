@@ -98,7 +98,7 @@ awk 'BEGIN {FS=OFS="\t"} \
 		$13 == "INS" {start = start; end = end + 1} \
 		{$8 = chrom; $9 = start; $10 = end; print $0}' \
 	| cut -f4- \
-	| awk -v chain="${CHAIN_FILE}" 'BEGIN {OFS="\t"}; { if (chain ~ /hg38ToHg19/) $4 ="GRCh37"; else $4="GRCh38"; print ($0)}' \
+	| awk -v chain="${CHAIN_FILE}" 'BEGIN {FS=OFS="\t"}; { if (chain ~ /hg38ToHg19/) $4 ="GRCh37"; else $4="GRCh38"; print ($0)}' \
 	| sed 's/_____/ /g' >> "${OUTPUT_MAF}"
 
 if [[ ${DEBUG} == 0 ]]; then
