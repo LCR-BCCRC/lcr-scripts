@@ -40,7 +40,6 @@ class Parser:
         # combine everything in a list for ease of operation
         test_list = [a1, b1, frac1, a2, b2, frac2]
         # replace NAs with zero, othervise convert string to floats for future calculations
-        # also handle NANA that are occasionaly in the battenberg output
         test_list = [0.0 if i.startswith("NA") else float(i) for i in test_list]
         # calculate CN
         # Determine whether it's the major allele that is represented by two states
