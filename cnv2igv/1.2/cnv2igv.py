@@ -34,6 +34,30 @@ class Parser:
         ''' Return string indicating if segment is LOH or not. '''
         pass
 
+    # battenberg needs its own function because it outputs CN for each subclone separately
+    def calculate_logratio_battenberg(self, a1, b1, frac1, a2, b2, frac2):
+        logr = None
+        # combine everything in a list for ease of operation
+        test_list = [a1, b1, frac1, a2, b2, frac2]
+        # replace NAs with zero, othervise convert string to floats for future calculations
+        test_list = [0.0 if i.startswith("NA") else float(i) for i in test_list]
+        # calculate CN
+        # Determine whether it's the major allele that is represented by two states
+        is_subclonal_maj = abs(test_list[0] - test_list[3]) > 0
+        if is_subclonal_maj:
+          segment_states_min = test_list[1]*1
+          segment_states_maj = test_list[0]*test_list[2]+test_list[3]*test_list[5]
+        # If it's not major, then it is the minor allele represented by two states
+        else:
+          segment_states_min = test_list[1]*test_list[2]+test_list[4]*test_list[5]
+          segment_states_maj = test_list[0]*1
+        cn = segment_states_min + segment_states_maj
+        if cn == 0:
+            logr = '-Inf'
+        else:
+            logr = math.log(cn, 2) - 1
+        return(str(logr))
+
     def calculate_logratio(self, cn):
         cn   = float(cn)
         logr = None
@@ -125,24 +149,26 @@ class BattenbergParser(Parser):
 
     def parse_segment(self, line):
         _line = line.split('\t')
-        chrm, start, end, BAF, pval, orig_logr, cn, a, b = _line[0:9]
+        chrm, start, end, BAF, pval, orig_logr, cn, a1, b1, frac1, a2, b2, frac2 = _line[0:13]
         if not chrm.startswith("chr"):
             chrm = "chr"+ str(chrm) 
-        loh_flag = self.get_loh_flag(a, b)
-        logr = self.calculate_logratio(float(cn))
+        loh_flag = self.get_loh_flag(a1, b1)
+        logr = self.calculate_logratio_battenberg(a1, b1, frac1, a2, b2, frac2)
         return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
  
     #actually use the LOH information from Battenberg, The column is nMin1_A (if < 1, LOH)
-    def get_loh_flag(self, a, b):
+    def get_loh_flag(self, a1, b1):
         loh_flag = '0'
         if self.loh_type == 'neutral':
-            if int(a) == 2 and int(b) == 1:
+            if int(a1) == 2 and int(b1) == 1:
                 loh_flag = '1'
         elif self.loh_type == 'deletion':
-           if (int(a) + int(b)) == 1:
+           if (int(a1) + int(b1)) == 1:
                 loh_flag = '1'
         elif self.loh_type == 'any':
-            if int(b) == 0:
+            if b1 == 'NA':
+                loh_flag = 0
+            elif float(b1) == 0:
                 loh_flag = '1'
         return(loh_flag)
 
