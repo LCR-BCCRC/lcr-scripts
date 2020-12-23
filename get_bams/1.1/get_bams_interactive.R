@@ -39,11 +39,11 @@ suppressWarnings(suppressPackageStartupMessages({
 
 # Parse command-line arguments (when running non-interactively)
 args <- commandArgs(trailingOnly = TRUE) %>% as.list()
+# Error if no library_id is specified. 
+if (length(args) != 1) stop("Please specify a comma-separated list of GSC library IDs. Usage: get_bams_interactive.R \"D85283,D98729\"")
 arg_names <- c("library_id")
 args <- setNames(args, arg_names[1:length(args)])
 
-# Error if no library_id is specified. 
-if (is.null(args$library_id)) stop("Please specify a comma-separated list of GSC library IDs. Usage: get_bams_interactive.R \"D85283,D98729\"")
 
 
 # Load data ---------------------------------------------------------------
