@@ -165,7 +165,7 @@ class BattenbergParser(Parser):
                 loh_flag = '1'
         elif self.loh_type == 'any':
             if nMin1_A == 'NA':
-                loh_flag = 0
+                loh_flag = '0'
             elif float(nMin1_A) == 0:
                 loh_flag = '1'
         return(loh_flag)
