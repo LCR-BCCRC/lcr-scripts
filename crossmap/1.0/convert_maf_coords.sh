@@ -91,15 +91,16 @@ awk 'BEGIN {FS=OFS="\t"} \
 		{row = gensub(/['"${MAFCOLSEP}"']/, "\t", "g", $4)} \
 		{print $1, $2, $3, row}' \
 		"${OUTPUT_BED}" \
-	| awk 'BEGIN {FS=OFS="\t"} \
-		{chrom = $1; start = $2; end = $3} \
+	| awk -v chain="${CHAIN_FILE}" 'BEGIN {FS=OFS="\t"} \
+		{if (chain ~ /hg38ToHg19/) chrom = substr($1,4); else chrom ="chr"$1; start = $2; end = $3} \
 		$13 == "SNP" {start = start + 1; end = end} \
 		$13 == "DEL" {start = start + 1; end = end} \
 		$13 == "INS" {start = start; end = end + 1} \
 		{$8 = chrom; $9 = start; $10 = end; print $0}' \
 	| cut -f4- \
 	| awk -v chain="${CHAIN_FILE}" 'BEGIN {FS=OFS="\t"}; { if (chain ~ /hg38ToHg19/) $4 ="GRCh37"; else $4="GRCh38"; print ($0)}' \
-	| sed 's/_____/ /g' >> "${OUTPUT_MAF}"
+	| sed 's/_____/ /g' \
+  | perl -F'\t' -ane 'print if $F[4] =~ /^(chr)*[\dX]{1,2}$/' >> "${OUTPUT_MAF}"
 
 if [[ ${DEBUG} == 0 ]]; then
 	DATE=$(date --rfc-3339 seconds | cut -c1-19)
