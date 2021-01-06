@@ -34,6 +34,8 @@ def main():
 
     # create a dictionary containing coordinates of chromosome arms
     arm_chrom = load_chrom_arm(chrom_file)
+    # get the order of chromosomes
+    chrom_order = list(arm_chrom.keys()) + ["buffer"]
 
     # initialize empty variable for the new segments
     columns_new = []
@@ -62,22 +64,42 @@ def main():
         # read 2 segments at a time to compare coordinates of end of previous sefment, and start of the next segments
         columns_first = (lines[i].rstrip("\n").rstrip("\r")).split("\t")
         columns_second = (lines[i+1].rstrip("\n").rstrip("\r")).split("\t")
+        if columns_first[5]=='-inf': columns_first[5]=str('-10')
+        if columns_second[5]=='-inf': columns_second[5]=str('-10')
 
         # insert empty segment from the beginning of chromosome of the first segment in file to complete the telomeric region of first chromosome
         if i==1: 
             columns_new = [columns_first[0], columns_first[1], str(arm_chrom[columns_first[1]]['p']['start']), str(int(columns_first[2])-1), empty_loh, empty_logr]
             seg_filled.append(columns_new)
             seg_filled.append(columns_first)
+            # deal with fencepost problem
+            if (int(columns_first[3]) > arm_chrom[columns_first[1]]['p']['end'] and int(columns_first[3]) < arm_chrom[columns_first[1]]['q']['start']):            
+                columns_first[3] = str(arm_chrom[columns_first[1]]['p']['end'])
+            seg_filled.append(columns_first)
+
+            if (chrom_order[chrom_order.index(columns_second[1])] == chrom_order[chrom_order.index(columns_first[1])+1]):
+              missing_arm = chrom_order[chrom_order.index(columns_first[1])]
+              columns_edges = [columns_first[0], columns_first[1], str(arm_chrom[missing_arm]['q']['start']), str(arm_chrom[missing_arm]['q']['end']), empty_loh, empty_logr]
+              seg_filled.append(columns_edges)
+              seg_filled.append(columns_second)
+              continue        
 
         # scenario 1: when it is same sample and same chromosome
         if (columns_first[0]==columns_second[0] and columns_first[1]==columns_second[1]):
+
+            # handle very rare overlapping segments (occurs ~ 0.008%)
+            if (int(columns_first[3]) > int(columns_second[2])):
+                columns_first[3] = int(columns_second[2])-1
+                seg_filled.append(columns_first)
+                pass
 
             # for segments in p arm
             if (int(columns_second[2]) < arm_chrom[columns_second[1]]['p']['end']):
                 # create empty segment to fill in
                 columns_new = [columns_first[0], columns_first[1], str(int(columns_first[3])+1), str(int(columns_second[2])-1), empty_loh, empty_logr]
                 seg_filled.append(columns_new)
-                if (int(columns_second[3]) < arm_chrom[columns_second[1]]['p']['end']):
+                next_segment = (lines[i+2].rstrip("\n").rstrip("\r")).split("\t")
+                if (int(columns_second[3]) < arm_chrom[columns_second[1]]['p']['end'] and int(columns_second[3]) < int(next_segment[2])):
                     seg_filled.append(columns_second)
 
             # deal with centromeres
@@ -128,6 +150,9 @@ def main():
                   seg_filled.append(columns_new)
                 else:
                   columns_edges = [columns_second[0], columns_second[1], str(arm_chrom[columns_second[1]]['q']['start']), str(int(columns_second[2])-1), empty_loh, empty_logr]
+                  if (int(columns_second[2]) > arm_chrom[columns_second[1]]['p']['end'] and int(columns_second[2]) < arm_chrom[columns_second[1]]['q']['start']):
+                    columns_second[2] = str(arm_chrom[columns_second[1]]['q']['start'])
+                    seg_filled.append(columns_second)
                 seg_filled.append(columns_edges)
                 if (int(columns_second[2]) > arm_chrom[columns_second[1]]['p']['end'] and int(columns_second[3]) < arm_chrom[columns_second[1]]['q']['start']):
                   pass # this just drops the segment from output if it is within centromere
@@ -144,12 +169,32 @@ def main():
 
         # scenario 2: same sample, but going over to the new chromosome
         elif (columns_first[0]==columns_second[0] and columns_first[1]!=columns_second[1]):
+
+            # very rare cases when whole chromosome is missing, identify them here
+            if (chrom_order[chrom_order.index(columns_second[1])] != chrom_order[chrom_order.index(columns_first[1])+1]):
+              missing_chrom = chrom_order[chrom_order.index(columns_first[1])+1]
+              missing_p = [columns_first[0], missing_chrom, str(arm_chrom[missing_chrom]['p']['start']), str(arm_chrom[missing_chrom]['p']['end']), empty_loh, empty_logr]
+              missing_q = [columns_first[0], missing_chrom, str(arm_chrom[missing_chrom]['q']['start']), str(arm_chrom[missing_chrom]['q']['end']), empty_loh, empty_logr]
+
             
             # first, are there any segments in the p arm? that means second segments starts all the way in centromere or q arm
-            if (int(columns_first[3]) < arm_chrom[columns_first[1]]['q']['end']):
-              columns_edges = [columns_first[0], columns_first[1], str(int(columns_first[3])+1), str(arm_chrom[columns_first[1]]['q']['end']), empty_loh, empty_logr]
-              seg_filled.append(columns_edges)
+            if (int(columns_first[3]) > arm_chrom[columns_first[1]]['q']['start']):
+              if (int(columns_first[2]) > arm_chrom[columns_first[1]]['p']['end'] and int(columns_first[2]) < arm_chrom[columns_first[1]]['q']['start']):
+                  previous_segment = (lines[i-1].rstrip("\n").rstrip("\r")).split("\t")
+                  if (chrom_order[chrom_order.index(previous_segment[1])] != chrom_order[chrom_order.index(columns_first[1])]):
+                    columns_edges = [columns_first[0], columns_first[1], str(arm_chrom[columns_first[1]]['p']['start']), str(arm_chrom[columns_first[1]]['p']['end']), empty_loh, empty_logr]
+                    seg_filled.append(columns_edges)                  
+                  pass
+              else:
+                  columns_edges = [columns_first[0], columns_first[1], str(int(columns_first[3])+1), str(arm_chrom[columns_first[1]]['q']['end']), empty_loh, empty_logr]
+                  seg_filled.append(columns_edges)
             if (int(columns_second[2]) > arm_chrom[columns_second[1]]['p']['end']):
+              if (chrom_order[chrom_order.index(columns_second[1])] != chrom_order[chrom_order.index(columns_first[1])+1]):
+                seg_filled.append(missing_p)
+                seg_filled.append(missing_q)
+              if (int(columns_first[2]) < arm_chrom[columns_first[1]]['q']['start'] and int(columns_first[2]) > arm_chrom[columns_first[1]]['p']['end']):
+                columns_first[2] = arm_chrom[columns_first[1]]['q']['start']
+                seg_filled.append(columns_first)                  
               columns_new = [columns_second[0], columns_second[1], str(arm_chrom[columns_second[1]]['p']['start']), str(arm_chrom[columns_second[1]]['p']['end']), empty_loh, empty_logr]
               seg_filled.append(columns_new)
               if (int(columns_second[2]) > arm_chrom[columns_second[1]]['q']['start']):
@@ -167,6 +212,7 @@ def main():
                   columns_edges = [columns_first[0], columns_first[1], str(int(columns_first[3])+1), str(arm_chrom[columns_first[1]]['p']['end']), empty_loh, empty_logr]
                   seg_filled.append(columns_edges)
               seg_filled.append(columns_new)
+              seg_filled.append(columns_second)              
 
             # are there any segments that starts in p arm and span centromere? if so, maintain loh flag and logr, but cut out centromere
             elif (int(columns_second[2]) < arm_chrom[columns_second[1]]['p']['end'] and int(columns_second[3]) > arm_chrom[columns_second[1]]['q']['start']):
@@ -182,11 +228,16 @@ def main():
 
             # in other cases, there are segments both in p and q arms
             else:
-              previous_segment = (lines[i].rstrip("\n").rstrip("\r")).split("\t")
               columns_edges = [columns_second[0], columns_second[1], str(arm_chrom[columns_first[1]]['p']['start']), str(int(columns_second[2])-1), empty_loh, empty_logr]
               if (int(columns_first[2]) > arm_chrom[columns_second[1]]['p']['end']):
+                if (int(columns_first[2]) > arm_chrom[columns_first[1]]['p']['end'] and int(columns_first[2]) < arm_chrom[columns_first[1]]['q']['start']):
+                  columns_first[2] = arm_chrom[columns_first[1]]['q']['start']
+                  seg_filled.append(columns_first)                
                 columns_new = [columns_first[0], columns_first[1], str(int(columns_first[3])+1), str(arm_chrom[columns_first[1]]['q']['end']),  empty_loh, empty_logr]
                 seg_filled.append(columns_new)
+              if (chrom_order[chrom_order.index(columns_second[1])] != chrom_order[chrom_order.index(columns_first[1])+1]):
+                seg_filled.append(missing_p)
+                seg_filled.append(missing_q)
               seg_filled.append(columns_edges)
               if (int(columns_second[3]) < arm_chrom[columns_second[1]]['p']['end']):
                 seg_filled.append(columns_second)
@@ -214,7 +265,9 @@ def main():
 
     # remove any duplicated segments, if there are
     print("Checking and removing duplicated segments...")
-    seg_filled_df = seg_filled_df.groupby((seg_filled_df["start"] != seg_filled_df["start"].shift()).cumsum().values).first()
+    seg_filled_df = seg_filled_df.groupby((seg_filled_df["end"] != seg_filled_df["end"].shift(-2)).cumsum().values).first()    
+    seg_filled_df = seg_filled_df.groupby((seg_filled_df["end"] != seg_filled_df["end"].shift(-1)).cumsum().values).first()
+    seg_filled_df = seg_filled_df.groupby((seg_filled_df["start"] != seg_filled_df["start"].shift(-1)).cumsum().values).first()
 
     # save to the output file specified by user
     print("Saving to file...")
