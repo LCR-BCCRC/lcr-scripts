@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-This script will fill emty segments in seg files by creating a dummy segment with log2(CN)=0 and no LOH.
+This script will fill empty segments in seg files by creating a dummy segment with log2(CN)=0 and no LOH.
 This is an important step preparing seg files for GISTIC after lifting over from one genome build to another.
 This script assumes that CN is in log2 ratio.
 It requires seg file and chromosome arms file as mandatory inputs. The path to output file also must be specified.
