@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 # Globals ----------------------------------------------------------------
 
-MODES = ['sclust', 'sequenza', 'titan', 'cnvkit','battenberg'] # add new seg filetypes here
+MODES = ['sclust', 'sequenza', 'titan', 'cnvkit','battenberg', 'controlfreec'] # add new seg filetypes here
 LOH_TYPES = ['neutral', 'deletion', 'any']
 
 # Classes ----------------------------------------------------------------
@@ -225,6 +225,34 @@ class TitanParser(Parser):
                 loh_flag = '1'
         return(loh_flag)
 
+
+class ControlfreecParser(Parser):
+    def __init__(self, stream, sample, loh_type):
+        super().__init__(stream, sample, loh_type)
+
+    def is_header(self, line):
+        chrm = line.split('\t', 1)[0]
+        return True if chrm == "chr" else False
+
+    def parse_segment(self, line):
+        _line = line.split('\t')
+        chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval = _line[0:11]
+        if not chrm.startswith("chr"):
+            chrm = "chr"+ str(chrm)
+        # if both alleles are not present in genotype, it indicates LOH event
+        alleles = ["A", "B"]
+        if all(x in genotype for x in alleles):
+            loh_flag = str(0)
+        else:
+            loh_flag = str(1)
+        # calsulate logratio for somatic events that pass significance threshold
+        if somgerm == "somatic" and not "NA" in str(pval) and float(pval) <= 0.1:
+            logr = self.calculate_logratio(cn)
+        else:
+            logr = str(0.0)
+        return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
+
+
 class Segment:
     def __init__(self, chrm, start, end, cn, logr, sample, loh_flag = 'NA'):
         self.chrm     = chrm
@@ -307,6 +335,8 @@ def main():
         parser = CNVKitParser(seg_file, sample, loh_type)
     elif mode == "battenberg":
         parser = BattenbergParser(seg_file, sample, loh_type)
+    elif mode == 'controlfreec':
+        parser = ControlfreecParser(seg_file, sample, loh_type)
 
     # header
     if not oncocircos:
