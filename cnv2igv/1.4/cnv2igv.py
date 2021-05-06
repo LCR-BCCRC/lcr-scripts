@@ -229,11 +229,11 @@ class TitanParser(Parser):
 class ControlfreecParser(Parser):
     def __init__(self, stream, sample, loh_type):
         super().__init__(stream, sample, loh_type)
-​
+
     def is_header(self, line):
         chrm = line.split('\t', 1)[0]
         return True if chrm == "chr" else False
-​
+
     def parse_segment(self, line):
         _line = line.split('\t')
         chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval = _line[0:11]
