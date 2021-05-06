@@ -246,7 +246,7 @@ class ControlfreecParser(Parser):
         else:
             loh_flag = str(1)
         # calsulate logratio for somatic events that pass significance threshold
-        if somgerm == "somatic" and float(pval) <= 0.1:
+        if somgerm == "somatic" and not "NA" in str(pval) and float(pval) <= 0.1:
             logr = self.calculate_logratio(cn)
         else:
             logr = str(0.0)
