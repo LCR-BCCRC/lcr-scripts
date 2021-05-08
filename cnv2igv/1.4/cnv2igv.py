@@ -164,16 +164,28 @@ class BattenbergParser(Parser):
            if (int(nMaj1_A) + int(nMin1_A)) == 1:
                 loh_flag = '1'
         elif self.loh_type == 'any':
-            if frac1_A > frac2_A:
-                if nMin1_A == 'NA' or float(nMin1_A) > 0:
-                    loh_flag = '0'
-                elif float(nMin1_A) == 0:
-                    loh_flag = '1'
-            else:
-                if nMin2_A == 'NA' or float(nMin2_A) > 0:
-                    loh_flag = '0'
-                elif float(nMin2_A) == 0:
-                    loh_flag = '1'
+            # events with no subclones and no minor allele are set with loh flag
+            if "NA" in str(frac2_A) and float(nMin1_A) == 0:
+                loh_flag = '1'
+            # events with no subclones, but where minor allele is present, are not assigned loh flag
+            elif "NA" in str(frac2_A) and not float(nMin1_A) == 0:
+                loh_flag = '0'
+            # the rest of events have subclones
+            else:    
+                # for events where major clone is prevalent
+                if float(frac1_A) > float(frac2_A):
+                    if float(nMin1_A) > 0:
+                        loh_flag = '0'
+                    # set loh flag if there is no minor allele
+                    elif float(nMin1_A) == 0:
+                        loh_flag = '1'
+                # for events where subclone is prevalent
+                else:
+                    if float(nMin2_A) > 0:
+                        loh_flag = '0'
+                    # set loh flag if there is no minor allele
+                    elif float(nMin2_A) == 0:
+                        loh_flag = '1'
         return(loh_flag)
 
 class SClustParser(Parser):
