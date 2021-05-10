@@ -164,8 +164,11 @@ class BattenbergParser(Parser):
            if (int(nMaj1_A) + int(nMin1_A)) == 1:
                 loh_flag = '1'
         elif self.loh_type == 'any':
+            # segments with no information of their copy number state:
+            if "NA" in str(nMin1_A):
+                loh_flag = '0'
             # events with no subclones and no minor allele are set with loh flag
-            if "NA" in str(frac2_A) and float(nMin1_A) == 0:
+            elif "NA" in str(frac2_A) and float(nMin1_A) == 0:
                 loh_flag = '1'
             # events with no subclones, but where minor allele is present, are not assigned loh flag
             elif "NA" in str(frac2_A) and not float(nMin1_A) == 0:
