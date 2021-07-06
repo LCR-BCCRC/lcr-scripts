@@ -98,9 +98,10 @@ def main():
                 # create empty segment to fill in
                 columns_new = [columns_first[0], columns_first[1], str(int(columns_first[3])+1), str(int(columns_second[2])-1), empty_loh, empty_logr]
                 seg_filled.append(columns_new)
-                next_segment = (lines[i+2].rstrip("\n").rstrip("\r")).split("\t")
+                next_segment = (lines[i+1].rstrip("\n").rstrip("\r")).split("\t")
                 if (int(columns_second[3]) < arm_chrom[columns_second[1]]['p']['end'] and int(columns_second[3]) < int(next_segment[2])):
                     seg_filled.append(columns_second)
+                seg_filled.append(columns_second)    
 
             # deal with centromeres
             # I already know that this is same sample, and same chromosome
@@ -175,7 +176,8 @@ def main():
               missing_chrom = chrom_order[chrom_order.index(columns_first[1])+1]
               missing_p = [columns_first[0], missing_chrom, str(arm_chrom[missing_chrom]['p']['start']), str(arm_chrom[missing_chrom]['p']['end']), empty_loh, empty_logr]
               missing_q = [columns_first[0], missing_chrom, str(arm_chrom[missing_chrom]['q']['start']), str(arm_chrom[missing_chrom]['q']['end']), empty_loh, empty_logr]
-
+              seg_filled.append(missing_p)
+              seg_filled.append(missing_q)
             
             # first, are there any segments in the p arm? that means second segments starts all the way in centromere or q arm
             if (int(columns_first[3]) > arm_chrom[columns_first[1]]['q']['start']):
@@ -185,6 +187,13 @@ def main():
                     columns_edges = [columns_first[0], columns_first[1], str(arm_chrom[columns_first[1]]['p']['start']), str(arm_chrom[columns_first[1]]['p']['end']), empty_loh, empty_logr]
                     seg_filled.append(columns_edges)                  
                   pass
+              elif (int(columns_first[2]) < arm_chrom[columns_first[1]]['p']['end'] and int(columns_first[3]) > arm_chrom[columns_first[1]]['q']['start']):
+                  previous_segment = (lines[i-1].rstrip("\n").rstrip("\r")).split("\t")
+                  if (chrom_order[chrom_order.index(previous_segment[1])] != chrom_order[chrom_order.index(columns_first[1])-1]):
+                      columns_edges = [columns_first[0], columns_first[1], columns_first[2], str(arm_chrom[columns_first[1]]['p']['end']), columns_first[4], columns_first[5]]
+                      columns_first[2] = arm_chrom[columns_first[1]]['q']['start']
+                      seg_filled.append(columns_edges)
+                      seg_filled.append(columns_first)
               else:
                   columns_edges = [columns_first[0], columns_first[1], str(int(columns_first[3])+1), str(arm_chrom[columns_first[1]]['q']['end']), empty_loh, empty_logr]
                   seg_filled.append(columns_edges)
@@ -217,14 +226,15 @@ def main():
             # are there any segments that starts in p arm and span centromere? if so, maintain loh flag and logr, but cut out centromere
             elif (int(columns_second[2]) < arm_chrom[columns_second[1]]['p']['end'] and int(columns_second[3]) > arm_chrom[columns_second[1]]['q']['start']):
               previous_segment = (lines[i].rstrip("\n").rstrip("\r")).split("\t")
-              next_segment = (lines[i+2].rstrip("\n").rstrip("\r")).split("\t")
-              columns_new = [columns_second[0], columns_second[1], str(int(columns_second[2])+1), str(arm_chrom[columns_second[1]]['p']['end']), columns_second[4], columns_second[5]]
-              columns_edges = [columns_second[0], columns_second[1], str(arm_chrom[columns_second[1]]['q']['start']), str(int(columns_second[3])), columns_second[4], columns_second[5]]
-              if (columns_new[0]==previous_segment[0] and columns_new[1]!=previous_segment[1]):
-                  columns_new[2]=str(arm_chrom[columns_new[1]]['p']['start'])
-              if (columns_second[0]==next_segment[0] and columns_second[1]!=next_segment[1]):
-                  seg_filled.append(columns_new)
-                  seg_filled.append(columns_edges)
+              if "X" not in str(columns_second[1]):
+                next_segment = (lines[i+2].rstrip("\n").rstrip("\r")).split("\t")
+                columns_new = [columns_second[0], columns_second[1], str(int(columns_second[2])+1), str(arm_chrom[columns_second[1]]['p']['end']), columns_second[4], columns_second[5]]
+                columns_edges = [columns_second[0], columns_second[1], str(arm_chrom[columns_second[1]]['q']['start']), str(int(columns_second[3])), columns_second[4], columns_second[5]]
+                if (columns_new[0]==previous_segment[0] and columns_new[1]!=previous_segment[1]):
+                    columns_new[2]=str(arm_chrom[columns_new[1]]['p']['start'])
+                if (columns_second[0]==next_segment[0] and columns_second[1]!=next_segment[1]):
+                    seg_filled.append(columns_new)
+                    seg_filled.append(columns_edges)
 
             # in other cases, there are segments both in p and q arms
             else:
