@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+# This script will use bedtools subtract to leverage chromosome coordinates and seg file and fill all missing segments.
+# Important! The chromosome prefix should match between the chromosome arms bed file and seg file.
+# This script is intended to be used within snakemake and expects to have environment with bedtools available.
+
+# Usage:
+# bash fill_segments.sh <input chromosome arm bed file> <input seg file> <output seg file> <sample_id>
+# Eexample:
+# bash fill_segments.sh src/chromArm.hg19.bed TCRBOA7-T-WEX-test--matched.igv.seg TCRBOA7-T-WEX-test--matched.igv.filled.seg TCRBOA7-T-WEX
+# 
+
+# Read variables to store the arguments from command line
+ARM_BED_PATH="$1"
+SEG_PATH="$2"
+RESULTS_PATH="$3"
+THIS_SAMPLE_ID="$4"
+
+# bedtools subtract doesn't like headers - so we need to strip it and store separately in temp file
+cat $SEG_PATH | head -1 > $RESULTS_PATH.header
+
+# Rearrange columns in the seg file to follow bed convention of chr-start-end
+cat $SEG_PATH | grep -v "start" | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[1..$#F,0]"' > $RESULTS_PATH.headerless.bed
+
+# Make variable available to use within perl
+export THIS_SAMPLE_ID
+
+# Run bedtools substract to find regions that are missing from seg file.
+# The perl pipe part will assign the neutral segment log.ratio and no LOH for the missing segments.
+# For the missing segments, +1 is added to start position and 1 is substracted from the end position
+# to ensure they do not overlap with original segments of seg file by 1 position.
+# 0.00 are explicitly used to easily identify segments supplemented by this script
+bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.00"; $a[4]="0.00"; $a[5]=$ENV{THIS_SAMPLE_ID}; print join "\t", @a;' > $RESULTS_PATH.temp
+
+# Merge the initial seg file with the missing segments and rearrange columns to match the style of seg files
+cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -V | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' > $RESULTS_PATH.merged.seg
+
+# Return back the header
+cat $RESULTS_PATH.header $RESULTS_PATH.merged.seg > $RESULTS_PATH
+
+# Cleanup
+rm $RESULTS_PATH.temp
+rm $RESULTS_PATH.header
+rm $RESULTS_PATH.headerless.bed
+rm $RESULTS_PATH.merged.seg
