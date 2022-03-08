@@ -5,16 +5,20 @@
 # This script is intended to be used within snakemake and expects to have environment with bedtools available.
 
 # Usage:
-# bash fill_segments.sh <input chromosome arm bed file> <input seg file> <output seg file> <sample_id>
+# bash fill_segments.sh <input chromosome arm bed file> <input seg file> <input blacklisted bed file> <output seg file> <sample_id>
 # Eexample:
 # bash fill_segments.sh src/chromArm.hg19.bed TCRBOA7-T-WEX-test--matched.igv.seg TCRBOA7-T-WEX-test--matched.igv.filled.seg TCRBOA7-T-WEX
 # 
 
+set -e
+
 # Read variables to store the arguments from command line
 ARM_BED_PATH="$1"
 SEG_PATH="$2"
-RESULTS_PATH="$3"
-THIS_SAMPLE_ID="$4"
+BLACKLIST_PATH="$3"
+RESULTS_PATH="$4"
+THIS_SAMPLE_ID="$5"
+
 
 # bedtools subtract doesn't like headers - so we need to strip it and store separately in temp file
 cat $SEG_PATH | head -1 > $RESULTS_PATH.header
@@ -59,13 +63,17 @@ export THIS_SAMPLE_ID
 bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.00"; $a[4]="0.00"; $a[5]=$ENV{THIS_SAMPLE_ID}; print join "\t", @a;' > $RESULTS_PATH.temp
 
 # Merge the initial seg file with the missing segments and rearrange columns to match the style of seg files
-cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -k1,1 -k2,2n -V | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' > $RESULTS_PATH.merged.seg
+cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -k1,1 -k2,2n -V  > $RESULTS_PATH.merged.seg
+
+# Now, remove blacklisted regions (centromeres and p arm telomeres) from this file.
+bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"'  > $RESULTS_PATH.deblacklisted.seg
 
 # Return back the header
-cat $RESULTS_PATH.header $RESULTS_PATH.merged.seg > $RESULTS_PATH
+cat $RESULTS_PATH.header $RESULTS_PATH.deblacklisted.seg > $RESULTS_PATH
 
 # Cleanup
 rm $RESULTS_PATH.temp
 rm $RESULTS_PATH.header
 rm $RESULTS_PATH.headerless.bed
 rm $RESULTS_PATH.merged.seg
+rm $RESULTS_PATH.deblacklisted.seg
