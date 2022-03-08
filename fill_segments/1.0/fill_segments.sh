@@ -7,7 +7,7 @@
 # Usage:
 # bash fill_segments.sh <input chromosome arm bed file> <input seg file> <input blacklisted bed file> <output seg file> <sample_id>
 # Eexample:
-# bash fill_segments.sh src/chromArm.hg19.bed TCRBOA7-T-WEX-test--matched.igv.seg TCRBOA7-T-WEX-test--matched.igv.filled.seg TCRBOA7-T-WEX
+# bash fill_segments.sh src/chromArm.hg19.bed TCRBOA7-T-WEX-test--matched.igv.seg src/blacklisted.hg19.bed TCRBOA7-T-WEX-test--matched.igv.filled.seg TCRBOA7-T-WEX
 # 
 
 set -e
