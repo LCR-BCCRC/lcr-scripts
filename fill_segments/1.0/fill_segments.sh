@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This script will use bedtools subtract to leverage chromosome coordinates and seg file and fill all missing segments.
-# Important! The chromosome prefix should match between the chromosome arms bed file and seg file.
+# Important! The chromosome prefix will be normalize that of the input arm bed file.
 # This script is intended to be used within snakemake and expects to have environment with bedtools available.
 
 # Usage:
@@ -21,6 +21,32 @@ cat $SEG_PATH | head -1 > $RESULTS_PATH.header
 
 # Rearrange columns in the seg file to follow bed convention of chr-start-end
 cat $SEG_PATH | grep -v "start" | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[1..$#F,0]"' > $RESULTS_PATH.headerless.bed
+
+# If there is inconsistent chr prefixing between SEG file and bed file of chromosome coordinates,
+# normalize it to match between the two files.
+ARM_IS_PREFIXED=$(head -1 $ARM_BED_PATH | cut -f 1)
+SEG_IS_PREFIXED=$(head -1 $RESULTS_PATH.headerless.bed | cut -f 1)
+
+# if the arm coordinates file is prefixed, but the SEG file is not
+if [[ "$ARM_IS_PREFIXED" == *"chr"* && ! "$SEG_IS_PREFIXED" == *"chr"* ]]; then
+    echo "Normalizing chr prefix in SEG file to match that of provided arm file..."
+    # add chr prefix
+    cat $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[0] =~ s/^/chr/;print join "\t", @a;' > $RESULTS_PATH.normalized.bed
+    # replace the headerless fiel with this normalized one
+    cat $RESULTS_PATH.normalized.bed > $RESULTS_PATH.headerless.bed
+    rm $RESULTS_PATH.normalized.bed
+    echo "Done normalizing! Continuing filling segments..."
+# if the arm coordinates file is not prefixed, but the SEG file does have chromosome names with chr
+elif [[ ! "$ARM_IS_PREFIXED" == *"chr"* && "$SEG_IS_PREFIXED" == *"chr"* ]]; then
+    echo "Normalizing chr prefix in SEG file to match that of provided arm file..."
+    # strip chr prefix
+    cat $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[0] =~ s/chr//;print join "\t", @a;' > $RESULTS_PATH.normalized.bed
+    # replace the headerless fiel with this normalized one
+    cat $RESULTS_PATH.normalized.bed > $RESULTS_PATH.headerless.bed
+    rm $RESULTS_PATH.normalized.bed
+    echo "Done normalizing! Continuing filling segments..."
+fi
+
 
 # Make variable available to use within perl
 export THIS_SAMPLE_ID
