@@ -59,7 +59,7 @@ export THIS_SAMPLE_ID
 bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.00"; $a[4]="0.00"; $a[5]=$ENV{THIS_SAMPLE_ID}; print join "\t", @a;' > $RESULTS_PATH.temp
 
 # Merge the initial seg file with the missing segments and rearrange columns to match the style of seg files
-cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -V | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' > $RESULTS_PATH.merged.seg
+cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -k1,1 -k2,2n -V | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' > $RESULTS_PATH.merged.seg
 
 # Return back the header
 cat $RESULTS_PATH.header $RESULTS_PATH.merged.seg > $RESULTS_PATH
