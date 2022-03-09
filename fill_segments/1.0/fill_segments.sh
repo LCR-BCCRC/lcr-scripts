@@ -66,7 +66,7 @@ bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane 
 cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -k1,1 -k2,2n -V  > $RESULTS_PATH.merged.seg
 
 # Now, remove blacklisted regions (centromeres and p arm telomeres) from this file.
-bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"'  > $RESULTS_PATH.deblacklisted.seg
+bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' | perl -lane 'print if ($F[3]-$F[2])>1;' > $RESULTS_PATH.deblacklisted.seg
 
 # Return back the header
 cat $RESULTS_PATH.header $RESULTS_PATH.deblacklisted.seg > $RESULTS_PATH
