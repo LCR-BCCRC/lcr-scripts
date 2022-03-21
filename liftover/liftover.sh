@@ -2,14 +2,15 @@
 
 # This script will use UCSC liftOver to convert seg or bed files between hg19/hg38 genome builds.
 # The scripts accepts input files with any number of columns.
-# The argument 'chain' is expecting the path to liftOver chain file.
 # The argument 'mode' will determine whether it is `SEG` or 'BED' files to convert.
+# The argument 'chain' is expecting the path to liftOver chain file.
 # The argument 'header' accepts 'YES' or 'NO' to indicate whether header is present in the input file.
+# The argument <minmatch> expects a float in the range 0..1 to pass to the liftover minMatch parameter.
 
 # Usage:
-# bash liftover.sh <input chromosome arm bed file> <input seg file> <input blacklisted bed file> <output seg file> <sample_id> <mode>
+# bash liftover.sh <mode> <input file> <output file> <chain> <header> <minmatch>
 # Eexample:
-# bash liftover.sh src/chromArm.hg19.bed TCRBOA7-T-WEX-test--matched.igv.seg src/blacklisted.hg19.bed TCRBOA7-T-WEX-test--matched.igv.filled.seg TCRBOA7-T-WEX SEG
+# bash liftover.sh BED input.bed output.bed path/to/chain YES 0.9775
 # 
 
 set -e
