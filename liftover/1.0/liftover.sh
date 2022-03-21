@@ -51,6 +51,7 @@ elif [[ "$HEADER" == *"NO"* ]]; then
     cat $OUTPUT_FILE.collapsed > $OUTPUT_FILE.bed
 else
     echo "You specified header $MODE, which is not recognized. Please specify YES or NO."
+    rm $OUTPUT_FILE.collapsed
     exit 1 # terminate and indicate error
 fi
 
