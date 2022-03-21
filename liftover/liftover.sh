@@ -55,7 +55,8 @@ fi
 
 # Now, run the liftOver
 echo "Running UCSC liftOver with minimum match of converted regions set to $MINMATCH ..."
-liftOver -minMatch=$MINMATCH $OUTPUT_FILE.bed $CHAIN $OUTPUT_FILE.lifted-temp.bed $OUTPUT_FILE.unmapped.bed
+UNMAPPED="${OUTPUT_FILE%.*}.unmapped.bed"
+liftOver -minMatch=$MINMATCH $OUTPUT_FILE.bed $CHAIN $OUTPUT_FILE.lifted-temp.bed $UNMAPPED
 
 # Next, if the input file had header, merge it back to the lifted file
 if [[ "$HEADER" == *"YES"* ]]; then
