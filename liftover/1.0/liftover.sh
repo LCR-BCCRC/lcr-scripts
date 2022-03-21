@@ -90,6 +90,3 @@ rm $OUTPUT_FILE.lifted-temp.bed
 rm $OUTPUT_FILE.merged
 
 echo "Done!"
-
-
-
