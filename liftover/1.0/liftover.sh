@@ -24,7 +24,7 @@ HEADER="$5"
 MINMATCH="$6"
 
 
-# First, check that proper mode is specified, rearrange ciolumns for seg file, and collapse extra columns together
+# First, check that proper mode is specified, rearrange columns for seg file, and collapse extra columns together
 if [[ "$MODE" == *"SEG"* ]]; then
     echo "Running in the $MODE mode ..."
     cat $INPUT_FILE \
@@ -67,19 +67,16 @@ else
     cat $OUTPUT_FILE.lifted-temp.bed > $OUTPUT_FILE.merged
 fi
 
-# Now, split back all comcatenated columns into the separate ones and rearrange back if it is SEG file
+# Now, split back all concatenated columns into the separate ones and rearrange back if it is SEG file
 if [[ "$MODE" == *"SEG"* ]]; then
     cat $OUTPUT_FILE.merged \
     | perl -ne 's/\|/\t/g;print;' \
     | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[3,0..2,4..$#F-1]"' \
     > $OUTPUT_FILE
-elif [[ "$MODE" == *"BED"* ]]; then
+else
     cat $OUTPUT_FILE.merged \
     | perl -ne 's/\|/\t/g;print;' \
     > $OUTPUT_FILE
-else
-    echo "You specified mode $MODE, which is not supported. Please provide SEG or BED file."
-    exit 1 # terminate and indicate error
 fi
 
 # Cleanup
