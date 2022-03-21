@@ -50,7 +50,7 @@ elif [[ "$HEADER" == *"NO"* ]]; then
     echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
     cat $OUTPUT_FILE.collapsed > $OUTPUT_FILE.bed
 else
-    echo "You specified header $MODE, which is not recognized. Please specify YES or NO."
+    echo "You specified header $HEADER, which is not recognized. Please specify YES or NO."
     rm $OUTPUT_FILE.collapsed
     exit 1 # terminate and indicate error
 fi
@@ -72,7 +72,7 @@ fi
 if [[ "$MODE" == *"SEG"* ]]; then
     cat $OUTPUT_FILE.merged \
     | perl -ne 's/\|/\t/g;print;' \
-    | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[3,0..2,4..$#F-1]"' \
+    | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[3,0..2,4..$#F]"' \
     > $OUTPUT_FILE
 else
     cat $OUTPUT_FILE.merged \
