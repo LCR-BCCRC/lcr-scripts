@@ -42,13 +42,18 @@ else
 fi
 
 # Second, if the input file has header, save it temporarily in a separate file
+# Prepend with chr if chromosomes are not prepended, othervise liftOver silently outputs empty file
 if [[ "$HEADER" == *"YES"* ]]; then
     echo "Header is specified as $HEADER, handling it separately ..."
     head -1 $OUTPUT_FILE.collapsed > $OUTPUT_FILE.header
-    tail -n+2 $OUTPUT_FILE.collapsed > $OUTPUT_FILE.bed
+    tail -n+2 $OUTPUT_FILE.collapsed \
+    | perl -lane 'if ( /^chr/ ) { print } else { s/^/chr/;print }' \
+    > $OUTPUT_FILE.bed
 elif [[ "$HEADER" == *"NO"* ]]; then
     echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
-    cat $OUTPUT_FILE.collapsed > $OUTPUT_FILE.bed
+    cat $OUTPUT_FILE.collapsed \
+    | perl -lane 'if ( /^chr/ ) { print } else { s/^/chr/;print }' \
+    > $OUTPUT_FILE.bed
 else
     echo "You specified header $HEADER, which is not recognized. Please specify YES or NO."
     rm $OUTPUT_FILE.collapsed
