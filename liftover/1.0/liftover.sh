@@ -67,10 +67,15 @@ liftOver -minMatch=$MINMATCH $OUTPUT_FILE.bed $CHAIN $OUTPUT_FILE.lifted-temp.be
 
 # Next, if the input file had header, merge it back to the lifted file
 if [[ "$HEADER" == *"YES"* ]]; then
-    cat $OUTPUT_FILE.header $OUTPUT_FILE.lifted-temp.bed > $OUTPUT_FILE.merged
+    cat $OUTPUT_FILE.header > $OUTPUT_FILE.merged
+    cat $OUTPUT_FILE.lifted-temp.bed \
+    | sort -k1,1 -k2,2n -V \
+    >> $OUTPUT_FILE.merged
     rm $OUTPUT_FILE.header # this is only specific if input has header, so clean up this temp file here
 else
-    cat $OUTPUT_FILE.lifted-temp.bed > $OUTPUT_FILE.merged
+    cat $OUTPUT_FILE.lifted-temp.bed \
+    | sort -k1,1 -k2,2n -V \
+    > $OUTPUT_FILE.merged
 fi
 
 # Now, split back all concatenated columns into the separate ones and rearrange back if it is SEG file
