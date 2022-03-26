@@ -86,7 +86,7 @@ fi
 
 
 # Merge the initial seg file with the missing segments and rearrange columns to match the style of seg files
-cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -k1,1 -k2,2n -V  > $RESULTS_PATH.merged.seg
+cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -k1,1 -k2,2n -V | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.merged.seg
 
 # Now, remove blacklisted regions (centromeres and p arm telomeres) from this file.
 
