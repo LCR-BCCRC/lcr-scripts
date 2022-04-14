@@ -13,7 +13,7 @@ LOH_TYPES = ['neutral', 'deletion', 'any']
 
 class Parser:
     ''' Extend this class and implement is_header(), parse_segment() methods.
-        get_loh_flag() is optional. 
+        get_loh_flag() is optional.
     '''
     def __init__(self, stream, sample, loh_type):
         self.stream   = open(stream, 'r')
@@ -114,6 +114,8 @@ class SequenzaParser(Parser):
             b =1
         loh_flag = self.get_loh_flag(cn, a, b)
         logr = self.calculate_logratio(cn)
+        start = str(int(float(start)))
+        end = str(int(float(end)))
 
         return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
 
@@ -149,11 +151,11 @@ class BattenbergParser(Parser):
         _line = line.split('\t')
         chrm, start, end, BAF, pval, orig_logr, cn, nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A = _line[0:13]
         if not chrm.startswith("chr"):
-            chrm = "chr"+ str(chrm) 
+            chrm = "chr"+ str(chrm)
         loh_flag = self.get_loh_flag(nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A)
         logr = self.calculate_logratio_battenberg(nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A)
         return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
- 
+
     #actually use the LOH information from Battenberg, The column is nMin1_A (if < 1, LOH)
     def get_loh_flag(self, nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A):
         loh_flag = '0'
@@ -174,7 +176,7 @@ class BattenbergParser(Parser):
             elif "NA" in str(frac2_A) and not float(nMin1_A) == 0:
                 loh_flag = '0'
             # the rest of events have subclones
-            else:    
+            else:
                 # for events where major clone is prevalent
                 if float(frac1_A) > float(frac2_A):
                     if float(nMin1_A) > 0:
@@ -293,7 +295,7 @@ class Segment:
             cn_state = 'HOMD'
         return(cn_state)
 
-    
+
     def to_igv(self, prepend):
         if prepend:
             self.chrm = "chr"+self.chrm
@@ -311,7 +313,7 @@ class Segment:
 def parse_arguments():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--include_loh', '--loh_type', help = 'Type of LOH events to consider for LOH flag column. Default: any.', 
+    parser.add_argument('--include_loh', '--loh_type', help = 'Type of LOH events to consider for LOH flag column. Default: any.',
                         choices = LOH_TYPES, default = 'any', const = 'any', nargs = '?', dest = 'loh_type')
     parser.add_argument('--prepend_chr', help = 'Prepend "chr" to chromosome column.', action = 'store_true')
     parser.add_argument('--oncocircos', help = 'Output OncoCircos compatible output.', action = 'store_true')
@@ -320,7 +322,7 @@ def parse_arguments():
     parser.add_argument('--sample', '--sequenza_sample', help = 'Sample name for IGV ID column.', dest = 'sample', required = True)
     parser.add_argument('seg_file', help = 'Segmentation file to convert to IGV format.')
     return(parser.parse_args())
- 
+
 # Main -------------------------------------------------------------------
 
 def main():
@@ -340,7 +342,7 @@ def main():
     # - implement your own parser for any new segment file types by extending Parser
     # - add filetype to MODES list above
     # - add condition for new filetype here and instantiate your own Parser as parser
-    if mode == 'sequenza': 
+    if mode == 'sequenza':
         parser = SequenzaParser(seg_file, sample, loh_type)
     elif mode == 'sclust':
         parser = SClustParser(seg_file, sample, loh_type)
