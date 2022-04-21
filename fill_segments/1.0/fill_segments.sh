@@ -10,7 +10,7 @@
 # bash fill_segments.sh <input chromosome arm bed file> <input seg file> <input blacklisted bed file> <output seg file> <sample_id> <mode>
 # Eexample:
 # bash fill_segments.sh src/chromArm.hg19.bed TCRBOA7-T-WEX-test--matched.igv.seg src/blacklisted.hg19.bed TCRBOA7-T-WEX-test--matched.igv.filled.seg TCRBOA7-T-WEX SEG
-# 
+#
 
 set -e
 
@@ -80,7 +80,8 @@ if [[ "$MODE" == *"SEG"* ]]; then
 elif [[ "$MODE" == *"subclones"* ]]; then
     # Make variable available to use within perl
     export NUM_COLUMNS
-    bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.5"; $a[4]="1.0"; $a[5]="0.00"; $a[6]="2.0"; foreach my $column (7..$ENV{NUM_COLUMNS}) {$a[$column]="NA"}; print join "\t", @a;' > $RESULTS_PATH.temp
+    bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed \
+    | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.5"; $a[4]="1.0"; $a[5]="0.00"; $a[6]="2.0"; foreach my $column (7..12) {$a[$column]="1.0"}; foreach my $column (13..$ENV{NUM_COLUMNS}) {$a[$column]="NA"}; print join "\t", @a;' > $RESULTS_PATH.temp
 
 fi
 
