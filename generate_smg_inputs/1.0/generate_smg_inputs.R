@@ -31,8 +31,14 @@ suppressPackageStartupMessages({
 # Parse command-line arguments
 args <- commandArgs(trailingOnly = TRUE) %>% as.list()
 arg_names <- c("master_maf", "all_sample_sets", "output_path", "case_set", "mode", "include_non_coding")
+# if there are multiple maf files passed, collapse them into one list
+args = c(
+        list(unlist(args[1:(length(args)-5)])),
+        args[(length(args)-4):length(args)]
+        )
 args <- setNames(args, arg_names[1:length(args)])
-
+args$master_maf = as.list(args$master_maf)
+save.image(file='/home/kdreval/debug.RData')
 # Print args for debugging
 print(paste("master_maf:",args$master_maf,
             "all_sample_sets:",args$all_sample_sets,
@@ -64,13 +70,13 @@ this_subset_samples =
 
 # Load master maf and get mutations for the maf subset-------------------
 message("Loading master maf and finding available data for samples in requested subset...")
-if (is.list(args$master_maf)){
+if (length(args$master_maf)>1){
   message("More than one maf file is supplied. Concatenating them into single file.")
   master_maf =
-    tibble(filename = test.list) %>% # create a data frame
+    tibble(filename = args$master_maf) %>% # create a data frame
     # holding the file names
     mutate(file_contents = map(filename, # read files into
-                             ~ read_tsv(test.list, col_types = cols())) # a new data column
+                             ~ read_tsv(args$master_maf, col_types = cols())) # a new data column
     ) %>%
     unnest(cols = c(file_contents)) %>%
     select(-filename)
