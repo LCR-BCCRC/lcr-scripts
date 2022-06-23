@@ -38,7 +38,7 @@ args = c(
         )
 args <- setNames(args, arg_names[1:length(args)])
 args$master_maf = as.list(args$master_maf)
-save.image(file='/home/kdreval/debug.RData')
+
 # Print args for debugging
 print(paste("master_maf:",args$master_maf,
             "all_sample_sets:",args$all_sample_sets,
