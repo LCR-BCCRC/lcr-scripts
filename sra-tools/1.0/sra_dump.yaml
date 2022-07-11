@@ -1,0 +1,30 @@
+in_file_type: "sam" # options: sam or fastq; controls whether the pipeline will use sam-dump or fasterq-dump
+out_file_type: "cram" # options: bam or cram; required if in_file_type is sam
+accessions: "__UPDATE__" # file containing all SRA accession numbers for files to be downloaded. Must have one entry per line, no column names.
+
+params:
+  ngc: "__UPDATE__" # ngc file; required for dbGaP restricted access projects. Obtain from Ryan. Leave as "__UPDATE__" if repository is public.
+  ref: "__UPDATE__" # Reference genome fasta. Required if in_file_type is sam and out_file_type is cram.
+  sam-dump: "-u -r" # Additional sam-dump options. See `sam-dump --help` for more details. Default -r recreates sam header; -u includes unaligned reads.
+  fasterq-dump: "-S" # Additional sam-dump options. See `fasterq-dump --help` for more details. Default -S splits fastq by read for paired end data.
+  samtools: "" # Additional samtools view options. See `samtools view --help` for more details.
+
+conda:
+  sra-tools: "sra-tools.yaml" # Path to conda yaml file. Currently installed at `/projects/rmorin_scratch/conda_environments/bc30d4315aa1bb82767149df6dc7e11f`.
+
+threads:
+  sam_dump: 1 # Single-threaded
+  sam_to_bam: 8
+  index_bam: 1
+  fastq_dump: 8
+
+resources:
+  sam_dump:
+    mem_mb: 10000
+  sam_to_bam:
+    mem_mb: 15000
+  index_bam:
+    mem_mb: 2000
+  fastq_dump:
+    mem_mb: 10000
+
