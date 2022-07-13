@@ -1,14 +1,16 @@
 import pandas as pd
 import os
 
-configfile: "test_sra_dump.yaml"
+configfile: "sra_dump.yaml"
 
 accessions = pd.read_csv(config["accessions"], names = ["accession"])
 
-in_file_type = config["in_file_type"]
-assert in_file_type in ["sam", "fastq"], (
-    f"Unrecognized in_file_type {in_file_type}. \n"
-    "Please specify one of [\"sam\", \"fastq\"]. "
+out_file_type = config["out_file_type"]
+possible_types = ["bam", "cram", "fastq"]
+possible_type_string = ", ".join(possible_types)
+assert out_file_type in possible_types, (
+    f"Unrecognized out_file_type {out_file_type}. \n"
+    f"Please specify one of {possible_type_string}. "
 )
 
 wildcard_constraints:
@@ -25,55 +27,58 @@ def get_ngc_arg(ngc = config["params"]["ngc"]):
         ngc_param = ""
     return ngc_param
 
-checkpoint fasterq_dump:
+rule prefetch:
     output:
-        complete = touch("{accession}.fastq.complete"),
+        fetched = temp(directory("{accession}"))
+    log:
+        log = "{accession}.log"
     params:
         ngc = get_ngc_arg(),
+        opts = config["params"]["prefetch"]
+    conda:
+        config["conda"]["sra-tools"]
+    threads: config["threads"]["prefetch"]
+    resources:
+        **config["resources"]["prefetch"]
+    group: "sra-dump"
+    shell:
+        "prefetch -X {resources.disk_mb} {params.opts} {params.ngc} {wildcards.accession} > {log.log} 2>&1"
+
+rule fastq_dump:
+    input:
+        fetched = str(rules.prefetch.output.fetched)
+    output:
+        fq1 = temp("{accession}_1.fastq"),
+        fq2 = temp("{accession}_2.fastq"),
+        complete = touch("{accession}.fastq.complete")
+    params:
         opts = config["params"]["fastq_dump"]
     conda:
         config["conda"]["sra-tools"]
     threads: config["threads"]["fastq_dump"]
     resources:
         **config["resources"]["fastq_dump"]
-    wildcard_constraints:
-        accession = "|".join(accessions["accession"].tolist())
-    group: "fasterq"
+    group: "sra-dump"
     shell:
-        "fasterq-dump -e {threads} {params.opts} {params.ngc} {wildcards.accession}"
+        "fasterq-dump -e {threads} {params.opts} {wildcards.accession}"
 
 rule gzip_fastq:
     input:
-        fastq = "{accession}{read}.fastq"
+        fastq = "{accession}_{read}.fastq",
+        complete = "{accession}.fastq.complete"
     output:
-        fastq = "{accession}{read}.fastq.gz"
+        fastq = "{accession}_{read}.fastq.gz", 
+        complete = touch("{accession}_{read}.gzipped")
     threads: 1
     resources:
-        **config["resources"]["fastq_dump"]
+        **config["resources"]["gzip_fastq"]
     wildcard_constraints:
-        accession = "|".join(accessions["accession"].tolist())
-    group: "fasterq"
+        read = "1|2"
+    group: "sra-dump"
     shell:
-        "gzip -c {input.fastq} > {output.fastq} && rm -f {input.fastq}"
+        "gzip -c {input.fastq} > {output.fastq}"
 
-def get_fastq_read(wildcards):
-    # Get the path to the output directory from the checkpoint fasterq_dump
-    # **wildcards unpacks the wildcards object from the rule where this input function is called
-    checkpoint_output = checkpoints.fasterq_dump.get(accession=wildcards.accession).output.complete
-    print(glob_wildcards(checkpoint_output.replace(".fastq.complete", "") + "{read}.fastq"))
-    # Obtain the read wildcards using the glob_wildcards function
-    fastqs = expand(
-        rules.gzip_fastq.output.fastq,
-        accession=wildcards.accession,
-        read = glob_wildcards(checkpoint_output.replace(".fastq.complete", "") + "{read}.fastq").read
-        )
-    return fastqs
 
-rule fastq_complete:
-    input:
-        get_fastq_read
-    output:
-        touch("{accession}.gzip.complete")
 
 def get_genome_arg(
     out_type = config["out_file_type"],
@@ -85,11 +90,13 @@ def get_genome_arg(
     elif out_type == "bam":
         param = "-bS"
     else:
-        raise AssertionError(f"Specified out_file_type is \"{out_type}\", not one of [\"bam\", \"cram\"]. ")
+        param = ""
     return(param)
 
 
 rule sam_dump:
+    input:
+        fetched = str(rules.prefetch.output.fetched)
     output:
         sam = pipe("{accession}.sam")
     params:
@@ -100,6 +107,7 @@ rule sam_dump:
     threads: 1
     resources:
         mem_mb = 10000
+    group: "sra-dump"
     shell:
         "sam-dump {params.opts} {wildcards.accession} > {output.sam}"
 
@@ -117,6 +125,7 @@ rule sam_to_bam:
     threads: config["threads"]["sam_to_bam"]
     resources:
         **config["resources"]["sam_to_bam"]
+    group: "sra-dump"
     shell:
         "samtools view {params.bam_cram} -@ {threads} {input.sam} > {output.bam}"
 
@@ -130,6 +139,7 @@ rule index_bam:
     threads: config["threads"]["index_bam"]
     resources:
         **config["resources"]["index_bam"]
+    group: "sra-dump"
     shell:
         "samtools index -@ {threads} {input.bam}"
 
@@ -143,7 +153,11 @@ rule all:
                 str(rules.index_bam.output.complete)
             ],
             accession = accessions["accession"]
-        ) if in_file_type == "sam" else expand(
-            str(rules.fastq_complete.output[0]),
-            accession = accessions["accession"]
+        ) if out_file_type in ["cram", "bam"] else expand(
+            expand[
+                str(rules.gzip_fastq.output.fastq), 
+                str(rules.gzip_fastq.output.complete)
+            ],
+            accession = accessions["accession"],
+            read = ["1", "2"]
         )
