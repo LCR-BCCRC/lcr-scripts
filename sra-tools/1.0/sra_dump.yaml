@@ -1,3 +1,9 @@
+# This pipeline downloads data from SRA, including dbGaP access controlled data. 
+# It is set up to prefetch the files rather than pulling them directly with sam-dump or fasterq-dump 
+# because it is faster, more reliable, and restartable if the download gets interrupted. 
+# It is highly recommended to extract the prefetched files to fastq and align them yourself if possible, 
+# since fasterq-dump is multi-threaded and many times faster than sam-dump. 
+
 out_file_type: "__UPDATE__" # options: fastq, bam or cram. Only use bam or cram if the SRA data are already in an aligned format.
 accessions: "__UPDATE__" # file containing all SRA accession numbers for files to be downloaded. Must have one entry per line, no column names.
 

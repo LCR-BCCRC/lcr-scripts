@@ -3,8 +3,10 @@ import os
 
 configfile: "sra_dump.yaml"
 
+# Load the accession numbers from file. 
 accessions = pd.read_csv(config["accessions"], names = ["accession"])
 
+# Confirm the output file type is correctly specified. 
 out_file_type = config["out_file_type"]
 possible_types = ["bam", "cram", "fastq"]
 possible_type_string = ", ".join(possible_types)
@@ -16,6 +18,7 @@ assert out_file_type in possible_types, (
 wildcard_constraints:
     accession = "|".join(accessions["accession"].tolist())
 
+# Create an argument to use the .ngc file if it is specified. 
 def get_ngc_arg(ngc = config["params"]["ngc"]):
     if ngc not in ["__UPDATE__", ""]:
         assert os.path.exists(ngc), (
@@ -27,6 +30,7 @@ def get_ngc_arg(ngc = config["params"]["ngc"]):
         ngc_param = ""
     return ngc_param
 
+# Prefetch the files. This is done because it is much faster than using sam-dump or fast(er)q-dump directly, and can be resumed if it gets interrupeted. 
 rule prefetch:
     output:
         fetched = temp(directory("{accession}"))
@@ -44,6 +48,7 @@ rule prefetch:
     shell:
         "prefetch -X {resources.disk_mb} {params.opts} {params.ngc} {wildcards.accession} > {log.log} 2>&1"
 
+# Convert the prefetched file to fastq if desired output is fastq. 
 rule fastq_dump:
     input:
         fetched = str(rules.prefetch.output.fetched)
@@ -62,6 +67,8 @@ rule fastq_dump:
     shell:
         "fasterq-dump -e {threads} {params.opts} {wildcards.accession}"
 
+
+# Compress the output fastq file. 
 rule gzip_fastq:
     input:
         fastq = "{accession}_{read}.fastq",
@@ -80,6 +87,7 @@ rule gzip_fastq:
 
 
 
+# Obtain the reference genome argument for cram compression. 
 def get_genome_arg(
     out_type = config["out_file_type"],
     ref_fasta = config["params"]["ref"]
@@ -94,6 +102,7 @@ def get_genome_arg(
     return(param)
 
 
+# Convert prefetched file to sam if specified. 
 rule sam_dump:
     input:
         fetched = str(rules.prefetch.output.fetched)
@@ -111,6 +120,7 @@ rule sam_dump:
     shell:
         "sam-dump {params.opts} {wildcards.accession} > {output.sam}"
 
+# Compress sam to bam or cram. 
 rule sam_to_bam:
     input:
         sam = str(rules.sam_dump.output.sam)
@@ -129,6 +139,8 @@ rule sam_to_bam:
     shell:
         "samtools view {params.bam_cram} -@ {threads} {input.sam} > {output.bam}"
 
+
+# Generate an index file. 
 rule index_bam:
     input:
         bam = str(rules.sam_to_bam.output.bam)
