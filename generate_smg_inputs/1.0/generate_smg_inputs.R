@@ -148,6 +148,8 @@ if (args$mode == "MutSig2CV") {
   subset_maf %>%
     select(chr, pos, gene, patient, ref_allele, newbase, type, classification)
 
+  grouping_column = "patient"
+
 }
 
 # dNdS
@@ -172,11 +174,13 @@ if (args$mode == "dNdS") {
                   "ref",
                   "mut"))
 
+  grouping_column = "sampleID"
+
 }
 
 # prepare maf file contents for documentation purposes
 contents = subset_maf %>%
-  group_by(patient) %>%
+  group_by(across(all_of(grouping_column))) %>%
   summarise(N_mutations=n()) %>%
   ungroup %>%
   mutate(non_coding_included=args$include_non_coding)
