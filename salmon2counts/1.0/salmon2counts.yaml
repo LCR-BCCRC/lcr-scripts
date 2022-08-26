@@ -18,7 +18,7 @@ dependencies:
   - bioconductor-biostrings=2.56.0
   - bioconductor-delayedarray=0.14.0
   - bioconductor-genomeinfodb=1.24.0
-  - bioconductor-genomeinfodbdata=1.2.3
+  - bioconductor-genomeinfodbdata=1.2.4
   - bioconductor-genomicalignments=1.24.0
   - bioconductor-genomicfeatures=1.40.0
   - bioconductor-genomicranges=1.40.0
