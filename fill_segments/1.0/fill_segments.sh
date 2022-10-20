@@ -29,7 +29,7 @@ cat $INPUT_PATH | head -1 > $RESULTS_PATH.header
 if [[ "$MODE" == *"SEG"* ]]; then
     # Rearrange columns in the seg file to follow bed convention of chr-start-end and strip header
     cat $INPUT_PATH | grep -v "start" | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[1..$#F,0]"' > $RESULTS_PATH.headerless.bed
-elif [[ "$MODE" == *"subclones"* ]]; then
+elif [[ "$MODE" == *"subclones"* ]] || [[ "$MODE" == *"sequenza"* ]] ; then
     # Strip header
     cat $INPUT_PATH | grep -v "start" > $RESULTS_PATH.headerless.bed
 else
@@ -83,6 +83,12 @@ elif [[ "$MODE" == *"subclones"* ]]; then
     bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed \
     | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.5"; $a[4]="1.0"; $a[5]="0.00"; $a[6]="2.0"; foreach my $column (7..12) {$a[$column]="1.0"}; foreach my $column (13..$ENV{NUM_COLUMNS}) {$a[$column]="NA"}; print join "\t", @a;' > $RESULTS_PATH.temp
 
+elif [[ "$MODE" == *"sequenza"* ]]; then
+    # Make variable available to use within perl
+    export NUM_COLUMNS
+    bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed \
+    | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; foreach my $column (3..5) {$a[$column]="NA"}; $a[6]="1"; foreach my $column (7..8) {$a[$column]="NA"}; $a[9]="2"; foreach my $column (10..11) {$a[$column]="1"}; $a[$ENV{NUM_COLUMNS}]="NA"; print join "\t", @a;' > $RESULTS_PATH.temp
+
 fi
 
 
@@ -95,7 +101,7 @@ if [[ "$MODE" == *"SEG"* ]]; then
     # After substracting blacklisted regions, seg file needs the column with sample ID to be shifted back to first position
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' | perl -lane 'print if ($F[3]-$F[2])>1;' > $RESULTS_PATH.deblacklisted.seg
 
-elif [[ "$MODE" == *"subclones"* ]]; then
+elif [[ "$MODE" == *"subclones"* ]] || [[ "$MODE" == *"sequenza"* ]] ; then
     # Subclones file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
 
