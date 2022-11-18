@@ -164,7 +164,7 @@ merges_raw <-
   } %>%
   transmute(library_id = map_chr(libraries, "name"),
             gsc_external_id = map_chr(libraries, "external_identifier"),
-            gsc_patient_id = map_chr(libraries, "patient_identifier"),
+            # gsc_patient_id = map_chr(libraries, "patient_identifier"),
             construction_date = map_chr(libraries, "library_started"),
             construction_date = as_date(construction_date),
             seq_strategy = map_chr(libraries, "library_strategy"),
@@ -233,7 +233,7 @@ if (nrow(missing_merges) > 0) {
 bam_files <-
   merges %>%
   rename_at(vars(construction_date, seq_strategy,
-                 gsc_external_id, gsc_patient_id),
+                 gsc_external_id),
             ~ paste0("lb.", .)) %>%
   rename_at(vars(-ends_with("_id"), -bam_id, -starts_with("object_"),
                  -contains(".")),
@@ -330,7 +330,7 @@ bio_qc_status <-
          bio_qc_status = paste0("lc.num_", bio_qc_status)) %>%
   pivot_wider(names_from = bio_qc_status, values_from = n,
               values_fill = list(n = 0)) %>%
-  select(bam_id, lc.num_passed, everything())
+  select(bam_id, any_of("lc.num_passed"), everything())
 
 # Split comments by status and collapse using libcore IDs
 bio_qc_comments <-
@@ -402,7 +402,7 @@ no_merge_tidy <-
   filter(successful, !is.na(data_path), libcore.billable) %>%
   transmute(library_id = libcore.library.name,
             gsc_external_id = libcore.library.external_identifier,
-            gsc_patient_id = libcore.library.patient_identifier,
+            # gsc_patient_id = libcore.library.patient_identifier,
             construction_date = libcore.library.library_started,
             construction_date = as_date(construction_date),
             seq_strategy = libcore.library.library_strategy,
@@ -423,7 +423,7 @@ no_merge_tidy <-
             bam_id,
             data_path) %>%
   rename_at(vars(construction_date, seq_strategy,
-                 gsc_external_id, gsc_patient_id),
+                 gsc_external_id),
             ~ paste0("lb.", .)) %>%
   rename_at(vars(-ends_with("_id"), -bam_id, -contains(".")),
             ~ paste0("al.", .))
@@ -462,7 +462,7 @@ no_merge_bio_qc_status <-
          bio_qc_status = paste0("lc.num_", bio_qc_status)) %>%
   pivot_wider(names_from = bio_qc_status, values_from = n,
               values_fill = list(n = 0)) %>%
-  select(bam_id, lc.num_passed, everything())
+  select(bam_id, any_of("lc.num_passed"), everything())
 
 # Add bio QC comments to bio QC status
 no_merge_bio_qc_combined <-

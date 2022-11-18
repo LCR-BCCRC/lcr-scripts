@@ -61,7 +61,7 @@ source(get_function)
 
 output_table <- get_bams(libraries, "library_id") 
 
-cat(format_tsv(select(output_table, library_id, al.merge_status, al.data_path, lb.gsc_external_id, lb.gsc_patient_id, lb.protocol_name)))
+cat(format_tsv(select(output_table, library_id, al.merge_status, al.data_path, lb.gsc_external_id, lb.protocol_name)))
 
 
 
