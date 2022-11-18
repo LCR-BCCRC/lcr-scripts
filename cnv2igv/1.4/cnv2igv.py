@@ -160,7 +160,7 @@ class BattenbergParser(Parser):
     def get_loh_flag(self, nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A):
         loh_flag = '0'
         if self.loh_type == 'neutral':
-            if int(nMaj1_A) == 2 and int(nMin1_A) == 1:
+            if int(nMaj1_A) == 2 and int(nMin1_A) == 0:
                 loh_flag = '1'
         elif self.loh_type == 'deletion':
            if (int(nMaj1_A) + int(nMin1_A)) == 1:
