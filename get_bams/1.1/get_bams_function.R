@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 #
 # Usage:
-#   Within an R script: 
+#   Within an R script:
 #     source("get_bams_function.R")
 #     lib_paths <- get_bams(input_table, library_id_column)
 #
@@ -50,20 +50,28 @@ for (pkg in required_packages){
 
 # Load data ---------------------------------------------------------------
 
-get_bams <- function(input_table, library_id_column){
-  
+get_bams <- function(input_table, library_id_column, interactive = TRUE){
+
 libraries <- input_table
 join_vector <- setNames("library_id", library_id_column)
 join_vector_2 <- setNames("lb.name", library_id_column)
-  
+
   message("Loading data...")
 
-
-message("Prompting for GSC/GIN credentials...")
-
 credentials <- list()
-credentials$username <- getPass("Username: ", noblank = TRUE)
-credentials$password <- getPass("Password: ", noblank = TRUE)
+if(!interactive){
+  # Enables programmatic use with Snakemake as long as the user's
+  # JIRA username and password are stored in environment variables.
+  message("Using environment variables GSC_USERNAME and GSC_PASSWORD for GSC/GIN credentials..")
+  credentials$username <- Sys.getenv("GSC_USERNAME")
+  credentials$password <- Sys.getenv("GSC_PASSWORD")
+} else {
+  message("Prompting for GSC/GIN credentials...")
+  credentials$username <- getPass("Username: ", noblank = TRUE)
+  credentials$password <- getPass("Password: ", noblank = TRUE)
+}
+
+
 
 
 # Setup session -----------------------------------------------------------
