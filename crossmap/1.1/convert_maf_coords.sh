@@ -7,7 +7,7 @@
 #       convert_maf_coords.sh input.maf hg38ToHg19.over.chain.gz output.maf [crossmap|liftover]
 #
 #   The default mode uses CrossMap.py to convert between genomic coordinate systems, because it
-#   tends to drop fewer variants than liftOver. 
+#   tends to drop fewer variants than liftOver.
 #
 #   The script assumes that there are no pipe (|) characters in your MAF file. If this is not
 #   the case, you can specify your own MAF column separator using the MAFCOLSEP variable.
@@ -91,9 +91,8 @@ awk 'BEGIN {FS=OFS="\t"} \
 		{row = gensub(/['"${MAFCOLSEP}"']/, "\t", "g", $4)} \
 		{print $1, $2, $3, row}' \
 		"${OUTPUT_BED}" \
-	# The output needs to be always chr-prefixed to work with vcf2maf 1.3 and reannotate_maf
 	| awk -v chain="${CHAIN_FILE}" 'BEGIN {FS=OFS="\t"} \
-		{if ($1 ~ /chr/) chrom =$1; else chrom ="chr"$1; start = $2; end = $3} \ 
+		{if ($1 ~ /chr/) chrom =$1; else chrom ="chr"$1; start = $2; end = $3} \
 		$13 == "SNP" {start = start + 1; end = end} \
 		$13 == "DEL" {start = start + 1; end = end} \
 		$13 == "INS" {start = start; end = end + 1} \
