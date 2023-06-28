@@ -11,6 +11,7 @@
 #If you are using tabular data that isn't a MAF, the minimum set of required columns are:
 #Chromosome, Start_Position, End_Position, Reference_Allele, Tumor_Seq_Allele2, Variant_Type, t_ref_count, t_alt_count, t_depth
 # e.g. chr2 1234 1235 A T SNP 0 0 0
+# Each of these columns is required and the value of Variant_Type is used to properly calculate the counts.
 from pathlib import Path 
 import pysam
 import os
