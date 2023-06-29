@@ -6,7 +6,7 @@
 
 # Usage:
 #   Rscript generate_smr_inputs.R <path/to/master/seg> <path/to/sample_sets> <path/to/output/folder> <case_set> <mode>
-#   Example: generate_smr_inputs.R results/gambl/gistic2-1.0/00-inputs/capture--projection/all-grch37.seg data/metadata/level3_samples_subsets.tsv "FLs_with_LSARP_Trios" gistic2
+#   Example: generate_smr_inputs.R results/gambl/gistic2-1.0/00-inputs/capture--projection/all-grch37.seg results/gambl/gistic2-1.0/00-inputs/genome--projection/all-grch37.seg data/metadata/level3_samples_subsets.tsv "FLs_with_LSARP_Trios" gistic2
 #
 # Notes:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R
@@ -34,8 +34,8 @@ args <- commandArgs(trailingOnly = TRUE) %>% as.list()
 arg_names <- c("master_seg", "all_sample_sets", "output_path", "case_set", "mode")
 # if there are multiple seg files passed, collapse them into one list
 args = c(
-        list(unlist(args[1:(length(args)-5)])),
-        args[(length(args)-4):length(args)]
+        list(unlist(args[1:(length(args)-4)])),
+        args[(length(args)-3):length(args)]
         )
 args <- setNames(args, arg_names[1:length(args)])
 args$master_seg = as.list(args$master_seg)
@@ -66,3 +66,19 @@ this_subset_samples =
   full_case_set %>%
   dplyr::filter(!!sym(args$case_set) == 1) %>%
   pull(Tumor_Sample_Barcode)
+
+# Load master seg files and get regions for the subset-------------------
+message("Loading master seg and finding available data for samples in requested subset...")
+if (length(args$master_seg)>1){
+  message("More than one seg file is supplied. Concatenating them into single file.")
+  master_seg =
+    tibble(filename = args$master_seg) %>% # create a data frame
+    # holding the file names
+    mutate(file_contents = map(filename, # read files into
+                             ~ read_tsv(args$master_seg, col_types = cols())) # a new data column
+    ) %>%
+    unnest(cols = c(file_contents)) %>%
+    select(-filename)
+} else {
+  master_seg = suppressWarnings(read_tsv(args$master_seg, col_types = cols()))
+}
