@@ -38,7 +38,6 @@ args = c(
         args[(length(args)-3):length(args)]
         )
 args <- setNames(args, arg_names[1:length(args)])
-args$master_seg = as.list(args$master_seg)
 
 # Print args for debugging
 print(paste("master_seg:",args$master_seg,
