@@ -5,8 +5,11 @@
 # and prepare it to be used with SMR tools e.g. gistic2
 
 # Usage:
-#   Rscript generate_smr_inputs.R <path/to/master/seg> <path/to/sample_sets> <path/to/output/folder> <case_set> <mode>
-#   Example: generate_smr_inputs.R results/gambl/gistic2-1.0/00-inputs/capture--projection/all-grch37.seg results/gambl/gistic2-1.0/00-inputs/genome--projection/all-grch37.seg data/metadata/level3_samples_subsets.tsv "FLs_with_LSARP_Trios" gistic2
+#   Rscript generate_smr_inputs.R <path/to/genome/master/seg> <path/to/genome/master/seg> <path/to/output/folder>
+#            <path/to/sample_sets> <case_set>
+#
+#   Example: Rscript generate_smr_inputs.R results/gambl/gistic2-1.0/00-inputs/genome--projection/all-grch37.seg results/gambl/gistic2-1.0/00-inputs/capture--projection/all-grch37.seg 
+#             /projects/rmorin_scratch/sgillis_temp/lcr-scripts/generate_smr_inputs/1.0/ data/metadata/level3_samples_subsets.tsv FLs_with_LSARP_Trios
 #
 # Notes:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R
@@ -27,57 +30,80 @@ suppressPackageStartupMessages({
 })
 )
 
-# Determine arguments -----------------------------------------------------
-
-# Parse command-line arguments
+# Parse command-line arguments -----------------------------------------------------
+# Assumes people will always put the right number of args and in the correct order
 args <- commandArgs(trailingOnly = TRUE) %>% as.list()
-arg_names <- c("master_seg", "all_sample_sets", "output_path", "case_set", "mode")
-# if there are multiple seg files passed, collapse them into one list
-args = c(
-        list(unlist(args[1:(length(args)-4)])),
-        args[(length(args)-3):length(args)]
-        )
+arg_names <- c("genome_path", "capture_path", "output_path", "all_sample_sets", "case_set")
 args <- setNames(args, arg_names[1:length(args)])
 
-# Print args for debugging
-print(paste("master_seg:",args$master_seg,
-            "all_sample_sets:",args$all_sample_sets,
-            "output_path:",args$output_path,
-            "case_set",args$case_set,
-            "mode",args$mode))
 
-# Ensure consistent naming of the sample ID column-------------------
+# Print args for debugging
+print(paste("genome_path:",args$genome_path,
+            "capture_path:",args$capture_path,
+            "output_path:",args$output_path,
+            "all_sample_sets:",args$all_sample_sets,
+            "case_set:",args$case_set))
+
+
+# Check existance of sample set file -----------------------------------------------------
 if (file.exists(args$all_sample_sets)) {
   full_case_set = suppressMessages(read_tsv(args$all_sample_sets))
 } else {
-  message(paste("Warning: case set is requested, but the case set file", full_case_set_path, "is not found."))
-  stop("Exiting because did not found case set-defining file")
+  stop(paste("Exiting because sample sets file", args$all_sample_sets, "is not found."))
 }
 
 full_case_set =
   full_case_set %>% rename_at(vars(matches(
     "sample_id", ignore.case = TRUE
   )),
-  ~ "Tumor_Sample_Barcode")
+  ~ "ID")
 
-# get case set as defined in the file
-this_subset_samples =
-  full_case_set %>%
-  dplyr::filter(!!sym(args$case_set) == 1) %>%
-  pull(Tumor_Sample_Barcode)
-
-# Load master seg files and get regions for the subset-------------------
-message("Loading master seg and finding available data for samples in requested subset...")
-if (length(args$master_seg)>1){
-  message("More than one seg file is supplied. Concatenating them into single file.")
-  master_seg =
-    tibble(filename = args$master_seg) %>% # create a data frame
-    # holding the file names
-    mutate(file_contents = map(filename, # read files into
-                             ~ read_tsv(args$master_seg, col_types = cols())) # a new data column
-    ) %>%
-    unnest(cols = c(file_contents)) %>%
-    select(-filename)
+# Get sample IDs of the case_set
+if (args$case_set){
+  case_set_samples =
+    full_case_set %>%
+    dplyr::filter(!!sym(args$case_set == 1)) %>%
+    pull(ID)
 } else {
-  master_seg = suppressWarnings(read_tsv(args$master_seg, col_types = cols()))
+  stop(paste("Case_set is not specified."))
 }
+
+# Load genome seg file and get regions for the  caseset-------------------
+message("Loading genome seg and finding available data for samples in requested case set...")
+if (!file.exists(args$genome_path)) {
+  stop(paste("Exiting because genome data seg file", args$genome_path, "is not found."))
+} else {
+  genome_seg <- suppressMessages(read_tsv(args$genome_path, col_types = cols())) %>%
+    filter(ID %in% case_set_samples)
+}
+
+# Load capture seg file -------------------
+message("Loading capture seg and removing samples already in genome data...")
+if (!file.exists(args$capture_path)) {
+  stop(paste("Exiting because genome data seg file", args$genome_path, "is not found."))
+} else {
+  capture_seg <- suppressMessages(read_tsv(args$capture_path, col_types = cols())) %>%
+    filter(!ID %in% unique(genome_seq$ID))
+}
+
+# Merge genome and capture data -------------------
+message("Merging genome and capture data...")
+full_seg <- rbind(genome_seg, capture_seg)
+
+# Report missing samples -------------------
+missing_samples <- setdiff(case_set_samples,
+                          unique(full_seg$ID))
+
+if (length(missing_samples)==0) {
+  message(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file."))
+} else {
+  message(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis."))
+  message("Did not find regions for these samples in the combine seg data:")
+  message(missing_samples)
+}
+
+# Write out final seg file -------------------
+message("Writing combined seg data to file...")
+write_tsv(full_seg, paste0(args$output_path, "/", args$case_set, ".seg"))
+
+message("DONE!")
