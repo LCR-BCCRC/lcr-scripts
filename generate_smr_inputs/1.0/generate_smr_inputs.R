@@ -38,7 +38,7 @@ parser$add_argument("--all_sample_sets", nargs=1, type= 'character', help="Tab d
                                                         and the rest of the columns are named after case sets. 
                                                         Samples will have a 1 in a column if they are part of that case set, 
                                                         and zero otherwise.")
-parser$add_argument("--case_set", nargs=1, help="Name of the case set to subset the region data to. Must match a column name in all_sample_sets file")
+parser$add_argument("--case_set", nargs=1, help="Name of the case set to subset the region data to. Must match a column name in ALL_SAMPLE_SETS")
 
 # Gets the args as a named list
 args <- parser$parse_args()
