@@ -83,7 +83,7 @@ if (!file.exists(args$capture_path)) {
   stop(paste("Exiting because genome data seg file", args$genome_path, "is not found."))
 } else {
   capture_seg <- suppressMessages(read_tsv(args$capture_path, col_types = cols())) %>%
-    filter(!ID %in% unique(genome_seq$ID))
+    filter(!ID %in% unique(genome_seg$ID))
 }
 
 # Merge genome and capture data -------------------
