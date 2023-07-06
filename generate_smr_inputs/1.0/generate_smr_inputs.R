@@ -34,10 +34,10 @@ suppressPackageStartupMessages({
 # Parse command-line arguments -----------------------------------------------------
 # TO DO : fill in script description in ArgumentParser()
 parser <- ArgumentParser()
-parser$add_argument("--genome", "-g", nargs=1, help="Path to the genome--projection/all--{projection}.seg file")
-parser$add_argument("--capture", "-c", nargs=1, help="Path to the capture--projection/all--{projection}.seg file")
-parser$add_argument("--output_dir", "-o", nargs=1, help="Path to write the combined seg file for the case set")
-parser$add_argument("--all_sample_sets", nargs=1, help="Tab delimited file where the first column is sample ID 
+parser$add_argument("--genome", "-g", nargs=1, type= 'character', help="Path to the genome--projection/all--{projection}.seg file")
+parser$add_argument("--capture", "-c", nargs=1, type= 'character', help="Path to the capture--projection/all--{projection}.seg file")
+parser$add_argument("--output_dir", "-o", nargs=1, type= 'character', help="Path to write the combined seg file for the case set")
+parser$add_argument("--all_sample_sets", nargs=1, type= 'character', help="Tab delimited file where the first column is sample ID 
                                                         and the rest of the columns are named after case sets. 
                                                         Samples will have a 1 in a column if they are part of that case set, 
                                                         and zero otherwise.")
