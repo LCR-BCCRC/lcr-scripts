@@ -32,12 +32,7 @@ suppressPackageStartupMessages({
 
 # Parse command-line arguments -----------------------------------------------------
 # Assumes people will always put the right number of args and in the correct order
-#args <- commandArgs(trailingOnly = TRUE) %>% as.list()
-args <- c("/projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/genome--projection/all--grch37.seg",
- "/projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/capture--projection/all--grch37.seg",
-  "/projects/rmorin_scratch/sgillis_temp/lcr-scripts/generate_smr_inputs/1.0/",
-  "/projects/rmorin/projects/gambl-repos/gambl-sgillis/data/metadata/level3_samples_subsets.tsv",
-   "FLs_with_LSARP_Trios") %>% as.list()
+args <- commandArgs(trailingOnly = TRUE) %>% as.list()
 arg_names <- c("genome_path", "capture_path", "output_path", "all_sample_sets", "case_set")
 args <- setNames(args, arg_names[1:length(args)])
 
