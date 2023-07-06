@@ -99,11 +99,11 @@ if (length(missing_samples)==0) {
 } else {
   message(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis."))
   message("Did not find regions for these samples in the combine seg data:")
-  message(missing_samples)
+  message(cat(missing_samples))
 }
 
 # Write out final seg file -------------------
 message("Writing combined seg data to file...")
-#write_tsv(full_seg, paste0(args$output_path, "/", args$case_set, ".seg"))
+write_tsv(full_seg, paste0(args$output_path, "/", args$case_set, ".seg"))
 
 message("DONE!")
