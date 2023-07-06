@@ -8,8 +8,8 @@
 #   Rscript generate_smr_inputs.R <path/to/genome/master/seg> <path/to/genome/master/seg> <path/to/output/folder>
 #            <path/to/sample_sets> <case_set>
 #
-#   Example: Rscript generate_smr_inputs.R results/gambl/gistic2-1.0/00-inputs/genome--projection/all-grch37.seg results/gambl/gistic2-1.0/00-inputs/capture--projection/all-grch37.seg 
-#             /projects/rmorin_scratch/sgillis_temp/lcr-scripts/generate_smr_inputs/1.0/ data/metadata/level3_samples_subsets.tsv FLs_with_LSARP_Trios
+#   Example: Rscript generate_smr_inputs.R /projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/genome--projection/all--grch37.seg /projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/capture--projection/all--grch37.seg 
+#             /projects/rmorin_scratch/sgillis_temp/lcr-scripts/generate_smr_inputs/1.0/ /projects/rmorin/projects/gambl-repos/gambl-sgillis/data/metadata/level3_samples_subsets.tsv FLs_with_LSARP_Trios
 #
 # Notes:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R
@@ -59,14 +59,14 @@ full_case_set =
   ~ "ID")
 
 # Get sample IDs of the case_set
-if (args$case_set){
+#if (args$case_set){
   case_set_samples =
     full_case_set %>%
-    dplyr::filter(!!sym(args$case_set == 1)) %>%
+    dplyr::filter(!!sym(args$case_set) == 1) %>%
     pull(ID)
-} else {
-  stop(paste("Case_set is not specified."))
-}
+# } else {
+#   stop(paste("Case_set is not specified."))
+# }
 
 # Load genome seg file and get regions for the  caseset-------------------
 message("Loading genome seg and finding available data for samples in requested case set...")
@@ -104,6 +104,6 @@ if (length(missing_samples)==0) {
 
 # Write out final seg file -------------------
 message("Writing combined seg data to file...")
-write_tsv(full_seg, paste0(args$output_path, "/", args$case_set, ".seg"))
+#write_tsv(full_seg, paste0(args$output_path, "/", args$case_set, ".seg"))
 
 message("DONE!")
