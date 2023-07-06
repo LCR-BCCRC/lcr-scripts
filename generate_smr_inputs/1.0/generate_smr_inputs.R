@@ -46,14 +46,6 @@ parser$add_argument("--case_set", nargs=1, help="Name of the case set to subset 
 # Gets the args as a named list
 args <- parser$parse_args()
 
-# Print args for debugging
-print(paste("genome:",args$genome,
-            "capture:",args$capture,
-            "output_dir:",args$output_dir,
-            "all_sample_sets:",args$all_sample_sets,
-            "case_set:",args$case_set))
-
-
 # Check existance of sample set file -----------------------------------------------------
 if (file.exists(args$all_sample_sets)) {
   full_case_set = suppressMessages(read_tsv(args$all_sample_sets))
