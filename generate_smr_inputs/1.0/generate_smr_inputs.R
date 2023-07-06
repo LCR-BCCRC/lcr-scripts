@@ -60,14 +60,10 @@ full_case_set =
   ~ "ID")
 
 # Get sample IDs of the case_set
-#if (args$case_set){
-  case_set_samples =
-    full_case_set %>%
-    dplyr::filter(!!sym(args$case_set) == 1) %>%
-    pull(ID)
-# } else {
-#   stop(paste("Case_set is not specified."))
-# }
+case_set_samples =
+  full_case_set %>%
+  dplyr::filter(!!sym(args$case_set) == 1) %>%
+  pull(ID)
 
 # Load genome seg file and get regions for the  caseset-------------------
 message("Loading genome seg and finding available data for samples in requested case set...")
