@@ -31,14 +31,14 @@ parser <- ArgumentParser(description="Generates inputs for Significantly Mutated
 Uses file defining sample sets and a case set name to generate a seg file from genome and capture seg files. 
 Currently prepares input for gistic2. Genome data takes precedence over capture data.")
 
-parser$add_argument("--genome", "-g", nargs=1, type= 'character', help="Path to the genome--projection/all--{projection}.seg file")
-parser$add_argument("--capture", "-c", nargs=1, type= 'character', help="Path to the capture--projection/all--{projection}.seg file")
-parser$add_argument("--output_dir", "-o", nargs=1, type= 'character', help="Path to write the combined seg file for the case set")
-parser$add_argument("--all_sample_sets", nargs=1, type= 'character', help="Tab delimited file where the first column is sample ID 
+parser$add_argument("genome", nargs=1, type= 'character', help="Path to the genome--projection/all--{projection}.seg file")
+parser$add_argument("capture", nargs=1, type= 'character', help="Path to the capture--projection/all--{projection}.seg file")
+parser$add_argument("output_dir", nargs=1, type= 'character', help="Path to write the combined seg file for the case set")
+parser$add_argument("all_sample_sets", nargs=1, type= 'character', help="Tab delimited file where the first column is sample ID 
                                                         and the rest of the columns are named after case sets. 
                                                         Samples will have a 1 in a column if they are part of that case set, 
                                                         and zero otherwise.")
-parser$add_argument("--case_set", nargs=1, help="Name of the case set to subset the region data to. Must match a column name in ALL_SAMPLE_SETS")
+parser$add_argument("case_set", nargs=1, help="Name of the case set to subset the region data to. Must match a column name in ALL_SAMPLE_SETS")
 
 # Gets the args as a named list
 args <- parser$parse_args()
