@@ -178,6 +178,24 @@ if (args$mode == "dNdS") {
 
 }
 
+if (args$mode == "FishHook") {
+  # check that the maf file is in grch37-based coordinates
+  
+  subset_maf =
+    raw_mutations %>%
+    select(Hugo_Symbol,
+           Tumor_Sample_Barcode,
+           Chromosome,
+           Start_Position,
+           End_Position,
+           Variant_Classification,
+           Strand)
+  
+  grouping_column = "Tumor_Sample_Barcode"
+  
+}
+
+
 # prepare maf file contents for documentation purposes
 contents = subset_maf %>%
   group_by(across(all_of(grouping_column))) %>%
