@@ -179,10 +179,9 @@ if (args$mode == "dNdS") {
 }
 
 if (args$mode == "FishHook") {
-  # check that the maf file is in grch37-based coordinates
   
   subset_maf =
-    raw_mutations %>%
+    subset_maf %>%
     select(Hugo_Symbol,
            Tumor_Sample_Barcode,
            Chromosome,
