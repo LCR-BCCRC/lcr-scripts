@@ -31,8 +31,8 @@ parser <- ArgumentParser(description="Generates inputs for Significantly Mutated
 Uses file defining sample sets and a case set name to generate a seg file from genome and capture seg files. 
 Currently prepares input for gistic2. Genome data takes precedence over capture data.")
 
-parser$add_argument("--genome", "-g", nargs=1, type= 'character', required=TRUE, help="Path to the genome--projection/all--{projection}.seg file")
-parser$add_argument("--capture", "-c", nargs=1, type= 'character', required=TRUE, help="Path to the capture--projection/all--{projection}.seg file")
+parser$add_argument("--genome", "-g", nargs=1, type= 'character', help="Path to the genome--projection/all--{projection}.seg file")
+parser$add_argument("--capture", "-c", nargs=1, type= 'character', help="Path to the capture--projection/all--{projection}.seg file")
 parser$add_argument("--output_dir", "-o", nargs=1, type= 'character', required=TRUE, help="Path to write the combined seg file for the case set")
 parser$add_argument("--all_sample_sets", nargs=1, type= 'character', required=TRUE, help="Tab delimited file where the first column is sample ID 
                                                         and the rest of the columns are named after case sets. 
@@ -42,6 +42,11 @@ parser$add_argument("--case_set", nargs=1, required=TRUE, help="Name of the case
 
 # Gets the args as a named list
 args <- parser$parse_args()
+
+# Check that at least one of -g or -c is given
+if ( (length(args$genome)==0) && (length(args$capture)==0) ){
+  stop(paste("Exiting because at least one genome or capture seg file was not provided"))
+}
 
 # Check existance of sample set file -----------------------------------------------------
 if (file.exists(args$all_sample_sets)) {
@@ -62,28 +67,44 @@ case_set_samples =
   dplyr::filter(!!sym(args$case_set) == 1) %>%
   pull(ID)
 
-# Load genome seg file and get regions for the  caseset-------------------
-message("Loading genome seg and finding available data for samples in requested case set...")
-if (!file.exists(args$genome)) {
-  stop(paste("Exiting because genome data seg file", args$genome, "is not found."))
-} else {
-  genome_seg <- suppressMessages(read_tsv(args$genome, col_types = cols())) %>%
-    filter(ID %in% case_set_samples)
+# Load genome seg file and get regions for the caseset -------------------
+if (length(args$genome) != 0){ # if -g value providced
+  message("Loading genome seg...")
+  if (!file.exists(args$genome)) {
+    stop(paste("Exiting because genome data seg file", args$genome, "is not found."))
+  } else {
+    message("Finding available data for samples in requested case set...")
+    genome_seg <- suppressMessages(read_tsv(args$genome, col_types = cols())) %>%
+      filter(ID %in% case_set_samples)
+  }
 }
 
-# Load capture seg file -------------------
-message("Loading capture seg and removing samples already in genome data...")
-if (!file.exists(args$capture)) {
-  stop(paste("Exiting because genome data seg file", args$capture, "is not found."))
-} else {
-  capture_seg <- suppressMessages(read_tsv(args$capture, col_types = cols())) %>%
-    filter(!ID %in% unique(genome_seg$ID)) %>%
-    filter(ID %in% case_set_samples)
+# Load capture seg file and get regions for the caseset -------------------
+if (length(args$capture) != 0){ # if -c value provided
+  message("Loading capture seg...")
+  if (!file.exists(args$capture)) {
+    stop(paste("Exiting because capture data seg file", args$capture, "is not found."))
+  } else if (length(args$genome) != 0){ # if -g provided
+    message("Removing samples already in genome data and finding available data for samples in requested case set...")
+    capture_seg <- suppressMessages(read_tsv(args$capture, col_types = cols())) %>%
+      filter(!ID %in% unique(genome_seg$ID)) %>%
+      filter(ID %in% case_set_samples)
+  } else { # if -g not provided
+    message("Finding available data for samples in requested case set...")
+    capture_seg <- suppressMessages(read_tsv(args$capture, col_types = cols())) %>%
+      filter(ID %in% case_set_samples)
+  }
 }
 
-# Merge genome and capture data -------------------
-message("Merging genome and capture data...")
-full_seg <- rbind(genome_seg, capture_seg)
+# Merge genome and capture data where applicable -------------------
+if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -c have values provided
+  message("Merging genome and capture data ...")
+  full_seg <- rbind(genome_seg, capture_seg)
+} else if ( length(args$genome)!=0 && (length(args$capture)==0) ){ # only -g provided
+  full_seg <- genome_seg
+} else { # only -c provided, since it would have exited earlier if both weren't given
+  full_seg <- capture_seg
+}
 
 # Report missing samples -------------------
 missing_samples <- setdiff(case_set_samples,
