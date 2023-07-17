@@ -178,6 +178,23 @@ if (args$mode == "dNdS") {
 
 }
 
+if (args$mode == "FishHook") {
+  
+  subset_maf =
+    subset_maf %>%
+    select(Hugo_Symbol,
+           Tumor_Sample_Barcode,
+           Chromosome,
+           Start_Position,
+           End_Position,
+           Variant_Classification,
+           Strand)
+  
+  grouping_column = "Tumor_Sample_Barcode"
+  
+}
+
+
 # prepare maf file contents for documentation purposes
 contents = subset_maf %>%
   group_by(across(all_of(grouping_column))) %>%
