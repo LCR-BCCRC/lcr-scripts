@@ -17,7 +17,7 @@
 #   It can be expanded to include other seq_types and to format inputs for other SMR tools.
 
 # Load packages -----------------------------------------------------------
-message("Loading packages...")
+cat("Loading packages...")
 suppressWarnings(
 suppressPackageStartupMessages({
   library(argparse)
@@ -33,6 +33,7 @@ Currently prepares input for gistic2. Genome data takes precedence over capture 
 
 parser$add_argument("--genome", "-g", nargs=1, type= 'character', help="Path to the genome--projection/all--{projection}.seg file")
 parser$add_argument("--capture", "-c", nargs=1, type= 'character', help="Path to the capture--projection/all--{projection}.seg file")
+parser$add_argument("--projection", "-p", nargs=1, type= 'character', required=TRUE, help="Genome build projection. e.g. hg38 or grch37")
 parser$add_argument("--output_dir", "-o", nargs=1, type= 'character', required=TRUE, help="Path to write the combined seg file for the case set")
 parser$add_argument("--all_sample_sets", nargs=1, type= 'character', required=TRUE, help="Tab delimited file where the first column is sample ID 
                                                         and the rest of the columns are named after case sets. 
@@ -69,11 +70,11 @@ case_set_samples =
 
 # Load genome seg file and get regions for the caseset -------------------
 if (length(args$genome) != 0){ # if -g value providced
-  message("Loading genome seg...")
+  cat("Loading genome seg...")
   if (!file.exists(args$genome)) {
     stop(paste("Exiting because genome data seg file", args$genome, "is not found."))
   } else {
-    message("Finding available data for samples in requested case set...")
+    cat("Finding available data for samples in requested case set...")
     genome_seg <- suppressMessages(read_tsv(args$genome, col_types = cols())) %>%
       filter(ID %in% case_set_samples)
   }
@@ -81,16 +82,16 @@ if (length(args$genome) != 0){ # if -g value providced
 
 # Load capture seg file and get regions for the caseset -------------------
 if (length(args$capture) != 0){ # if -c value provided
-  message("Loading capture seg...")
+  cat("Loading capture seg...")
   if (!file.exists(args$capture)) {
     stop(paste("Exiting because capture data seg file", args$capture, "is not found."))
   } else if (length(args$genome) != 0){ # if -g provided
-    message("Removing samples already in genome data and finding available data for samples in requested case set...")
+    cat("Removing samples already in genome data and finding available data for samples in requested case set...")
     capture_seg <- suppressMessages(read_tsv(args$capture, col_types = cols())) %>%
       filter(!ID %in% unique(genome_seg$ID)) %>%
       filter(ID %in% case_set_samples)
   } else { # if -g not provided
-    message("Finding available data for samples in requested case set...")
+    cat("Finding available data for samples in requested case set...")
     capture_seg <- suppressMessages(read_tsv(args$capture, col_types = cols())) %>%
       filter(ID %in% case_set_samples)
   }
@@ -98,7 +99,7 @@ if (length(args$capture) != 0){ # if -c value provided
 
 # Merge genome and capture data where applicable -------------------
 if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -c have values provided
-  message("Merging genome and capture data ...")
+  cat("Merging genome and capture data ...")
   full_seg <- rbind(genome_seg, capture_seg)
 } else if ( length(args$genome)!=0 && (length(args$capture)==0) ){ # only -g provided
   full_seg <- genome_seg
@@ -111,15 +112,15 @@ missing_samples <- setdiff(case_set_samples,
                           unique(full_seg$ID))
 
 if (length(missing_samples)==0) {
-  message(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file."))
+  cat(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file."))
 } else {
-  message(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis."))
-  message("Did not find regions for these samples in the combine seg data:")
-  message(cat(missing_samples))
+  cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis."))
+  cat("Did not find regions for these samples in the combine seg data:")
+  cat(missing_samples)
 }
 
 # Write out final seg file -------------------
-message("Writing combined seg data to file...")
-write_tsv(full_seg, paste0(args$output_dir, "/", args$case_set, ".seg"))
+cat("Writing combined seg data to file...")
+write_tsv(full_seg, paste0(args$output_dir, "/", args$case_set, "--", args$projection, ".seg"))
 
-message("DONE!")
+cat("DONE!")
