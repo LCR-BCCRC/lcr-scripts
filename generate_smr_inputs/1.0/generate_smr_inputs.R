@@ -33,6 +33,7 @@ Currently prepares input for gistic2. Genome data takes precedence over capture 
 
 parser$add_argument("--genome", "-g", nargs=1, type= 'character', help="Path to the genome--projection/all--{projection}.seg file")
 parser$add_argument("--capture", "-c", nargs=1, type= 'character', help="Path to the capture--projection/all--{projection}.seg file")
+parser$add_argument("--projeciton", "-p", nargs=1, type= 'character', required=TRUE, help="Genome build projection. e.g. hg38 or grch37")
 parser$add_argument("--output_dir", "-o", nargs=1, type= 'character', required=TRUE, help="Path to write the combined seg file for the case set")
 parser$add_argument("--all_sample_sets", nargs=1, type= 'character', required=TRUE, help="Tab delimited file where the first column is sample ID 
                                                         and the rest of the columns are named after case sets. 
@@ -120,6 +121,6 @@ if (length(missing_samples)==0) {
 
 # Write out final seg file -------------------
 message("Writing combined seg data to file...")
-write_tsv(full_seg, paste0(args$output_dir, "/", args$case_set, ".seg"))
+write_tsv(full_seg, paste0(args$output_dir, "/", args$case_set, "--", args$projection, ".seg"))
 
 message("DONE!")
