@@ -23,6 +23,7 @@ suppressPackageStartupMessages({
   library(argparse)
   library(data.table)
   library(tidyverse)
+  library(stringr)
 })
 )
 
@@ -107,7 +108,7 @@ if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -
   full_seg <- capture_seg
 }
 
-# Remove possible overlaps
+# Remove possible overlaps -------------------
 full_seg <- full_seg %>%
     group_by(ID, chrom) %>%
     mutate(
@@ -117,6 +118,10 @@ full_seg <- full_seg %>%
     ungroup %>%
     filter(is.na(overlapping) | ! overlapping) %>%
     select(1:6)
+
+# Filter non-canonical chromosomes -------------------
+full_seg <- full_seg %>%
+  filter(!str_detect(chrom, regex("Un|random|alt", ignore_case = TRUE)))
 
 # Report missing samples -------------------
 missing_samples <- setdiff(case_set_samples,
