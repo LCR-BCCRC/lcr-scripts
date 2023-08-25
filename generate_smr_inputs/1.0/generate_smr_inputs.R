@@ -109,7 +109,7 @@ if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -
 }
 
 # Filter to only canonical chromosomes -------------------
-  cat("Filtering non-canonical chromosomes... \n")
+  cat("Filtering to only canonical chromosomes... \n")
 if (args$projection %in% "hg38"){
   full_seg <- full_seg %>%
     filter(str_detect(chrom, regex("chr[XY\\d]+$", ignore_case = TRUE)))
