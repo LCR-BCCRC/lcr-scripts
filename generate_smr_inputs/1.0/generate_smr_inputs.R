@@ -109,6 +109,7 @@ if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -
 }
 
 # Remove possible overlaps -------------------
+cat("Resolving overlapping regions... \n")
 check_overlap = function(seg) {
     highest_end = 0
     overlap <- c()
@@ -243,9 +244,10 @@ solve_overlap = function(seg) {
 }
 
 full_seg_checked <- check_overlap(full_seg)
-full_seg <- solve_overlap(full_seg_checked) %>%
+full_seg <- solve_overlap(full_seg_checked)
 
 # Filter non-canonical chromosomes -------------------
+  cat("Filtering non-canonical chromosomes... \n")
 full_seg <- full_seg %>%
   filter(!str_detect(chrom, regex("Un|random|alt", ignore_case = TRUE)))
 
