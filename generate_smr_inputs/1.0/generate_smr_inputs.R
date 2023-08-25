@@ -108,6 +108,16 @@ if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -
   full_seg <- capture_seg
 }
 
+# Filter non-canonical chromosomes -------------------
+  cat("Filtering non-canonical chromosomes... \n")
+if (args$projection %in% "hg38"){
+  full_seg <- full_seg %>%
+    filter(str_detect(chrom, regex("chr[XY\\d]+$", ignore_case = TRUE)))
+} else if (args$projection %in% "grch37"){
+  full_seg <- full_seg %>%
+    filter(str_detect(chrom, regex("^[XY\\d]+$", ignore_case = TRUE)))
+}
+
 # Remove possible overlaps -------------------
 cat("Resolving overlapping regions... \n")
 check_overlap = function(seg) {
@@ -245,11 +255,6 @@ solve_overlap = function(seg) {
 
 full_seg_checked <- check_overlap(full_seg)
 full_seg <- solve_overlap(full_seg_checked)
-
-# Filter non-canonical chromosomes -------------------
-  cat("Filtering non-canonical chromosomes... \n")
-full_seg <- full_seg %>%
-  filter(!str_detect(chrom, regex("Un|random|alt", ignore_case = TRUE)))
 
 # Report missing samples -------------------
 missing_samples <- setdiff(case_set_samples,
