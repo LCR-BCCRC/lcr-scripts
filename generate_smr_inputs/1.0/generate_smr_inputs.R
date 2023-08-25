@@ -108,7 +108,7 @@ if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -
   full_seg <- capture_seg
 }
 
-# Filter non-canonical chromosomes -------------------
+# Filter to only canonical chromosomes -------------------
   cat("Filtering non-canonical chromosomes... \n")
 if (args$projection %in% "hg38"){
   full_seg <- full_seg %>%
