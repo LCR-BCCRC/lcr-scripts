@@ -64,8 +64,7 @@ full_case_set =
   ~ "ID")
 
 # Get sample IDs of the case_set
-case_set_samples =
-  full_case_set %>%
+case_set_samples <-full_case_set %>%
   dplyr::filter(!!sym(args$case_set) == 1) %>%
   pull(ID)
 
@@ -107,6 +106,10 @@ if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -
 } else { # only -c provided, since it would have exited earlier if both weren't given
   full_seg <- capture_seg
 }
+
+# Sort by chrom, start, end
+full_seg <- full_seg %>%
+  arrange(ID, chrom, start, end)
 
 # Filter to only canonical chromosomes -------------------
   cat("Filtering to only canonical chromosomes... \n")
@@ -249,7 +252,8 @@ solve_overlap = function(seg) {
     }
     seg = rbind(non_overlap, seg) %>% 
       arrange(ID, chrom, start, end) %>%
-      select(-overlap_status, -region_size)
+      select(-overlap_status, -region_size) %>%
+      filter(!start == end)
     return(seg)
 }
 
