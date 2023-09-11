@@ -155,95 +155,97 @@ solve_overlap = function(seg) {
     non_overlap = seg[-num_pre_overlap_sorted,]
     seg <- seg[num_pre_overlap_sorted,]
     for (i in 1:nrow(seg)) {
-        if (seg$overlap_status[i] == "overlap") {
-            if (seg$end[i] < seg$end[i-1]){
-                new_row1 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$start[i-1],
-                                       end = seg$start[i],
-                                       LOH_flag = seg$LOH_flag[i-1],
-                                       log.ratio = seg$log.ratio[i-1],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                new_row2 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$end[i],
-                                       end = seg$end[i-1],
-                                       LOH_flag = seg$LOH_flag[i-1],
-                                       log.ratio = seg$log.ratio[i-1],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                seg <- seg[-(i-1), ]
-                seg <- rbind(seg, new_row1, new_row2)
-            }else if (seg$start[i-1] == seg$start[i]) {
-                new_row  <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$end[i-1],
-                                       end = seg$end[i],
-                                       LOH_flag = seg$LOH_flag[i],
-                                       log.ratio = seg$log.ratio[i],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                seg <- seg[-(i), ]
-                seg <- rbind(seg, new_row)
-            }else if (seg$region_size[i] < seg$region_size[i-1]) {
-                new_row1 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$start[i-1],
-                                       end = seg$start[i],
-                                       LOH_flag = seg$LOH_flag[i-1],
-                                       log.ratio = seg$log.ratio[i-1],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                new_row2 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$start[i],
-                                       end = seg$end[i-1],
-                                       LOH_flag = seg$LOH_flag[i],
-                                       log.ratio = seg$log.ratio[i],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                new_row3 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$end[i-1],
-                                       end = seg$end[i],
-                                       LOH_flag = seg$LOH_flag[i],
-                                       log.ratio = seg$log.ratio[i],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                seg <- seg[-c(i, i-1), ]
-                seg <- rbind(seg, new_row1, new_row2, new_row3)
-            }else if (seg$region_size[i] > seg$region_size[i-1]) {
-                new_row1 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$start[i-1],
-                                       end = seg$start[i],
-                                       LOH_flag = seg$LOH_flag[i-1],
-                                       log.ratio = seg$log.ratio[i-1],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                new_row2 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$start[i],
-                                       end = seg$end[i-1],
-                                       LOH_flag = seg$LOH_flag[i-1],
-                                       log.ratio = seg$log.ratio[i-1],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                new_row3 <- data.frame(ID = seg$ID[i],
-                                       chrom = seg$chrom[i],
-                                       start = seg$end[i-1],
-                                       end = seg$end[i],
-                                       LOH_flag = seg$LOH_flag[i],
-                                       log.ratio = seg$log.ratio[i],
-                                       overlap_status = "NOToverlap",
-                                       region_size = "FALSE")
-                seg <- seg[-c(i, i-1), ]
-                seg <- rbind(seg, new_row1, new_row2, new_row3)
-            }
-        }
-        seg <- seg %>%
-        arrange(ID, chrom, start, end)
+      if (nrow(seg) == 0) {
+        break
+      }else if (seg$overlap_status[i] == "overlap") {
+          if (seg$end[i] < seg$end[i-1]){
+              new_row1 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$start[i-1],
+                                      end = seg$start[i],
+                                      LOH_flag = seg$LOH_flag[i-1],
+                                      log.ratio = seg$log.ratio[i-1],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              new_row2 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$end[i],
+                                      end = seg$end[i-1],
+                                      LOH_flag = seg$LOH_flag[i-1],
+                                      log.ratio = seg$log.ratio[i-1],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              seg <- seg[-(i-1), ]
+              seg <- rbind(seg, new_row1, new_row2)
+          }else if (seg$start[i-1] == seg$start[i]) {
+              new_row  <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$end[i-1],
+                                      end = seg$end[i],
+                                      LOH_flag = seg$LOH_flag[i],
+                                      log.ratio = seg$log.ratio[i],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              seg <- seg[-(i), ]
+              seg <- rbind(seg, new_row)
+          }else if (seg$region_size[i] < seg$region_size[i-1]) {
+              new_row1 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$start[i-1],
+                                      end = seg$start[i],
+                                      LOH_flag = seg$LOH_flag[i-1],
+                                      log.ratio = seg$log.ratio[i-1],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              new_row2 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$start[i],
+                                      end = seg$end[i-1],
+                                      LOH_flag = seg$LOH_flag[i],
+                                      log.ratio = seg$log.ratio[i],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              new_row3 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$end[i-1],
+                                      end = seg$end[i],
+                                      LOH_flag = seg$LOH_flag[i],
+                                      log.ratio = seg$log.ratio[i],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              seg <- seg[-c(i, i-1), ]
+              seg <- rbind(seg, new_row1, new_row2, new_row3)
+          }else if (seg$region_size[i] > seg$region_size[i-1]) {
+              new_row1 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$start[i-1],
+                                      end = seg$start[i],
+                                      LOH_flag = seg$LOH_flag[i-1],
+                                      log.ratio = seg$log.ratio[i-1],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              new_row2 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$start[i],
+                                      end = seg$end[i-1],
+                                      LOH_flag = seg$LOH_flag[i-1],
+                                      log.ratio = seg$log.ratio[i-1],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              new_row3 <- data.frame(ID = seg$ID[i],
+                                      chrom = seg$chrom[i],
+                                      start = seg$end[i-1],
+                                      end = seg$end[i],
+                                      LOH_flag = seg$LOH_flag[i],
+                                      log.ratio = seg$log.ratio[i],
+                                      overlap_status = "NOToverlap",
+                                      region_size = "FALSE")
+              seg <- seg[-c(i, i-1), ]
+              seg <- rbind(seg, new_row1, new_row2, new_row3)
+          }
+      }
+      seg <- seg %>%
+      arrange(ID, chrom, start, end)
     }
     seg = seg %>% arrange(ID, chrom, start, end) 
     seg = check_overlap(seg)
