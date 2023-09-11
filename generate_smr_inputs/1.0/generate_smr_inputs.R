@@ -155,9 +155,7 @@ solve_overlap = function(seg) {
     non_overlap = seg[-num_pre_overlap_sorted,]
     seg <- seg[num_pre_overlap_sorted,]
     for (i in 1:nrow(seg)) {
-      if (nrow(seg) == 0) {
-        break
-      }else if (seg$overlap_status[i] == "overlap") {
+      if (seg$overlap_status[i] == "overlap") {
           if (seg$end[i] < seg$end[i-1]){
               new_row1 <- data.frame(ID = seg$ID[i],
                                       chrom = seg$chrom[i],
@@ -260,7 +258,14 @@ solve_overlap = function(seg) {
 }
 
 full_seg_checked <- check_overlap(full_seg)
-full_seg <- solve_overlap(full_seg_checked)
+# if no overlaps, do not run solve function
+if ("overlap" %in% full_seg_checked$overlap_status) {
+  full_seg <- solve_overlap(full_seg_checked)
+} else {
+  full_seg <- full_seg_checked %>%
+  select(-overlap_status, -region_size)
+}
+
 
 # Report missing samples -------------------
 missing_samples <- setdiff(case_set_samples,
