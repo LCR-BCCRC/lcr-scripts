@@ -46,7 +46,6 @@ parser$add_argument("--metadata", nargs=1, required=TRUE, help="Metadata for all
 parser$add_argument("--case_set", nargs=1, required=TRUE, help="Name of the case set to subset the region data to. Must match a column name in ALL_SAMPLE_SETS")
 parser$add_argument("--launch_date", nargs=1, required=TRUE, help="From snakemake, month and year the run was launched")
 
-
 # Gets the args as a named list
 args <- parser$parse_args()
 
