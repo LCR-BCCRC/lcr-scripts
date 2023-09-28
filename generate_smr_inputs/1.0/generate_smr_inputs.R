@@ -21,7 +21,6 @@
 cat("Loading packages... \n")
 suppressWarnings(
 suppressPackageStartupMessages({
-  library(argparse)
   library(data.table)
   library(tidyverse)
   library(stringr)
@@ -29,48 +28,20 @@ suppressPackageStartupMessages({
 })
 )
 
-# Parse command-line arguments -----------------------------------------------------
-parser <- ArgumentParser(description="Generates inputs for Significantly Mutated Regions (SMR) tools.
-Uses file defining sample sets and a case set name to generate a seg file from genome and capture seg files.
-Currently prepares input for gistic2. Genome data takes precedence over capture data.")
+seq_type <- snakemake@params[["seq_type"]]
+projection <- snakemake@wildcards[["projection"]]
+output_dir <- snakemake@output[["seg"]] %>% dirname()
+all_sample_sets_file <- snakemake@inputs[["all_sample_sets"]]
+metadata_file <- snakemake@inputs[["metadata"]]
+case_set <- snakemake@params[["case_set"]]
+launch_date <- snakemake@params[["launch_date"]]
 
-parser$add_argument("--genome", "-g", nargs=1, type= 'character', help="Path to the genome--projection/all--{projection}.seg file")
-parser$add_argument("--capture", "-c", nargs=1, type= 'character', help="Path to the capture--projection/all--{projection}.seg file")
-parser$add_argument("--projection", "-p", nargs=1, type= 'character', required=TRUE, help="Genome build projection. e.g. hg38 or grch37")
-parser$add_argument("--output_dir", "-o", nargs=1, type= 'character', required=TRUE, help="Path to write the combined seg file for the case set")
-parser$add_argument("--all_sample_sets", nargs=1, type= 'character', required=TRUE, help="Tab delimited file where the first column is sample ID
-                                                        and the rest of the columns are named after case sets.
-                                                        Samples will have a 1 in a column if they are part of that case set,
-                                                        and zero otherwise.")
-parser$add_argument("--metadata", nargs=1, required=TRUE, help="Metadata for all samples in gambl. data/metadata/gambl_samples_available.tsv")
-parser$add_argument("--case_set", nargs=1, required=TRUE, help="Name of the case set to subset the region data to. Must match a column name in ALL_SAMPLE_SETS")
-parser$add_argument("--launch_date", nargs=1, required=TRUE, help="From snakemake, month and year the run was launched")
-
-# Gets the args as a named list
-args <- parser$parse_args()
-
-# Check that at least one of -g or -c is given
-if ( (length(args$genome)==0) && (length(args$capture)==0) ){
-  stop(paste("Exiting because at least one genome or capture seg file was not provided. \n"))
-}
-
-# Check existance of sample set file -----------------------------------------------------
-if (file.exists(args$all_sample_sets)) {
-  full_case_set = suppressMessages(read_tsv(args$all_sample_sets))
-} else {
-  stop(paste("Exiting because sample sets file", args$all_sample_sets, "is not found. \n"))
-}
-
-# Check existance of metadata file
-if (file.exists(args$metadata)) {
-  metadata = suppressMessages(read_tsv(args$metadata))
-} else {
-  stop(paste("Exiting because metadata file", args$metadata, "is not found. \n"))
-}
+full_case_set <- suppressMessages(read_tsv(all_sample_sets_file))
+metadata <- suppressMessages(read_tsv(metadata_file))
 
 # Get subsetting values for the case_set
 subsetting_values <- full_case_set %>%
-  filter(sample_set == args$case_set)
+  filter(sample_set == case_set)
 
 # Function for getting the sample ids
 subset_samples <- function(categories, metadata) {
@@ -95,43 +66,29 @@ subset_samples <- function(categories, metadata) {
 # Get sample ids of the case_set
 case_set_samples <- subset_samples(subsetting_values, metadata)
 
-# Load genome seg file and get regions for the caseset -------------------
-if (length(args$genome) != 0){ # if -g value providced
+# Get seg file paths depending on seq type
+seg_files <- snakemake@inputs[["seg"]]
+if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
   cat("Loading genome seg... \n")
-  if (!file.exists(args$genome)) {
-    stop(paste("Exiting because genome data seg file", args$genome, "is not found. \n"))
-  } else {
-    cat("Finding available data for samples in requested case set... \n")
-    genome_seg <- suppressMessages(read_tsv(args$genome, col_types = cols())) %>%
-      filter(ID %in% case_set_samples)
-  }
-}
+  full_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
+    filter(ID %in% case_set_samples)
 
-# Load capture seg file and get regions for the caseset -------------------
-if (length(args$capture) != 0){ # if -c value provided
+} else if (!("genome" %in% seq_type) && "capture" %in% seq_type) { # capture only
   cat("Loading capture seg... \n")
-  if (!file.exists(args$capture)) {
-    stop(paste("Exiting because capture data seg file", args$capture, "is not found. \n"))
-  } else if (length(args$genome) != 0){ # if -g provided
-    cat("Removing samples already in genome data and finding available data for samples in requested case set... \n")
-    capture_seg <- suppressMessages(read_tsv(args$capture, col_types = cols())) %>%
-      filter(!ID %in% unique(genome_seg$ID)) %>%
-      filter(ID %in% case_set_samples)
-  } else { # if -g not provided
-    cat("Finding available data for samples in requested case set... \n")
-    capture_seg <- suppressMessages(read_tsv(args$capture, col_types = cols())) %>%
-      filter(ID %in% case_set_samples)
-  }
-}
+  full_seg<- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
+    filter(ID %in% case_set_samples)
 
-# Merge genome and capture data where applicable -------------------
-if ( (length(args$genome)!=0) && (length(args$capture)!=0) ){ # if both -g and -c have values provided
-  cat("Merging genome and capture data ... \n")
+} else if ("genome" %in% seq_type && "capture" %in% seq_type) { # both
+  cat("Loading genome seg... \n")
+  genome_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
+    filter(ID %in% case_set_samples)
+
+  cat("Loading capture seg... \n")
+  capture_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
+    filter(!ID %in% unique(genome_seg$ID)) %>%
+    filter(ID %in% case_set_samples)
+
   full_seg <- rbind(genome_seg, capture_seg)
-} else if ( length(args$genome)!=0 && (length(args$capture)==0) ){ # only -g provided
-  full_seg <- genome_seg
-} else { # only -c provided, since it would have exited earlier if both weren't given
-  full_seg <- capture_seg
 }
 
 # Sort by chrom, start, end
@@ -140,10 +97,10 @@ full_seg <- full_seg %>%
 
 # Filter to only canonical chromosomes -------------------
   cat("Filtering to only canonical chromosomes... \n")
-if (args$projection %in% "hg38"){
+if (projection %in% "hg38"){
   full_seg <- full_seg %>%
     filter(str_detect(chrom, regex("chr[XY\\d]+$", ignore_case = TRUE)))
-} else if (args$projection %in% "grch37"){
+} else if (projection %in% "grch37"){
   full_seg <- full_seg %>%
     filter(str_detect(chrom, regex("^[XY\\d]+$", ignore_case = TRUE)))
 }
@@ -310,6 +267,6 @@ case_set_md5sum <- digest(case_set_samples)
 
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
-write_tsv(full_seg, paste0(args$output_dir, "/", args$case_set, "/", args$launch_date, "--", case_set_md5sum, "/", args$projection, ".seg"))
+write_tsv(full_seg, paste0(output_dir, "/", case_set, "/", launch_date, "--", case_set_md5sum, "/", projection, ".seg"))
 
 cat("DONE!")
