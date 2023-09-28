@@ -5,8 +5,9 @@
 #            --all_sample_sets <path/to/sample_sets> --case_set <case_set>
 #
 #   Example: Rscript generate_smr_inputs.R --genome /projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/genome--projection/all--grch37.seg --capture /projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/capture--projection/all--grch37.seg
-#             --output_dir /projects/rmorin_scratch/sgillis_temp/lcr-scripts/generate_smr_inputs/1.0/ --all_sample_sets /projects/rmorin/projects/gambl-repos/gambl-sgillis/data/metadata/level3_samples_subsets.tsv --case_set FLs_with_LSARP_Trios
+#             --output_dir /projects/rmorin_scratch/sgillis_temp/lcr-scripts/generate_smr_inputs/1.0/ --all_sample_sets /projects/rmorin/projects/gambl-repos/gambl-sgillis/data/metadata/level3_subsetting_categories.tsv --case_set FLs_with_LSARP_Trios
 #
+# TO DO: update this description
 # Notes:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
 #   This script is intended for generating input to SMR modules in LCR-modules (gistic2).
@@ -24,6 +25,7 @@ suppressPackageStartupMessages({
   library(data.table)
   library(tidyverse)
   library(stringr)
+  library(digest)
 })
 )
 
@@ -40,7 +42,10 @@ parser$add_argument("--all_sample_sets", nargs=1, type= 'character', required=TR
                                                         and the rest of the columns are named after case sets.
                                                         Samples will have a 1 in a column if they are part of that case set,
                                                         and zero otherwise.")
+parser$add_argument("--metadata", nargs=1, required=TRUE, help="Metadata for all samples in gambl. data/metadata/gambl_samples_available.tsv")
 parser$add_argument("--case_set", nargs=1, required=TRUE, help="Name of the case set to subset the region data to. Must match a column name in ALL_SAMPLE_SETS")
+parser$add_argument("--launch_date", nargs=1, required=TRUE, help="From snakemake, month and year the run was launched")
+
 
 # Gets the args as a named list
 args <- parser$parse_args()
@@ -57,16 +62,39 @@ if (file.exists(args$all_sample_sets)) {
   stop(paste("Exiting because sample sets file", args$all_sample_sets, "is not found. \n"))
 }
 
-full_case_set =
-  full_case_set %>% rename_at(vars(matches(
-    "sample_id", ignore.case = TRUE
-  )),
-  ~ "ID")
+# Check existance of metadata file
+if (file.exists(args$metadata)) {
+  metadata = suppressMessages(read_tsv(args$metadata))
+} else {
+  stop(paste("Exiting because metadata file", args$metadata, "is not found. \n"))
+}
 
-# Get sample IDs of the case_set
-case_set_samples <-full_case_set %>%
-  dplyr::filter(!!sym(args$case_set) == 1) %>%
-  pull(ID)
+# Get subsetting values for the case_set
+subsetting_values <- full_case_set %>%
+  filter(sample_set == args$case_set)
+
+# Function for getting the sample ids
+subset_samples <- function(categories, metadata) {
+    samples <- metadata %>%
+            select(bam_available, sample_id,  seq_type, genome_build,
+            cohort, pathology, time_point, unix_group) %>%
+            filter(bam_available = TRUE,
+            seq_type %in% unlist(strsplit(categories$seq_type, ",")),
+            genome_build %in% unlist(strsplit(categories$genome_build, ",")),
+            cohort %in% unlist(strsplit(categories$cohort, ",")),
+            pathology %in% unlist(strsplit(categories$pathology, ",")),
+            unix_group %in% unlist(strsplit(categories$unix_group, ",")),
+            if (is.na(time_point) || categories$time_points == "primary-only") time_point %in% c(NA,"A") 
+            else if (is.na(time_point) || categories$time_points == "all") time_point %in% c(NA,"A","B","C","D","E","G","F","J","H") 
+            else time_point %in% c("B","C","D","E","G","F","J","H")
+            ) %>% 
+            pull(sample_id)
+
+    return(samples)
+}
+
+# Get sample ids of the case_set
+case_set_samples <- subset_samples(subsetting_values, metadata)
 
 # Load genome seg file and get regions for the caseset -------------------
 if (length(args$genome) != 0){ # if -g value providced
@@ -266,7 +294,6 @@ if ("overlap" %in% full_seg_checked$overlap_status) {
   select(-overlap_status, -region_size)
 }
 
-
 # Report missing samples -------------------
 missing_samples <- setdiff(case_set_samples,
                           unique(full_seg$ID))
@@ -279,8 +306,11 @@ if (length(missing_samples)==0) {
   cat(missing_samples)
 }
 
+# Calculate md5sum for the case set samples
+case_set_md5sum <- digest(case_set_samples)
+
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
-write_tsv(full_seg, paste0(args$output_dir, "/", args$case_set, "--", args$projection, ".seg"))
+write_tsv(full_seg, paste0(args$output_dir, "/", args$case_set, "/", args$launch_date, "--", case_set_md5sum, "/", args$projection, ".seg"))
 
 cat("DONE!")
