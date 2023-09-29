@@ -32,12 +32,11 @@ seq_type <- snakemake@params[["seq_type"]]
 projection <- snakemake@wildcards[["projection"]]
 output_dir <- snakemake@output[["seg"]] %>% dirname()
 all_sample_sets_file <- snakemake@inputs[["all_sample_sets"]]
-metadata_file <- snakemake@inputs[["metadata"]]
+metadata <- snakemake@config[["lcr-modules"]][["gistic2"]][["samples"]]
 case_set <- snakemake@params[["case_set"]]
 launch_date <- snakemake@params[["launch_date"]]
 
 full_case_set <- suppressMessages(read_tsv(all_sample_sets_file))
-metadata <- suppressMessages(read_tsv(metadata_file))
 
 # Get subsetting values for the case_set
 subsetting_values <- full_case_set %>%
@@ -268,5 +267,9 @@ case_set_md5sum <- digest(case_set_samples)
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
 write_tsv(full_seg, paste0(output_dir, "/", case_set, "/", launch_date, "--", case_set_md5sum, "/", projection, ".seg"))
+
+# Write out md5sum file -------------------
+cat("Writing case_set md5sum to file... \n")
+write_tsv(case_set_md5sum, paste0(output_dir, "/", case_set, "/", launch_date, "--", case_set_md5sum, "/md5sum.txt"))
 
 cat("DONE!")
