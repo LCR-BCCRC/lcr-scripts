@@ -30,16 +30,16 @@ suppressPackageStartupMessages({
 
 seq_type <- snakemake@params[["seq_type"]]
 projection <- snakemake@wildcards[["projection"]]
-output_dir <- snakemake@output[["seg"]] %>% dirname()
-all_sample_sets_file <- snakemake@inputs[["all_sample_sets"]]
+output_dir <- snakemake@config[["lcr-modules"]][["gistic2"]][["dirs"]][["preapre_seg"]]
+subsetting_categories_file <- snakemake@inputs[["subsetting_categories"]]
 metadata <- snakemake@config[["lcr-modules"]][["gistic2"]][["samples"]]
 case_set <- snakemake@params[["case_set"]]
 launch_date <- snakemake@params[["launch_date"]]
 
-full_case_set <- suppressMessages(read_tsv(all_sample_sets_file))
+full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file))
 
 # Get subsetting values for the case_set
-subsetting_values <- full_case_set %>%
+subsetting_values <- full_subsetting_categories %>%
   filter(sample_set == case_set)
 
 # Function for getting the sample ids
