@@ -53,11 +53,6 @@ metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FAL
           unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
           time_point=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
 
-cat("printing metadata \n")
-print(str(metadata))
-print(metadata)
-cat("dont printing metadata \n")
-
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file))
 
 # Get subsetting values for the case_set
