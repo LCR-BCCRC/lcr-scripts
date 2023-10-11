@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript
+# /usr/bin/env Rscript
 
 # Usage:
 #   Rscript generate_smr_inputs.R --genome <path/to/genome/master/seg> --capture <path/to/genome/master/seg> --output_path <path/to/output/folder>
@@ -17,6 +17,11 @@
 #   As of right now it creates input for gistic2 using genome and capture seg files from cnv_master
 #   It can be expanded to include other seq_types and to format inputs for other SMR tools.
 
+# Log both the stdout and stderr
+log <- file(snakemake@log[[1]], open="wt")
+sink(log ,type = "output")
+sink(log, type = "message")
+
 # Load packages -----------------------------------------------------------
 cat("Loading packages... \n")
 suppressWarnings(
@@ -28,13 +33,29 @@ suppressPackageStartupMessages({
 })
 )
 
-seq_type <- snakemake@params[["seq_type"]]
+# Input snakemake variables
+subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
+
 projection <- snakemake@wildcards[["projection"]]
-output_dir <- snakemake@config[["lcr-modules"]][["gistic2"]][["dirs"]][["preapre_seg"]]
-subsetting_categories_file <- snakemake@inputs[["subsetting_categories"]]
-metadata <- snakemake@config[["lcr-modules"]][["gistic2"]][["samples"]]
+
+output_dir <- snakemake@config[["lcr-modules"]][["gistic2"]][["dirs"]][["prepare_seg"]]
+
 case_set <- snakemake@params[["case_set"]]
 launch_date <- snakemake@params[["launch_date"]]
+seq_type <- unlist(snakemake@params[["seq_type"]])
+metadata_str <- snakemake@params[["metadata"]]
+
+metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE)],
+          seq_type=metadata_str[c(FALSE,TRUE,FALSE,FALSE,FALSE,FALSE)],
+          genome_build=metadata_str[c(FALSE,FALSE,TRUE,FALSE,FALSE,FALSE)],
+          cohort=metadata_str[c(FALSE,FALSE,FALSE,TRUE,FALSE,FALSE)],
+          pathology=metadata_str[c(FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
+          unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
+
+cat("printing metadata \n")
+print(str(metadata))
+print(metadata)
+cat("dont printing metadata \n")
 
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file))
 
@@ -45,10 +66,9 @@ subsetting_values <- full_subsetting_categories %>%
 # Function for getting the sample ids
 subset_samples <- function(categories, metadata) {
     samples <- metadata %>%
-            select(bam_available, sample_id,  seq_type, genome_build,
+            select(sample_id,  seq_type, genome_build,
             cohort, pathology, time_point, unix_group) %>%
-            filter(bam_available = TRUE,
-            seq_type %in% unlist(strsplit(categories$seq_type, ",")),
+            filter(seq_type %in% unlist(strsplit(categories$seq_type, ",")),
             genome_build %in% unlist(strsplit(categories$genome_build, ",")),
             cohort %in% unlist(strsplit(categories$cohort, ",")),
             pathology %in% unlist(strsplit(categories$pathology, ",")),
@@ -273,3 +293,5 @@ cat("Writing case_set md5sum to file... \n")
 write_tsv(case_set_md5sum, paste0(output_dir, "/", case_set, "/", launch_date, "--", case_set_md5sum, "/md5sum.txt"))
 
 cat("DONE!")
+sink()
+sink()
