@@ -45,12 +45,13 @@ launch_date <- snakemake@params[["launch_date"]]
 seq_type <- unlist(snakemake@params[["seq_type"]])
 metadata_str <- snakemake@params[["metadata"]]
 
-metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE)],
-          seq_type=metadata_str[c(FALSE,TRUE,FALSE,FALSE,FALSE,FALSE)],
-          genome_build=metadata_str[c(FALSE,FALSE,TRUE,FALSE,FALSE,FALSE)],
-          cohort=metadata_str[c(FALSE,FALSE,FALSE,TRUE,FALSE,FALSE)],
-          pathology=metadata_str[c(FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
-          unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
+metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE)],
+          seq_type=metadata_str[c(FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE)],
+          genome_build=metadata_str[c(FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE)],
+          cohort=metadata_str[c(FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE)],
+          pathology=metadata_str[c(FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE)],
+          unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
+          time_point=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
 
 cat("printing metadata \n")
 print(str(metadata))
