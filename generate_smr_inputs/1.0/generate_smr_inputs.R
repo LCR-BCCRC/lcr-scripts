@@ -82,7 +82,7 @@ subset_samples <- function(categories, metadata) {
 case_set_samples <- subset_samples(subsetting_values, metadata)
 
 # Get seg file paths depending on seq type
-seg_files <- snakemake@inputs[["seg"]]
+seg_files <- snakemake@input[["seg"]]
 if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
   cat("Loading genome seg... \n")
   full_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
