@@ -282,11 +282,11 @@ case_set_md5sum <- digest(case_set_samples)
 
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
-write_tsv(full_seg, paste0(output_dir, "/", case_set, "/", launch_date, "--", case_set_md5sum, "/", projection, ".seg"))
+write_tsv(full_seg, paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum, "/", projection, ".seg"))
 
 # Write out md5sum file -------------------
 cat("Writing case_set md5sum to file... \n")
-write_tsv(case_set_md5sum, paste0(output_dir, "/", case_set, "/", launch_date, "--", case_set_md5sum, "/md5sum.txt"))
+write_tsv(case_set_samples, paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum, "/sample_ids.txt"))
 
 cat("DONE!")
 sink()
