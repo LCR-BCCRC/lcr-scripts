@@ -281,9 +281,9 @@ if (length(missing_samples)==0) {
 case_set_md5sum <- digest(case_set_samples)
 
 # Check if output dir extists, create if not
-if (!file.exists(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum))){ 
-        dir.create(file.path(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum))) 
-}
+ifelse(!dir.exists(file.path(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum))), 
+          dir.create(file.path(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum)), recursive = TRUE), 
+          FALSE)
 
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
