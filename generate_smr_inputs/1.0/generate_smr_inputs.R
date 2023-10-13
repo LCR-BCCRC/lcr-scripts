@@ -281,18 +281,20 @@ if (length(missing_samples)==0) {
 case_set_md5sum <- digest(case_set_samples)
 
 # Check if output dir extists, create if not
-ifelse(!dir.exists(file.path(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum))), 
-          dir.create(file.path(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum)), recursive = TRUE), 
-          FALSE)
+if (!dir.exists(file.path(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum)))){
+  cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
+  dir.create(file.path(paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum)), recursive = TRUE)
+} else {
+  cat("Output directory for case_set and launch date combo exists.\n")
+}
 
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
 write_tsv(full_seg, paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum, "/", projection, ".seg"))
 
 # Write out md5sum file -------------------
-cat("Writing case_set md5sum to file... \n")
-write_tsv(case_set_samples, paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum, "/sample_ids.txt"))
+cat("Writing sample ids to file... \n")
+write_tsv(data.frame(case_set_samples), paste0(output_dir, case_set, "/", launch_date, "--", case_set_md5sum, "/sample_ids.txt"))
 
 cat("DONE!")
-sink()
 sink()
