@@ -36,12 +36,12 @@ suppressPackageStartupMessages({
 # Input snakemake variables
 subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
 
+case_set <- snakemake@wildcards[["case_set"]]
 projection <- snakemake@wildcards[["projection"]]
+launch_date <- snakemake@wildcards[["launch_date"]]
 
 output_dir <- snakemake@config[["lcr-modules"]][["gistic2"]][["dirs"]][["prepare_seg"]]
 
-case_set <- snakemake@params[["case_set"]]
-launch_date <- snakemake@params[["launch_date"]]
 seq_type <- unlist(snakemake@params[["seq_type"]])
 metadata_str <- snakemake@params[["metadata"]]
 
