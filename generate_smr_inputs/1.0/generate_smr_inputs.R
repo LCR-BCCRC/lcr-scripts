@@ -59,6 +59,9 @@ full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_fi
 subsetting_values <- full_subsetting_categories %>%
   filter(sample_set == case_set)
 
+print("Subsetting values:\n")
+print(subsetting_values)
+
 # Function for getting the sample ids
 subset_samples <- function(categories, metadata) {
     samples <- metadata %>%
@@ -265,38 +268,44 @@ if ("overlap" %in% full_seg_checked$overlap_status) {
   select(-overlap_status, -region_size)
 }
 
-# Report missing samples -------------------
+# Report missing samples and calculate the md5sum-------------------
 missing_samples <- setdiff(case_set_samples,
                           unique(full_seg$ID))
 
 if (length(missing_samples)==0) {
   cat(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file. \n"))
+  final_sample_set <- case_set_samples
+  md5sum <- digest(final_sample_set)
 } else {
   cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. \n"))
   cat("Did not find regions for these samples in the combine seg data: \n")
   cat(missing_samples)
+  final_sample_set <- full_seg %>% unique(full_seg$ID)
+  md5sum <- digest(final_sample_set)
 }
-
-# Calculate md5sum for the case set samples
-case_set_md5sum <- digest(case_set_samples)
 
 full_output_dir <- paste0(output_dir, case_set, "--", projection, "--", launch_date)
 
 # Check if output dir extists, create if not
 if (!dir.exists(file.path(full_output_dir))){
   cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
+  cat(full_output_dir)
   dir.create(file.path(full_output_dir), recursive = TRUE)
 } else {
   cat("Output directory for case_set and launch date combo exists.\n")
+  cat(full_output_dir)
 }
 
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
-write_tsv(full_seg, paste0(full_output_dir, "/", case_set_md5sum, ".seg"))
+write_tsv(full_seg, paste0(full_output_dir, "/", md5sum, ".seg"))
 
 # Write out md5sum file -------------------
 cat("Writing sample ids to file... \n")
-write_tsv(data.frame(case_set_samples), paste0(full_output_dir, "/", case_set_md5sum, "_sample_ids.txt"))
+write_tsv(data.frame(final_sample_set), paste0(full_output_dir, "/", md5sum, "_sample_ids.txt"))
+
+# Writing empty file for snakemake checkpoint rule output
+file.create(paste0(full_output_dir, "/done"))
 
 cat("DONE!")
 sink()
