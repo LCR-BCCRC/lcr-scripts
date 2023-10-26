@@ -52,6 +52,9 @@ metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FAL
           pathology=metadata_str[c(FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE)],
           unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
           time_point=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
+# Format NA
+metadata <- metadata %>%  
+  mutate_all(~na_if(., ''))
 
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file))
 
@@ -59,7 +62,7 @@ full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_fi
 subsetting_values <- full_subsetting_categories %>%
   filter(sample_set == case_set)
 
-print("Subsetting values:\n")
+print("Subsetting values:")
 print(subsetting_values)
 
 # Function for getting the sample ids
@@ -87,21 +90,21 @@ case_set_samples <- subset_samples(subsetting_values, metadata)
 # Get seg file paths depending on seq type
 seg_files <- snakemake@input[["seg"]]
 if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
-  cat("Loading genome seg... \n")
+  print("Loading genome seg...")
   full_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
     filter(ID %in% case_set_samples)
 
 } else if (!("genome" %in% seq_type) && "capture" %in% seq_type) { # capture only
-  cat("Loading capture seg... \n")
+  print("Loading capture seg...")
   full_seg<- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
     filter(ID %in% case_set_samples)
 
 } else if ("genome" %in% seq_type && "capture" %in% seq_type) { # both
-  cat("Loading genome seg... \n")
+  print("Loading genome seg...")
   genome_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
     filter(ID %in% case_set_samples)
 
-  cat("Loading capture seg... \n")
+  print("Loading capture seg...")
   capture_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
     filter(!ID %in% unique(genome_seg$ID)) %>%
     filter(ID %in% case_set_samples)
@@ -114,7 +117,7 @@ full_seg <- full_seg %>%
   arrange(ID, chrom, start, end)
 
 # Filter to only canonical chromosomes -------------------
-  cat("Filtering to only canonical chromosomes... \n")
+print("Filtering to only canonical chromosomes... ")
 if (projection %in% "hg38"){
   full_seg <- full_seg %>%
     filter(str_detect(chrom, regex("chr[XY\\d]+$", ignore_case = TRUE)))
@@ -124,7 +127,7 @@ if (projection %in% "hg38"){
 }
 
 # Remove possible overlaps -------------------
-cat("Resolving overlapping regions... \n")
+print("Resolving overlapping regions... ")
 check_overlap = function(seg) {
     highest_end = 0
     overlap <- c()
@@ -273,13 +276,13 @@ missing_samples <- setdiff(case_set_samples,
                           unique(full_seg$ID))
 
 if (length(missing_samples)==0) {
-  cat(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file. \n"))
+  print(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file. "))
   final_sample_set <- case_set_samples
   md5sum <- digest(final_sample_set)
 } else {
-  cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. \n"))
-  cat("Did not find regions for these samples in the combine seg data: \n")
-  cat(missing_samples)
+  print(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. "))
+  print("Did not find regions for these samples in the combine seg data:")
+  print(missing_samples)
   final_sample_set <- full_seg %>% unique(full_seg$ID)
   md5sum <- digest(final_sample_set)
 }
@@ -288,24 +291,24 @@ full_output_dir <- paste0(output_dir, case_set, "--", projection, "--", launch_d
 
 # Check if output dir extists, create if not
 if (!dir.exists(file.path(full_output_dir))){
-  cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
-  cat(full_output_dir)
+  print("Output directory for case_set and launch date combo does not exist. Creating it...\n")
+  print(full_output_dir)
   dir.create(file.path(full_output_dir), recursive = TRUE)
 } else {
-  cat("Output directory for case_set and launch date combo exists.\n")
-  cat(full_output_dir)
+  print("Output directory for case_set and launch date combo exists.\n")
+  print(full_output_dir)
 }
 
 # Write out final seg file -------------------
-cat("Writing combined seg data to file... \n")
+print("Writing combined seg data to file... ")
 write_tsv(full_seg, paste0(full_output_dir, "/", md5sum, ".seg"))
 
 # Write out md5sum file -------------------
-cat("Writing sample ids to file... \n")
+print("Writing sample ids to file...")
 write_tsv(data.frame(final_sample_set), paste0(full_output_dir, "/", md5sum, "_sample_ids.txt"))
 
 # Writing empty file for snakemake checkpoint rule output
 file.create(paste0(full_output_dir, "/done"))
 
-cat("DONE!")
+print("DONE!")
 sink()
