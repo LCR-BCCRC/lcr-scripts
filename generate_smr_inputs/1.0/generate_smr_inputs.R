@@ -38,6 +38,8 @@ output_dir <- snakemake@config[["lcr-modules"]][["gistic2"]][["dirs"]][["prepare
 seq_type <- unlist(snakemake@params[["seq_type"]])
 metadata_str <- snakemake@params[["metadata"]]
 
+# pandas df from snakemake is passed as a list of lists object
+# This converts the lists to columns of a dataframe
 metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE)],
           seq_type=metadata_str[c(FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE)],
           genome_build=metadata_str[c(FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE)],
