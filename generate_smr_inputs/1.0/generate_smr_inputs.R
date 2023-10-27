@@ -1,20 +1,13 @@
 # /usr/bin/env Rscript
 
-# Usage:
-#   Rscript generate_smr_inputs.R --genome <path/to/genome/master/seg> --capture <path/to/genome/master/seg> --output_path <path/to/output/folder>
-#            --all_sample_sets <path/to/sample_sets> --case_set <case_set>
-#
-#   Example: Rscript generate_smr_inputs.R --genome /projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/genome--projection/all--grch37.seg --capture /projects/rmorin/projects/gambl-repos/gambl-sgillis/results/gambl/gistic2-1.0/00-inputs/capture--projection/all--grch37.seg
-#             --output_dir /projects/rmorin_scratch/sgillis_temp/lcr-scripts/generate_smr_inputs/1.0/ --all_sample_sets /projects/rmorin/projects/gambl-repos/gambl-sgillis/data/metadata/level3_subsetting_categories.tsv --case_set FLs_with_LSARP_Trios
-#
-# TO DO: update this description
-# Notes:
+# Description:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
 #   This script is intended for generating input to SMR modules in LCR-modules (gistic2).
-#   It expects to be provided with the tab-deliminated file where sample subsets for a particular analysis are specified, where the first column (sample_id)
-#   defines the unique sample ID, and each column indicates whether this ID is included (1) or not (0) in a particular case set.
-#   The column name for the case set will be used as the naming of the output seg file at the user-provided location.
-#   As of right now it creates input for gistic2 using genome and capture seg files from cnv_master
+#   It expects to be run as part of a snakemake workflow which provides a file with categories 
+#   to subset the metadata to get a case set of samples IDs. The snakemake workflow will also provide
+#   seq_type, launch_date, projection, and output directory values.
+#   As of right now this script creates input for gistic2 using genome and capture seg files from cnv_master,
+#   including resolving overlapping regions.
 #   It can be expanded to include other seq_types and to format inputs for other SMR tools.
 
 # Log both the stdout and stderr
