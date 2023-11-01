@@ -51,7 +51,7 @@ metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FAL
 metadata <- metadata %>%  
   mutate_all(~na_if(., ''))
 
-full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file))
+full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
 
 # Get subsetting values for the case_set
 subsetting_values <- full_subsetting_categories %>%
