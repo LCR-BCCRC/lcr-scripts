@@ -4,7 +4,7 @@
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
 #   This script is intended for generating input to SMR modules in LCR-modules (gistic2).
 #   It expects to be run as part of a snakemake workflow which provides a file with categories
-#   to subset the metadata to get a case set of samples IDs. The snakemake workflow will also provide
+#   to subset the metadata in order to get samples IDs of interest. The snakemake workflow will also provide
 #   seq_type, launch_date, projection, and output directory values.
 #   As of right now this script creates input for gistic2 using genome and capture seg files from cnv_master,
 #   including resolving overlapping regions.
