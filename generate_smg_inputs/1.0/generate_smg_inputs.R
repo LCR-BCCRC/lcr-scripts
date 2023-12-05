@@ -25,8 +25,8 @@ suppressPackageStartupMessages({
 )
 
 # Determine arguments from snakemake -----------------------------------------------------
-subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
-output_dir <- dirname(snakemake@output[[1]])
+subsetting_categories_file <- snakemake@input[["sample_sets"]]
+output_dir <- dirname(snakemake@output[["maf"]])
 
 case_set <- snakemake@wildcards[["sample_set"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
@@ -34,6 +34,7 @@ launch_date <- snakemake@wildcards[["launch_date"]]
 seq_type <- unlist(snakemake@params[["seq_type"]])
 include_non_coding <- snakemake@params[["include_non_coding"]]
 mode <- snakemake@params[["mode"]]
+
 
 # pandas df from snakemake is passed as a list of lists object
 # This converts the lists to columns of a dataframe
@@ -49,12 +50,11 @@ metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FAL
 metadata <- metadata %>%
   mutate_all(~na_if(., ''))
 
-
 # Get samples in subset and ensure consistent naming of the sample ID column-------------------
 if (file.exists(subsetting_categories_file)) {
   full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
 } else {
-  cat(paste("Warning: case set is requested, but the subsetting categories file", subsetting_categories_file, "is not found."))
+  cat(paste("Warning: case set is requested, but the subsetting categories file", subsetting_categories_file, "is not found.\n"))
   stop("Exiting because did not find subsetting categories file")
 }
 
@@ -63,7 +63,7 @@ subsetting_values <- full_subsetting_categories %>%
   filter(sample_set == case_set)
 
 cat("Subsetting values:\n")
-print(subsetting_values)
+cat(table(subsetting_values))
 
 # Function for getting the sample ids
 subset_samples <- function(categories, metadata) {
@@ -115,9 +115,9 @@ if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
 
 # subset for coding only if user requested
 if (include_non_coding) {
-  cat("Proceeding with non-coding mutations...")
+  cat("Proceeding with non-coding mutations...\n")
 } else{
-  cat("Excluding non-coding mutations...")
+  cat("Excluding non-coding mutations...\n")
   coding_class = c("Frame_Shift_Del",
                 "Frame_Shift_Ins",
                 "In_Frame_Del",
@@ -140,24 +140,24 @@ missing_samples = setdiff(this_subset_samples,
                           unique(subset_maf$Tumor_Sample_Barcode))
 
 if (length(missing_samples)==0) {
-  cat(paste("Success! Found mutations for all samples.", length(this_subset_samples), "patients will be used in the analysis"))
+  cat(paste("Success! Found mutations for all samples.", length(this_subset_samples), "patients will be used in the analysis\n"))
   md5sum <- digest(this_subset_samples)
 } else {
-  cat(paste("WARNING:", length(missing_samples), "will not be available for the analysis."))
-  cat("Did not find mutations for these samples in the master input maf:")
+  cat(paste("WARNING:", length(missing_samples), "will not be available for the analysis.\n"))
+  cat("Did not find mutations for these samples in the master input maf:\n")
   cat(missing_samples)
   final_sample_set <- subset_maf %>% unique(subset_maf$Tumor_Sample_Barcode)
   md5sum <- digest(final_sample_set)
 }
 
 # Format maf according to the requirements of each individual tool --------------------------------------
-cat(paste("preparing maf file to be used with", mode))
+cat("preparing maf file to be used with", mode, "\n")
 # MutSig2CV
 if (mode == "MutSig2CV") {
   # check that the maf file is in grch37-based coordinates
   if (grepl("38", subset_maf$NCBI_Build[1])) {
-    cat("Requested mode is MutSig2CV, but the supplied file is in the hg38-based coordinates.")
-    cat("Unfortunatelly, MutSig only works for grch37-based maf files.")
+    cat("Requested mode is MutSig2CV, but the supplied file is in the hg38-based coordinates.\n")
+    cat("Unfortunatelly, MutSig only works for grch37-based maf files.\n")
     stop("Please supply the mutation data in grch37-based version.")
   }
 
@@ -184,8 +184,8 @@ subset_maf =
 if (mode == "dNdS") {
   # check that the maf file is in grch37-based coordinates
   if (grepl("38", subset_maf$NCBI_Build[1])) {
-    cat("Requested mode is dNdS, but the supplied file is in the hg38-based coordinates.")
-    cat("Unfortunatelly, dNdS is configured to only work for grch37-based maf files.")
+    cat("Requested mode is dNdS, but the supplied file is in the hg38-based coordinates.\n")
+    cat("Unfortunatelly, dNdS is configured to only work for grch37-based maf files.\n")
     stop("Please supply the mutation data in grch37-based version.")
   }
 
@@ -242,12 +242,12 @@ if (!dir.exists(file.path(output_dir))){
   cat(output_dir,"\n")
 }
 
-cat("Writing resulting maf to file...")
-write_tsv(subset_maf, paste0(output_dir, "/", md5sum, ".maf"))
-write_tsv(contents, paste0(output_dir, "/", md5sum, ".maf.content"))
+cat("Writing resulting maf to file...\n")
+write_tsv(subset_maf, paste0(output_dir, "/", case_set, "--", launch_date, ".maf"))
+write_tsv(contents, paste0(output_dir, "/", case_set, "--", launch_date, ".maf.content"))
 
-# Writing empty file for snakemake checkpoint rule output
-file.create(paste0(output_dir, "/done"))
+# # Writing empty file for snakemake checkpoint rule output
+# file.create(paste0(output_dir, "/done"))
 
 cat("DONE!")
 sink()
