@@ -3,7 +3,7 @@
 # Description:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
 #   This script is intended for generating input to SMR modules in LCR-modules (gistic2).
-#   It expects to be run as part of a snakemake workflow which provides a file with categories 
+#   It expects to be run as part of a snakemake workflow which provides a file with categories
 #   to subset the metadata to get a case set of samples IDs. The snakemake workflow will also provide
 #   seq_type, launch_date, projection, and output directory values.
 #   As of right now this script creates input for gistic2 using genome and capture seg files from cnv_master,
@@ -33,7 +33,8 @@ case_set <- snakemake@wildcards[["case_set"]]
 projection <- snakemake@wildcards[["projection"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
 
-output_dir <- snakemake@config[["lcr-modules"]][["gistic2"]][["dirs"]][["prepare_seg"]]
+print(snakemake@output[[1]])
+output_dir <- dirname(snakemake@output[[1]])
 
 seq_type <- unlist(snakemake@params[["seq_type"]])
 metadata_str <- snakemake@params[["metadata"]]
@@ -48,7 +49,7 @@ metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FAL
           unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
           time_point=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
 # Format NA
-metadata <- metadata %>%  
+metadata <- metadata %>%
   mutate_all(~na_if(., ''))
 
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
@@ -70,10 +71,10 @@ subset_samples <- function(categories, metadata) {
             cohort %in% unlist(strsplit(categories$cohort, ",")),
             pathology %in% unlist(strsplit(categories$pathology, ",")),
             unix_group %in% unlist(strsplit(categories$unix_group, ",")),
-            if (is.na(time_point) || categories$time_points == "primary-only") time_point %in% c(NA,"A") 
-            else if (is.na(time_point) || categories$time_points == "all") time_point %in% c(NA,"A","B","C","D","E","G","F","J","H") 
+            if (is.na(time_point) || categories$time_points == "primary-only") time_point %in% c(NA,"A")
+            else if (is.na(time_point) || categories$time_points == "all") time_point %in% c(NA,"A","B","C","D","E","G","F","J","H")
             else time_point %in% c("B","C","D","E","G","F","J","H")
-            ) %>% 
+            ) %>%
             pull(sample_id)
 
     return(samples)
@@ -245,12 +246,12 @@ solve_overlap = function(seg) {
       seg <- seg %>%
       arrange(ID, chrom, start, end)
     }
-    seg = seg %>% arrange(ID, chrom, start, end) 
+    seg = seg %>% arrange(ID, chrom, start, end)
     seg = check_overlap(seg)
     while("overlap" %in% seg$overlap_status){
         seg = check_overlap(solve_overlap(seg))
     }
-    seg = rbind(non_overlap, seg) %>% 
+    seg = rbind(non_overlap, seg) %>%
       arrange(ID, chrom, start, end) %>%
       select(-overlap_status, -region_size) %>%
       filter(!start == end)
@@ -282,28 +283,26 @@ if (length(missing_samples)==0) {
   md5sum <- digest(final_sample_set)
 }
 
-full_output_dir <- paste0(output_dir, case_set, "--", projection, "--", launch_date)
-
 # Check if output dir extists, create if not
-if (!dir.exists(file.path(full_output_dir))){
+if (!dir.exists(file.path(output_dir))){
   cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
-  cat(full_output_dir,"\n")
-  dir.create(file.path(full_output_dir), recursive = TRUE)
+  cat(output_dir,"\n")
+  dir.create(file.path(output_dir), recursive = TRUE)
 } else {
   cat("Output directory for case_set and launch date combo exists.\n")
-  cat(full_output_dir,"\n")
+  cat(output_dir,"\n")
 }
 
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
-write_tsv(full_seg, paste0(full_output_dir, "/", md5sum, ".seg"))
+write_tsv(full_seg, paste0(output_dir, "/", md5sum, ".seg"))
 
 # Write out md5sum file -------------------
 cat("Writing sample ids to file... \n")
-write_tsv(data.frame(final_sample_set), paste0(full_output_dir, "/", md5sum, "_sample_ids.txt"))
+write_tsv(data.frame(final_sample_set), paste0(output_dir, "/", md5sum, "_sample_ids.txt"))
 
 # Writing empty file for snakemake checkpoint rule output
-file.create(paste0(full_output_dir, "/done"))
+file.create(paste0(output_dir, "/done"))
 
 cat("DONE!")
 sink()
