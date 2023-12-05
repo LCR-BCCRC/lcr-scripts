@@ -33,7 +33,6 @@ case_set <- snakemake@wildcards[["case_set"]]
 projection <- snakemake@wildcards[["projection"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
 
-print(snakemake@output[[1]])
 output_dir <- dirname(snakemake@output[[1]])
 
 seq_type <- unlist(snakemake@params[["seq_type"]])
