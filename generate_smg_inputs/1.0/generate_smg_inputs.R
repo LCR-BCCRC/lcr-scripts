@@ -19,6 +19,8 @@ suppressWarnings(
 suppressPackageStartupMessages({
   library(data.table)
   library(tidyverse)
+  library(stringr)
+  library(digest)
 })
 )
 
