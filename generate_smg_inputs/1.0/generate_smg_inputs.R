@@ -26,7 +26,7 @@ suppressPackageStartupMessages({
 
 # Determine arguments from snakemake -----------------------------------------------------
 subsetting_categories_file <- snakemake@input[["sample_sets"]]
-output_dir <- dirname(snakemake@output[["maf"]])
+output_dir <- dirname(snakemake@output[[1]])
 
 case_set <- snakemake@wildcards[["sample_set"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
@@ -34,6 +34,16 @@ launch_date <- snakemake@wildcards[["launch_date"]]
 seq_type <- unlist(snakemake@params[["seq_type"]])
 include_non_coding <- snakemake@params[["include_non_coding"]]
 mode <- snakemake@params[["mode"]]
+
+cat("Arguments from snakemake...\n")
+cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
+cat(paste("Output directory:", output_dir, "\n"))
+cat(paste("Sample set:", case_set, "\n"))
+cat(paste("Launch date:", launch_date, "\n"))
+cat(paste("Seq type(s):", seq_type, "\n"))
+cat(paste("Include non-coding:", include_non_coding, "\n"))
+cat(paste("Mode:", mode, "\n"))
+
 
 
 # pandas df from snakemake is passed as a list of lists object
@@ -243,11 +253,14 @@ if (!dir.exists(file.path(output_dir))){
 }
 
 cat("Writing resulting maf to file...\n")
-write_tsv(subset_maf, paste0(output_dir, "/", case_set, "--", launch_date, ".maf"))
-write_tsv(contents, paste0(output_dir, "/", case_set, "--", launch_date, ".maf.content"))
+write_tsv(subset_maf, paste0(output_dir, "/", md5sum, ".maf"))
+write_tsv(contents, paste0(output_dir, "/", md5sum, ".maf.content"))
 
-# # Writing empty file for snakemake checkpoint rule output
-# file.create(paste0(output_dir, "/done"))
+cat("Writing samples corresponding to md5sum to file...\n")
+write_tsv(data.frame(final_sample_set), paste0(output_dir, "/", md5sum, "_sample_ids.txt"))
+
+# Writing empty file for snakemake checkpoint rule output
+file.create(paste0(output_dir, "/done"))
 
 cat("DONE!")
 sink()
