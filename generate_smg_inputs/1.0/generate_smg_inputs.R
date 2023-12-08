@@ -73,7 +73,7 @@ subsetting_values <- full_subsetting_categories %>%
   filter(sample_set == case_set)
 
 cat("Subsetting values:\n")
-cat(table(subsetting_values))
+print(subsetting_values)
 
 # Function for getting the sample ids
 subset_samples <- function(categories, metadata) {
@@ -97,7 +97,6 @@ subset_samples <- function(categories, metadata) {
 # Get sample ids of the case_set
 this_subset_samples <- subset_samples(subsetting_values, metadata)
 
-
 # Load master mafs and get mutations for the case set-------------------
 maf_files <- snakemake@input[["maf"]]
 if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
@@ -117,7 +116,7 @@ if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
 
   cat("Loading capture maf...\n")
   capture_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "capture")])) %>%
-    filter(!Tumor_Sample_Barcode %in% unique(genome_maf$ID)) %>%
+    filter(!Tumor_Sample_Barcode %in% unique(genome_maf$Tumor_Sample_Barcode)) %>%
     filter(Tumor_Sample_Barcode %in% this_subset_samples)
 
   subset_maf <- rbind(genome_maf, capture_maf)
@@ -152,6 +151,7 @@ missing_samples = setdiff(this_subset_samples,
 if (length(missing_samples)==0) {
   cat(paste("Success! Found mutations for all samples.", length(this_subset_samples), "patients will be used in the analysis\n"))
   md5sum <- digest(this_subset_samples)
+  final_sample_set <- this_subset_samples
 } else {
   cat(paste("WARNING:", length(missing_samples), "will not be available for the analysis.\n"))
   cat("Did not find mutations for these samples in the master input maf:\n")
