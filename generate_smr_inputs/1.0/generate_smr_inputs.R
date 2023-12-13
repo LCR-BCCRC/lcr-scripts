@@ -278,7 +278,7 @@ if (length(missing_samples)==0) {
   cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. \n"))
   cat("Did not find regions for these samples in the combine seg data: \n")
   print(missing_samples)
-  final_sample_set <- full_seg %>% unique(full_seg$ID)
+  final_sample_set <- full_seg %>% pull(ID)
   md5sum <- digest(final_sample_set)
 }
 

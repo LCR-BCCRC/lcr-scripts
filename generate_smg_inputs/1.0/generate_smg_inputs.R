@@ -156,7 +156,8 @@ if (length(missing_samples)==0) {
   cat(paste("WARNING:", length(missing_samples), "will not be available for the analysis.\n"))
   cat("Did not find mutations for these samples in the master input maf:\n")
   cat(missing_samples)
-  final_sample_set <- subset_maf %>% unique(subset_maf$Tumor_Sample_Barcode)
+  cat("\n")
+  final_sample_set <- subset_maf %>% pull(Tumor_Sample_Barcode)
   md5sum <- digest(final_sample_set)
 }
 
