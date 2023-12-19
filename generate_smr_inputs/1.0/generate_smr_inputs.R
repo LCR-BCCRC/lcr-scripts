@@ -276,9 +276,9 @@ if (length(missing_samples)==0) {
   md5sum <- digest(final_sample_set)
 } else {
   cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. \n"))
-  cat("Did not find regions for these samples in the combine seg data: \n")
-  print(missing_samples)
-  final_sample_set <- full_seg %>% pull(ID)
+  cat("Writing missing sample ids to file... \n")
+  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
+  final_sample_set <- unique(full_seg$ID)
   md5sum <- digest(final_sample_set)
 }
 
