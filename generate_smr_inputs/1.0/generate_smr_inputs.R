@@ -31,7 +31,7 @@ subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
 output_dir <- dirname(snakemake@output[[1]])
 
-case_set <- snakemake@wildcards[["case_set"]]
+sample_set <- snakemake@wildcards[["sample_set"]]
 projection <- snakemake@wildcards[["projection"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
 
@@ -41,7 +41,7 @@ meta_cols <- snakemake@params[['metadata_cols']]
 cat("Arguments from snakemake...\n")
 cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
 cat(paste("Output directory:", output_dir, "\n"))
-cat(paste("Sample set:", case_set, "\n"))
+cat(paste("Sample set:", sample_set, "\n"))
 cat(paste("Launch date:", launch_date, "\n"))
 
 # pandas df from snakemake is passed as a character vector
@@ -55,9 +55,9 @@ colnames(metadata) <- meta_cols
 metadata <- metadata %>%
   mutate_all(~na_if(., ''))
 
-# Get subsetting values for the case_set
+# Get subsetting values for the sample_set
 subsetting_values <- full_subsetting_categories %>%
-  filter(sample_set == case_set)
+  filter(sample_set == !!sample_set)
 
 cat("Subsetting values:\n")
 print(subsetting_values)
@@ -90,30 +90,30 @@ subset_samples <- function(categories, meta) {
   return(samples)
 }
 
-# Get sample ids of the case_set
-case_set_samples <- subset_samples(subsetting_values, metadata)
+# Get sample ids of the sample_set
+this_sample_set <- subset_samples(subsetting_values, metadata)
 
 # Get seg file paths depending on seq type
 seg_files <- snakemake@input[["seg"]]
 if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome seg...\n")
   full_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
 } else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
   cat("Loading capture seg...\n")
   full_seg<- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
 } else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
   cat("Loading genome seg...\n")
   genome_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
   cat("Loading capture seg...\n")
   capture_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
     filter(!ID %in% unique(genome_seg$ID)) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
   full_seg <- rbind(genome_seg, capture_seg)
 }
@@ -279,21 +279,21 @@ if ("overlap" %in% full_seg_checked$overlap_status) {
 
 # Check if output dir extists, create if not
 if (!dir.exists(file.path(output_dir))){
-  cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
+  cat("Output directory for sample_set and launch date combo does not exist. Creating it...\n")
   cat(output_dir,"\n")
   dir.create(file.path(output_dir), recursive = TRUE)
 } else {
-  cat("Output directory for case_set and launch date combo exists.\n")
+  cat("Output directory for sample_set and launch date combo exists.\n")
   cat(output_dir,"\n")
 }
 
 # Report missing samples and calculate the md5sum-------------------
-missing_samples <- setdiff(case_set_samples,
+missing_samples <- setdiff(this_sample_set,
                           unique(full_seg$ID))
 
 if (length(missing_samples)==0) {
-  cat(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file. \n"))
-  final_sample_set <- case_set_samples
+  cat(paste("Found regions for all samples. ", length(this_sample_set), "samples will be used in the resulting seg file. \n"))
+  final_sample_set <- this_sample_set
   md5sum <- digest(final_sample_set)
 } else {
   cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. \n"))
