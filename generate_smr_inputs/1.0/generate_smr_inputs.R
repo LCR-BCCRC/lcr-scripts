@@ -56,8 +56,10 @@ metadata <- metadata %>%
   mutate_all(~na_if(., ''))
 
 # Get subsetting values for the sample_set
+# Renaming the variable required to subset the df correctly
+case_set <- sample_set
 subsetting_values <- full_subsetting_categories %>%
-  filter(sample_set == !!sample_set)
+  filter(sample_set == case_set)
 
 cat("Subsetting values:\n")
 print(subsetting_values)
