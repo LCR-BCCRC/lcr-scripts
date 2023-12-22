@@ -26,49 +26,39 @@ suppressPackageStartupMessages({
 
 # Determine arguments from snakemake -----------------------------------------------------
 subsetting_categories_file <- snakemake@input[["sample_sets"]]
+full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
 output_dir <- dirname(snakemake@output[[1]])
 
-case_set <- snakemake@wildcards[["sample_set"]]
+sample_set <- snakemake@wildcards[["sample_set"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
 
-seq_type <- unlist(snakemake@params[["seq_type"]])
 include_non_coding <- snakemake@params[["include_non_coding"]]
 mode <- snakemake@params[["mode"]]
+meta <- snakemake@params[['metadata']]
+meta_cols <- snakemake@params[['metadata_cols']]
 
 cat("Arguments from snakemake...\n")
 cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
 cat(paste("Output directory:", output_dir, "\n"))
-cat(paste("Sample set:", case_set, "\n"))
+cat(paste("Sample set:", sample_set, "\n"))
 cat(paste("Launch date:", launch_date, "\n"))
-cat(paste("Seq type(s):", seq_type, "\n"))
 cat(paste("Include non-coding:", include_non_coding, "\n"))
 cat(paste("Mode:", mode, "\n"))
 
-
-
-# pandas df from snakemake is passed as a list of lists object
-# This converts the lists to columns of a dataframe
-metadata_str <- snakemake@params[["metadata"]]
-metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE)],
-          seq_type=metadata_str[c(FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE)],
-          genome_build=metadata_str[c(FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE)],
-          cohort=metadata_str[c(FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE)],
-          pathology=metadata_str[c(FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE)],
-          unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
-          time_point=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
+# pandas df from snakemake is passed as a character vector
+# This converts it into a dataframe
+num_rows <- length(meta)/length(meta_cols)
+meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
+# Convert to dataframe and name columns
+metadata <- as.data.frame(meta_matrix)
+colnames(metadata) <- meta_cols
 # Format NA
 metadata <- metadata %>%
   mutate_all(~na_if(., ''))
 
-# Get samples in subset and ensure consistent naming of the sample ID column-------------------
-if (file.exists(subsetting_categories_file)) {
-  full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
-} else {
-  cat(paste("Warning: case set is requested, but the subsetting categories file", subsetting_categories_file, "is not found.\n"))
-  stop("Exiting because did not find subsetting categories file")
-}
-
 # Get subsetting values for this sample_set
+# Renaming the variable required to subset the df correctly
+case_set <- sample_set
 subsetting_values <- full_subsetting_categories %>%
   filter(sample_set == case_set)
 
@@ -76,25 +66,34 @@ cat("Subsetting values:\n")
 print(subsetting_values)
 
 # Function for getting the sample ids
-subset_samples <- function(categories, metadata) {
-    samples <- metadata %>%
-            select(sample_id,  seq_type, genome_build,
-            cohort, pathology, time_point, unix_group) %>%
-            filter(seq_type %in% unlist(strsplit(categories$seq_type, ",")),
-            genome_build %in% unlist(strsplit(categories$genome_build, ",")),
-            cohort %in% unlist(strsplit(categories$cohort, ",")),
-            pathology %in% unlist(strsplit(categories$pathology, ",")),
-            unix_group %in% unlist(strsplit(categories$unix_group, ",")),
-            if (is.na(time_point) || categories$time_points == "primary-only") time_point %in% c(NA,"A")
-            else if (is.na(time_point) || categories$time_points == "all") time_point %in% c(NA,"A","B","C","D","E","G","F","J","H")
-            else time_point %in% c("B","C","D","E","G","F","J","H")
-            ) %>%
-            pull(sample_id)
+subset_samples <- function(categories, meta) {
 
-    return(samples)
+  if ("time_point" %in% names(categories)){
+    if(categories$time_point == "primary_only"){
+      # Make a vector of acceptable values to store in subsetting_values list
+      categories$time_point <- "NA,A,1"
+    } else if (categories$time_point == "non-primary-only"){
+      # Make a vector mutually exclusive with the one above
+      categories$time_point <- paste(unique(eta$time_point[!meta$time_point %in% c(NA, "A", "1")]), collapse=",")
+    } else if(categories$time_point == "all"){
+      categories$time_point <- paste(unique(meta$time_point), collapse=",")
+    }
+  }
+
+  for (col in colnames(categories)[-1]){
+      subset_values <- unlist(strsplit(categories[[col]], ","))
+      subset_values[subset_values == "NA"] <- NA
+      meta <- meta %>%
+          filter(.data[[col]] %in% subset_values)
+  }
+
+  samples <- meta %>%
+    pull(sample_id)
+
+  return(samples)
 }
 
-# Get sample ids of the case_set
+# Get sample ids of the sample_set
 this_subset_samples <- subset_samples(subsetting_values, metadata)
 
 # Load master mafs and get mutations for the case set-------------------
