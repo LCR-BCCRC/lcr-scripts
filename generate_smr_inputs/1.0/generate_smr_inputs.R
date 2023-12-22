@@ -5,7 +5,7 @@
 #   This script is intended for generating input to SMR modules in LCR-modules (gistic2).
 #   It expects to be run as part of a snakemake workflow which provides a file with categories
 #   to subset the metadata in order to get samples IDs of interest. The snakemake workflow will also provide
-#   seq_type, launch_date, projection, and output directory values.
+#    launch_date, projection, and output directory values.
 #   As of right now this script creates input for gistic2 using genome and capture seg files from cnv_master,
 #   including resolving overlapping regions.
 #   It can be expanded to include other seq_types and to format inputs for other SMR tools.
@@ -36,14 +36,13 @@ launch_date <- snakemake@wildcards[["launch_date"]]
 
 output_dir <- dirname(snakemake@output[[1]])
 
-save.image("/projects/rmorin_scratch/sgillis_temp/lcr-scripts/test_preprocess_script.Rdata")
 meta <- snakemake@params[['metadata']]
 meta_cols <- snakemake@params[['metadata_cols']]
 
 # pandas df from snakemake is passed as a character vector
 # This converts the lists to columns of a dataframe
 num_rows <- length(meta)/length(meta_cols)
-meta_matrix <- t(matrix(meta, nrow = 25, ncol = row_num))
+meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
 # Convert to dataframe and name columns
 metadata <- as.data.frame(meta_matrix)
 colnames(metadata) <- meta_cols
@@ -80,17 +79,17 @@ case_set_samples <- subset_samples(subsetting_values, metadata)
 
 # Get seg file paths depending on seq type
 seg_files <- snakemake@input[["seg"]]
-if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
+if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome seg...\n")
   full_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
     filter(ID %in% case_set_samples)
 
-} else if (!("genome" %in% seq_type) && "capture" %in% seq_type) { # capture only
+} else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
   cat("Loading capture seg...\n")
   full_seg<- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
     filter(ID %in% case_set_samples)
 
-} else if ("genome" %in% seq_type && "capture" %in% seq_type) { # both
+} else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
   cat("Loading genome seg...\n")
   genome_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
     filter(ID %in% case_set_samples)
