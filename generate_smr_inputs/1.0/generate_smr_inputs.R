@@ -28,6 +28,7 @@ suppressPackageStartupMessages({
 
 # Input snakemake variables
 subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
+full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
 
 case_set <- snakemake@wildcards[["case_set"]]
 projection <- snakemake@wildcards[["projection"]]
@@ -35,23 +36,20 @@ launch_date <- snakemake@wildcards[["launch_date"]]
 
 output_dir <- dirname(snakemake@output[[1]])
 
-seq_type <- unlist(snakemake@params[["seq_type"]])
-metadata_str <- snakemake@params[["metadata"]]
+save.image("/projects/rmorin_scratch/sgillis_temp/lcr-scripts/test_preprocess_script.Rdata")
+meta <- snakemake@params[['metadata']]
+meta_cols <- snakemake@params[['metadata_cols']]
 
-# pandas df from snakemake is passed as a list of lists object
+# pandas df from snakemake is passed as a character vector
 # This converts the lists to columns of a dataframe
-metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE)],
-          seq_type=metadata_str[c(FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE)],
-          genome_build=metadata_str[c(FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE)],
-          cohort=metadata_str[c(FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE)],
-          pathology=metadata_str[c(FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE)],
-          unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
-          time_point=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
+num_rows <- length(meta)/length(meta_cols)
+meta_matrix <- t(matrix(meta, nrow = 25, ncol = row_num))
+# Convert to dataframe and name columns
+metadata <- as.data.frame(meta_matrix)
+colnames(metadata) <- meta_cols
 # Format NA
 metadata <- metadata %>%
   mutate_all(~na_if(., ''))
-
-full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
 
 # Get subsetting values for the case_set
 subsetting_values <- full_subsetting_categories %>%
