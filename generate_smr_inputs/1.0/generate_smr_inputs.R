@@ -45,7 +45,7 @@ cat(paste("Sample set:", case_set, "\n"))
 cat(paste("Launch date:", launch_date, "\n"))
 
 # pandas df from snakemake is passed as a character vector
-# This converts the lists to columns of a dataframe
+# This converts it into a dataframe
 num_rows <- length(meta)/length(meta_cols)
 meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
 # Convert to dataframe and name columns
