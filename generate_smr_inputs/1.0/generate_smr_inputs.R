@@ -282,7 +282,7 @@ if ("overlap" %in% full_seg_checked$overlap_status) {
   select(-overlap_status, -region_size)
 }
 
-# Check if output dir extists, create if not
+# Check if output dir extists, create if not-------------------
 if (!dir.exists(file.path(output_dir))){
   cat("Output directory for sample_set and launch date combo does not exist. Creating it...\n")
   cat(output_dir,"\n")
