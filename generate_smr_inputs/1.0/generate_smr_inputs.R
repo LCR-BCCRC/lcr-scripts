@@ -26,18 +26,23 @@ suppressPackageStartupMessages({
 })
 )
 
-# Input snakemake variables
+# Determine arguments from snakemake -----------------------------------------------------
 subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
+output_dir <- dirname(snakemake@output[[1]])
 
 case_set <- snakemake@wildcards[["case_set"]]
 projection <- snakemake@wildcards[["projection"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
 
-output_dir <- dirname(snakemake@output[[1]])
-
 meta <- snakemake@params[['metadata']]
 meta_cols <- snakemake@params[['metadata_cols']]
+
+cat("Arguments from snakemake...\n")
+cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
+cat(paste("Output directory:", output_dir, "\n"))
+cat(paste("Sample set:", case_set, "\n"))
+cat(paste("Launch date:", launch_date, "\n"))
 
 # pandas df from snakemake is passed as a character vector
 # This converts the lists to columns of a dataframe
@@ -60,14 +65,25 @@ print(subsetting_values)
 # Function for getting the sample ids
 subset_samples <- function(categories, meta) {
 
-  for (col in colnames(categories)[-1]){
-      meta <- meta %>%
-          filter(if (!str_detect(!!col, "time_point")) .data[[col]] %in% unlist(strsplit(categories[[col]], ","))
-              else if (str_detect(!!col, "time_point") & (categories$time_point == "primary-only" || is.na(time_point))) time_point %in% c(NA,"A")
-              else if (str_detect(!!col, "time_point") & (categories$time_point == "all" || is.na(time_point))) time_point %in% c(NA,"A","B","C","D","E","G","F","J","H")
-              else time_point %in% c("B","C","D","E","G","F","J","H")
-              )
+  if ("time_point" %in% names(categories)){
+    if(categories$time_point == "primary_only"){
+      # Make a vector of acceptable values to store in subsetting_values list
+      categories$time_point <- "NA,A,1"
+    } else if (categories$time_point == "non-primary-only"){
+      # Make a vector mutually exclusive with the one above
+      categories$time_point <- paste(unique(eta$time_point[!meta$time_point %in% c(NA, "A", "1")]), collapse=",")
+    } else if(categories$time_point == "all"){
+      categories$time_point <- paste(unique(meta$time_point), collapse=",")
+    }
   }
+
+  for (col in colnames(categories)[-1]){
+      subset_values <- unlist(strsplit(categories[[col]], ","))
+      subset_values[subset_values == "NA"] <- NA
+      meta <- meta %>%
+          filter(.data[[col]] %in% subset_values)
+  }
+
   samples <- meta %>%
     pull(sample_id)
 
@@ -261,6 +277,16 @@ if ("overlap" %in% full_seg_checked$overlap_status) {
   select(-overlap_status, -region_size)
 }
 
+# Check if output dir extists, create if not
+if (!dir.exists(file.path(output_dir))){
+  cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
+  cat(output_dir,"\n")
+  dir.create(file.path(output_dir), recursive = TRUE)
+} else {
+  cat("Output directory for case_set and launch date combo exists.\n")
+  cat(output_dir,"\n")
+}
+
 # Report missing samples and calculate the md5sum-------------------
 missing_samples <- setdiff(case_set_samples,
                           unique(full_seg$ID))
@@ -275,16 +301,6 @@ if (length(missing_samples)==0) {
   write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
   final_sample_set <- unique(full_seg$ID)
   md5sum <- digest(final_sample_set)
-}
-
-# Check if output dir extists, create if not
-if (!dir.exists(file.path(output_dir))){
-  cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
-  cat(output_dir,"\n")
-  dir.create(file.path(output_dir), recursive = TRUE)
-} else {
-  cat("Output directory for case_set and launch date combo exists.\n")
-  cat(output_dir,"\n")
 }
 
 # Write out final seg file -------------------
