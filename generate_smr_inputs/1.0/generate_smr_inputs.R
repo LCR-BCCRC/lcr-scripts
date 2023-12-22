@@ -48,42 +48,46 @@ cat(paste("Launch date:", launch_date, "\n"))
 # This converts it into a dataframe
 num_rows <- length(meta)/length(meta_cols)
 meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
+# Format NA
+meta_matrix[meta_matrix==""] <- NA
 # Convert to dataframe and name columns
 metadata <- as.data.frame(meta_matrix)
 colnames(metadata) <- meta_cols
-# Format NA
-metadata <- metadata %>%
-  mutate_all(~na_if(., ''))
 
 # Get subsetting values for the sample_set
 # Renaming the variable required to subset the df correctly
 case_set <- sample_set
 subsetting_values <- full_subsetting_categories %>%
-  filter(sample_set == case_set)
+  filter(sample_set == case_set) %>%
+  as.list(.)
 
-cat("Subsetting values:\n")
+# Split comma sep values
+subsetting_values <- lapply(subsetting_values, function(x) unlist(str_split(x, ",")))
+# Change "NA" character to NA object
+subsetting_values <- lapply(subsetting_values,function(x) ifelse(x=="NA",NA,x))
+
+cat("Subsetting values (list):\n")
 print(subsetting_values)
 
+save.image("/projects/rmorin_scratch/sgillis_temp/test_preprocess_script.Rdata")
 # Function for getting the sample ids
 subset_samples <- function(categories, meta) {
 
-  if ("time_point" %in% names(categories)){
+  if ("time_point" %in% names(categories) && length(categories$time_point)==1){
     if(categories$time_point == "primary_only"){
       # Make a vector of acceptable values to store in subsetting_values list
-      categories$time_point <- "NA,A,1"
+      categories$time_point <- c(NA, "A", "1")
     } else if (categories$time_point == "non-primary-only"){
       # Make a vector mutually exclusive with the one above
-      categories$time_point <- paste(unique(eta$time_point[!meta$time_point %in% c(NA, "A", "1")]), collapse=",")
+      categories$time_point <- unique(meta$time_point[!meta$time_point %in% c(NA, "A", "1")])
     } else if(categories$time_point == "all"){
-      categories$time_point <- paste(unique(meta$time_point), collapse=",")
+      categories$time_point <- unique(meta$time_point)
     }
   }
 
-  for (col in colnames(categories)[-1]){
-      subset_values <- unlist(strsplit(categories[[col]], ","))
-      subset_values[subset_values == "NA"] <- NA
+  for (col in names(categories)[-1]){
       meta <- meta %>%
-          filter(.data[[col]] %in% subset_values)
+          filter(.data[[col]] %in% categories[[col]])
   }
 
   samples <- meta %>%
