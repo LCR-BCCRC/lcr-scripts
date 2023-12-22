@@ -69,7 +69,6 @@ subsetting_values <- lapply(subsetting_values,function(x) ifelse(x=="NA",NA,x))
 cat("Subsetting values (list):\n")
 print(subsetting_values)
 
-save.image("/projects/rmorin_scratch/sgillis_temp/test_preprocess_script.Rdata")
 # Function for getting the sample ids
 subset_samples <- function(categories, meta) {
 
