@@ -59,22 +59,20 @@ cat("Subsetting values:\n")
 print(subsetting_values)
 
 # Function for getting the sample ids
-subset_samples <- function(categories, metadata) {
-    samples <- metadata %>%
-            select(sample_id,  seq_type, genome_build,
-            cohort, pathology, time_point, unix_group) %>%
-            filter(seq_type %in% unlist(strsplit(categories$seq_type, ",")),
-            genome_build %in% unlist(strsplit(categories$genome_build, ",")),
-            cohort %in% unlist(strsplit(categories$cohort, ",")),
-            pathology %in% unlist(strsplit(categories$pathology, ",")),
-            unix_group %in% unlist(strsplit(categories$unix_group, ",")),
-            if (is.na(time_point) || categories$time_points == "primary-only") time_point %in% c(NA,"A")
-            else if (is.na(time_point) || categories$time_points == "all") time_point %in% c(NA,"A","B","C","D","E","G","F","J","H")
-            else time_point %in% c("B","C","D","E","G","F","J","H")
-            ) %>%
-            pull(sample_id)
+subset_samples <- function(categories, meta) {
 
-    return(samples)
+  for (col in colnames(categories)[-1]){
+      meta <- meta %>%
+          filter(if (!str_detect(!!col, "time_point")) .data[[col]] %in% unlist(strsplit(categories[[col]], ","))
+              else if (str_detect(!!col, "time_point") & (categories$time_point == "primary-only" || is.na(time_point))) time_point %in% c(NA,"A")
+              else if (str_detect(!!col, "time_point") & (categories$time_point == "all" || is.na(time_point))) time_point %in% c(NA,"A","B","C","D","E","G","F","J","H")
+              else time_point %in% c("B","C","D","E","G","F","J","H")
+              )
+  }
+  samples <- meta %>%
+    pull(sample_id)
+
+  return(samples)
 }
 
 # Get sample ids of the case_set
