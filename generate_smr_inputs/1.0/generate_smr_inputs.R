@@ -303,9 +303,9 @@ if (length(missing_samples)==0) {
 } else {
   cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. \n"))
   cat("Writing missing sample ids to file... \n")
-  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
   final_sample_set <- unique(full_seg$ID)
   md5sum <- digest(final_sample_set)
+  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
 }
 
 # Write out final seg file -------------------
