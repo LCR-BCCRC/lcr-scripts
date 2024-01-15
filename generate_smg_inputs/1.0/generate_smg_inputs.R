@@ -101,17 +101,17 @@ this_subset_samples <- subset_samples(subsetting_values, metadata)
 
 # Load master mafs and get mutations for the case set-------------------
 maf_files <- snakemake@input[["maf"]]
-if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
+if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome maf...\n")
   subset_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "genome")])) %>%
     filter(Tumor_Sample_Barcode %in% this_subset_samples)
 
-} else if (!("genome" %in% seq_type) && "capture" %in% seq_type) { # capture only
+} else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
   cat("Loading capture maf...\n")
   subset_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "capture")])) %>%
     filter(Tumor_Sample_Barcode %in% this_subset_samples)
 
-} else if ("genome" %in% seq_type && "capture" %in% seq_type) { # both
+} else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
   cat("Loading genome maf...\n")
   genome_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "genome")])) %>%
     filter(Tumor_Sample_Barcode %in% this_subset_samples)
@@ -167,9 +167,9 @@ if (length(missing_samples)==0) {
 } else {
   cat(paste("WARNING:", length(missing_samples), "will not be available for the analysis.\n"))
   cat("Writing missing sample ids to file... \n")
-  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
   final_sample_set <- unique(subset_maf$Tumor_Sample_Barcode)
   md5sum <- digest(final_sample_set)
+  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
 }
 
 # Format maf according to the requirements of each individual tool --------------------------------------
