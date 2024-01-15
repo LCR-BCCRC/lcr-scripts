@@ -312,7 +312,7 @@ if (length(missing_samples)==0) {
 cat("Writing combined seg data to file... \n")
 write_tsv(full_seg, paste0(output_dir, "/", md5sum, ".seg"))
 
-# Write out md5sum file -------------------
+# Write out sample_ids file -------------------
 cat("Writing sample ids to file... \n")
 write_tsv(data.frame(final_sample_set), paste0(output_dir, "/", md5sum, "_sample_ids.txt"))
 

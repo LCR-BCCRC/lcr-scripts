@@ -25,7 +25,7 @@ suppressPackageStartupMessages({
 )
 
 # Determine arguments from snakemake -----------------------------------------------------
-subsetting_categories_file <- snakemake@input[["sample_sets"]]
+subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
 output_dir <- dirname(snakemake@output[[1]])
 
@@ -49,42 +49,45 @@ cat(paste("Mode:", mode, "\n"))
 # This converts it into a dataframe
 num_rows <- length(meta)/length(meta_cols)
 meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
+# Format NA
+meta_matrix[meta_matrix==""] <- NA
 # Convert to dataframe and name columns
 metadata <- as.data.frame(meta_matrix)
 colnames(metadata) <- meta_cols
-# Format NA
-metadata <- metadata %>%
-  mutate_all(~na_if(., ''))
 
 # Get subsetting values for this sample_set
 # Renaming the variable required to subset the df correctly
 case_set <- sample_set
 subsetting_values <- full_subsetting_categories %>%
-  filter(sample_set == case_set)
+  filter(sample_set == case_set) %>%
+  as.list(.)
 
-cat("Subsetting values:\n")
+# Split comma sep values
+subsetting_values <- lapply(subsetting_values, function(x) unlist(str_split(x, ",")))
+# Change "NA" character to NA object
+subsetting_values <- lapply(subsetting_values,function(x) ifelse(x=="NA",NA,x))
+
+cat("Subsetting values (list):\n")
 print(subsetting_values)
 
 # Function for getting the sample ids
 subset_samples <- function(categories, meta) {
 
-  if ("time_point" %in% names(categories)){
+  if ("time_point" %in% names(categories) && length(categories$time_point)==1){
     if(categories$time_point == "primary_only"){
       # Make a vector of acceptable values to store in subsetting_values list
-      categories$time_point <- "NA,A,1"
+      categories$time_point <- c(NA, "A", "1")
     } else if (categories$time_point == "non-primary-only"){
       # Make a vector mutually exclusive with the one above
-      categories$time_point <- paste(unique(eta$time_point[!meta$time_point %in% c(NA, "A", "1")]), collapse=",")
+      categories$time_point <- unique(meta$time_point[!meta$time_point %in% c(NA, "A", "1")])
     } else if(categories$time_point == "all"){
-      categories$time_point <- paste(unique(meta$time_point), collapse=",")
+      categories$time_point <- unique(meta$time_point)
     }
   }
 
-  for (col in colnames(categories)[-1]){
-      subset_values <- unlist(strsplit(categories[[col]], ","))
-      subset_values[subset_values == "NA"] <- NA
+  for (col in names(categories)[-1]){
       meta <- meta %>%
-          filter(.data[[col]] %in% subset_values)
+          filter(.data[[col]] %in% categories[[col]])
   }
 
   samples <- meta %>%
@@ -143,7 +146,17 @@ if (include_non_coding) {
       dplyr::filter(Variant_Classification %in% coding_class)
 }
 
-# report any missing samples and calculate md5sum for samples
+# Check if output dir extists, create if not-------------------
+if (!dir.exists(file.path(output_dir))){
+  cat("Output directory for sample_set and launch date combo does not exist. Creating it...\n")
+  cat(output_dir,"\n")
+  dir.create(file.path(output_dir), recursive = TRUE)
+} else {
+  cat("Output directory for sample_set and launch date combo exists.\n")
+  cat(output_dir,"\n")
+}
+
+# Report missing samples and calculate the md5sum-------------------
 missing_samples = setdiff(this_subset_samples,
                           unique(subset_maf$Tumor_Sample_Barcode))
 
@@ -153,10 +166,9 @@ if (length(missing_samples)==0) {
   final_sample_set <- this_subset_samples
 } else {
   cat(paste("WARNING:", length(missing_samples), "will not be available for the analysis.\n"))
-  cat("Did not find mutations for these samples in the master input maf:\n")
-  cat(missing_samples)
-  cat("\n")
-  final_sample_set <- subset_maf %>% pull(Tumor_Sample_Barcode)
+  cat("Writing missing sample ids to file... \n")
+  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
+  final_sample_set <- unique(subset_maf$Tumor_Sample_Barcode)
   md5sum <- digest(final_sample_set)
 }
 
@@ -240,24 +252,13 @@ contents = subset_maf %>%
   ungroup %>%
   mutate(non_coding_included=include_non_coding)
 
-
-# Output --------------------------------------------------------------------------------------
-# Check if output dir extists, create if not
-if (!dir.exists(file.path(output_dir))){
-  cat("Output directory for sample_set and launch date combo does not exist. Creating it...\n")
-  cat(output_dir,"\n")
-  dir.create(file.path(output_dir), recursive = TRUE)
-} else {
-  cat("Output directory for sample_set and launch date combo exists.\n")
-  cat(output_dir,"\n")
-}
-
+# Write out final maf file -------------------
 cat("Writing resulting maf to file...\n")
 write_tsv(subset_maf, paste0(output_dir, "/", md5sum, ".maf"))
-write_tsv(contents, paste0(output_dir, "/", md5sum, ".maf.content"))
 
-cat("Writing samples corresponding to md5sum to file...\n")
-write_tsv(data.frame(final_sample_set), paste0(output_dir, "/", md5sum, "_sample_ids.txt"))
+# Write out contents file -------------------
+cat("Writing maf contents grouped by sample to file...\n")
+write_tsv(contents, paste0(output_dir, "/", md5sum, ".maf.content"))
 
 # Writing empty file for snakemake checkpoint rule output
 file.create(paste0(output_dir, "/done"))
