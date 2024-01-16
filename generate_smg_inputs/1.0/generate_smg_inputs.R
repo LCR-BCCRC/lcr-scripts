@@ -244,6 +244,17 @@ if (mode == "FishHook") {
 
 }
 
+if (mode == "HotMAPS") {
+  if (grepl("38", subset_maf$NCBI_Build[1])) {
+    cat("Requested mode is HotMAPS, but the supplied file is in the hg38-based coordinates.\n")
+    cat("Unfortunately, HotMAPS is configured to only work for grch37-based maf files.\n")
+    stop("Please supply the mutation data in grch37-based version.")
+  }
+
+  grouping_column = "Tumor_Sample_Barcode"
+
+  subset_maf = subset_maf %>% unique()
+}
 
 # Prepare maf file contents for documentation purposes
 contents = subset_maf %>%
