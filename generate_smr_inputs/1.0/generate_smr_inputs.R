@@ -3,9 +3,9 @@
 # Description:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
 #   This script is intended for generating input to SMR modules in LCR-modules (gistic2).
-#   It expects to be run as part of a snakemake workflow which provides a file with categories 
-#   to subset the metadata to get a case set of samples IDs. The snakemake workflow will also provide
-#   seq_type, launch_date, projection, and output directory values.
+#   It expects to be run as part of a snakemake workflow which provides a file with categories
+#   to subset the metadata in order to get samples IDs of interest. The snakemake workflow will also provide
+#    launch_date, projection, and output directory values.
 #   As of right now this script creates input for gistic2 using genome and capture seg files from cnv_master,
 #   including resolving overlapping regions.
 #   It can be expanded to include other seq_types and to format inputs for other SMR tools.
@@ -26,83 +26,99 @@ suppressPackageStartupMessages({
 })
 )
 
-# Input snakemake variables
+# Determine arguments from snakemake -----------------------------------------------------
 subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
+full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
+output_dir <- dirname(snakemake@output[[1]])
 
-case_set <- snakemake@wildcards[["case_set"]]
+sample_set <- snakemake@wildcards[["sample_set"]]
 projection <- snakemake@wildcards[["projection"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
 
-output_dir <- snakemake@config[["lcr-modules"]][["gistic2"]][["dirs"]][["prepare_seg"]]
+meta <- snakemake@params[['metadata']]
+meta_cols <- snakemake@params[['metadata_cols']]
 
-seq_type <- unlist(snakemake@params[["seq_type"]])
-metadata_str <- snakemake@params[["metadata"]]
+cat("Arguments from snakemake...\n")
+cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
+cat(paste("Output directory:", output_dir, "\n"))
+cat(paste("Sample set:", sample_set, "\n"))
+cat(paste("Launch date:", launch_date, "\n"))
 
-# pandas df from snakemake is passed as a list of lists object
-# This converts the lists to columns of a dataframe
-metadata <- data.frame(sample_id=metadata_str[c(TRUE,FALSE,FALSE,FALSE,FALSE,FALSE,FALSE)],
-          seq_type=metadata_str[c(FALSE,TRUE,FALSE,FALSE,FALSE,FALSE,FALSE)],
-          genome_build=metadata_str[c(FALSE,FALSE,TRUE,FALSE,FALSE,FALSE,FALSE)],
-          cohort=metadata_str[c(FALSE,FALSE,FALSE,TRUE,FALSE,FALSE,FALSE)],
-          pathology=metadata_str[c(FALSE,FALSE,FALSE,FALSE,TRUE,FALSE,FALSE)],
-          unix_group=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,FALSE)],
-          time_point=metadata_str[c(FALSE,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE)])
+# pandas df from snakemake is passed as a character vector
+# This converts it into a dataframe
+num_rows <- length(meta)/length(meta_cols)
+meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
 # Format NA
-metadata <- metadata %>%  
-  mutate_all(~na_if(., ''))
+meta_matrix[meta_matrix==""] <- NA
+# Convert to dataframe and name columns
+metadata <- as.data.frame(meta_matrix)
+colnames(metadata) <- meta_cols
 
-full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
-
-# Get subsetting values for the case_set
+# Get subsetting values for the sample_set
+# Renaming the variable required to subset the df correctly
+case_set <- sample_set
 subsetting_values <- full_subsetting_categories %>%
-  filter(sample_set == case_set)
+  filter(sample_set == case_set) %>%
+  as.list(.)
 
-cat("Subsetting values:\n")
+# Split comma sep values
+subsetting_values <- lapply(subsetting_values, function(x) unlist(str_split(x, ",")))
+# Change "NA" character to NA object
+subsetting_values <- lapply(subsetting_values,function(x) ifelse(x=="NA",NA,x))
+
+cat("Subsetting values (list):\n")
 print(subsetting_values)
 
 # Function for getting the sample ids
-subset_samples <- function(categories, metadata) {
-    samples <- metadata %>%
-            select(sample_id,  seq_type, genome_build,
-            cohort, pathology, time_point, unix_group) %>%
-            filter(seq_type %in% unlist(strsplit(categories$seq_type, ",")),
-            genome_build %in% unlist(strsplit(categories$genome_build, ",")),
-            cohort %in% unlist(strsplit(categories$cohort, ",")),
-            pathology %in% unlist(strsplit(categories$pathology, ",")),
-            unix_group %in% unlist(strsplit(categories$unix_group, ",")),
-            if (is.na(time_point) || categories$time_points == "primary-only") time_point %in% c(NA,"A") 
-            else if (is.na(time_point) || categories$time_points == "all") time_point %in% c(NA,"A","B","C","D","E","G","F","J","H") 
-            else time_point %in% c("B","C","D","E","G","F","J","H")
-            ) %>% 
-            pull(sample_id)
+subset_samples <- function(categories, meta) {
 
-    return(samples)
+  if ("time_point" %in% names(categories) && length(categories$time_point)==1){
+    if(categories$time_point == "primary_only"){
+      # Make a vector of acceptable values to store in subsetting_values list
+      categories$time_point <- c(NA, "A", "1")
+    } else if (categories$time_point == "non-primary-only"){
+      # Make a vector mutually exclusive with the one above
+      categories$time_point <- unique(meta$time_point[!meta$time_point %in% c(NA, "A", "1")])
+    } else if(categories$time_point == "all"){
+      categories$time_point <- unique(meta$time_point)
+    }
+  }
+
+  for (col in names(categories)[-1]){
+      meta <- meta %>%
+          filter(.data[[col]] %in% categories[[col]])
+  }
+
+  samples <- meta %>%
+    pull(sample_id)
+
+  return(samples)
 }
 
-# Get sample ids of the case_set
-case_set_samples <- subset_samples(subsetting_values, metadata)
+# Get sample ids of the sample_set
+this_sample_set <- subset_samples(subsetting_values, metadata)
 
 # Get seg file paths depending on seq type
 seg_files <- snakemake@input[["seg"]]
-if ("genome" %in% seq_type && !("capture" %in% seq_type)) { # genome only
+if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome seg...\n")
   full_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
-} else if (!("genome" %in% seq_type) && "capture" %in% seq_type) { # capture only
+} else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
   cat("Loading capture seg...\n")
   full_seg<- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
-} else if ("genome" %in% seq_type && "capture" %in% seq_type) { # both
+} else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
   cat("Loading genome seg...\n")
   genome_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "genome")])) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
   cat("Loading capture seg...\n")
   capture_seg <- suppressMessages(read_tsv(seg_files[str_detect(seg_files, "capture")])) %>%
     filter(!ID %in% unique(genome_seg$ID)) %>%
-    filter(ID %in% case_set_samples)
+    filter(ID %in% this_sample_set)
 
   full_seg <- rbind(genome_seg, capture_seg)
 }
@@ -245,12 +261,12 @@ solve_overlap = function(seg) {
       seg <- seg %>%
       arrange(ID, chrom, start, end)
     }
-    seg = seg %>% arrange(ID, chrom, start, end) 
+    seg = seg %>% arrange(ID, chrom, start, end)
     seg = check_overlap(seg)
     while("overlap" %in% seg$overlap_status){
         seg = check_overlap(solve_overlap(seg))
     }
-    seg = rbind(non_overlap, seg) %>% 
+    seg = rbind(non_overlap, seg) %>%
       arrange(ID, chrom, start, end) %>%
       select(-overlap_status, -region_size) %>%
       filter(!start == end)
@@ -266,44 +282,42 @@ if ("overlap" %in% full_seg_checked$overlap_status) {
   select(-overlap_status, -region_size)
 }
 
+# Check if output dir extists, create if not-------------------
+if (!dir.exists(file.path(output_dir))){
+  cat("Output directory for sample_set and launch date combo does not exist. Creating it...\n")
+  cat(output_dir,"\n")
+  dir.create(file.path(output_dir), recursive = TRUE)
+} else {
+  cat("Output directory for sample_set and launch date combo exists.\n")
+  cat(output_dir,"\n")
+}
+
 # Report missing samples and calculate the md5sum-------------------
-missing_samples <- setdiff(case_set_samples,
+missing_samples <- setdiff(this_sample_set,
                           unique(full_seg$ID))
 
 if (length(missing_samples)==0) {
-  cat(paste("Found regions for all samples. ", length(case_set_samples), "samples will be used in the resulting seg file. \n"))
-  final_sample_set <- case_set_samples
+  cat(paste("Found regions for all samples. ", length(this_sample_set), "samples will be used in the resulting seg file. \n"))
+  final_sample_set <- this_sample_set
   md5sum <- digest(final_sample_set)
 } else {
   cat(paste("WARNING: ", length(missing_samples), " samples will not be available for the analysis. \n"))
-  cat("Did not find regions for these samples in the combine seg data: \n")
-  print(missing_samples)
-  final_sample_set <- full_seg %>% unique(full_seg$ID)
+  cat("Writing missing sample ids to file... \n")
+  final_sample_set <- unique(full_seg$ID)
   md5sum <- digest(final_sample_set)
-}
-
-full_output_dir <- paste0(output_dir, case_set, "--", projection, "--", launch_date)
-
-# Check if output dir extists, create if not
-if (!dir.exists(file.path(full_output_dir))){
-  cat("Output directory for case_set and launch date combo does not exist. Creating it...\n")
-  cat(full_output_dir,"\n")
-  dir.create(file.path(full_output_dir), recursive = TRUE)
-} else {
-  cat("Output directory for case_set and launch date combo exists.\n")
-  cat(full_output_dir,"\n")
+  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
 }
 
 # Write out final seg file -------------------
 cat("Writing combined seg data to file... \n")
-write_tsv(full_seg, paste0(full_output_dir, "/", md5sum, ".seg"))
+write_tsv(full_seg, paste0(output_dir, "/", md5sum, ".seg"))
 
-# Write out md5sum file -------------------
+# Write out sample_ids file -------------------
 cat("Writing sample ids to file... \n")
-write_tsv(data.frame(final_sample_set), paste0(full_output_dir, "/", md5sum, "_sample_ids.txt"))
+write_tsv(data.frame(final_sample_set), paste0(output_dir, "/", md5sum, "_sample_ids.txt"))
 
 # Writing empty file for snakemake checkpoint rule output
-file.create(paste0(full_output_dir, "/done"))
+file.create(paste0(output_dir, "/done"))
 
 cat("DONE!")
 sink()

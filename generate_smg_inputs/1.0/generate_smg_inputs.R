@@ -1,21 +1,17 @@
-### Generate inputs for SMG tools ###
-# Uses file defining sample set to generate maf
-# and prepare it to be used with SMG tools.
-
 #!/usr/bin/env Rscript
-#
-# Usage:
-#   Rscript generate_smg_inputs.R <path/to/master/maf> <path/to/sample_sets> <path/to/output/folder> <case_set> <mode> <include non-coding>
-#
-# Notes:
+
+# Description:
+#   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
 #   This script is intended for use with the SMG modules in LCR-modules (MutSig2CV, dNdS, HotMAPS,
 #   OncodriveFML).
-#   It expects to be provided with the tab-deliminated file where sample subsets
-#   for a particular analysis are specified, where first column (sample_id/Tumor_Sample_Barcode)
-#   defines the unique sample ID, and each column indicates whether this ID is included (1) or not (0)
-#   in a particular subset. The column name for the subset will be used as the naming of the
-#   output maf file at the user-provided location.
-#
+#   It expects to be run as part of a snakemake workflow which provides a file with categories
+#   to subset the metadata in order to get samples IDs of interest. The snakemake workflow will also provide
+#   seq_type, launch_date, and output directory values.
+
+# Log both the stdout and stderr
+log <- file(snakemake@log[[1]], open="wt")
+sink(log ,type = "output")
+sink(log, type = "message")
 
 # Load packages -----------------------------------------------------------
 message("Loading packages...")
@@ -23,76 +19,116 @@ suppressWarnings(
 suppressPackageStartupMessages({
   library(data.table)
   library(tidyverse)
+  library(stringr)
+  library(digest)
 })
 )
 
-# Determine arguments -----------------------------------------------------
+# Determine arguments from snakemake -----------------------------------------------------
+subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
+full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
+output_dir <- dirname(snakemake@output[[1]])
 
-# Parse command-line arguments
-args <- commandArgs(trailingOnly = TRUE) %>% as.list()
-arg_names <- c("master_maf", "all_sample_sets", "output_path", "case_set", "mode", "include_non_coding")
-# if there are multiple maf files passed, collapse them into one list
-args = c(
-        list(unlist(args[1:(length(args)-5)])),
-        args[(length(args)-4):length(args)]
-        )
-args <- setNames(args, arg_names[1:length(args)])
-args$master_maf = as.list(args$master_maf)
+sample_set <- snakemake@wildcards[["sample_set"]]
+launch_date <- snakemake@wildcards[["launch_date"]]
 
-# Print args for debugging
-print(paste("master_maf:",args$master_maf,
-            "all_sample_sets:",args$all_sample_sets,
-            "output_path:",args$output_path,
-            "case_set",args$case_set,
-            "mode",args$mode,
-            "include_non_coding",args$include_non_coding))
+include_non_coding <- snakemake@params[["include_non_coding"]]
+mode <- snakemake@params[["mode"]]
+meta <- snakemake@params[['metadata']]
+meta_cols <- snakemake@params[['metadata_cols']]
 
-# Ensure consistent naming of the sample ID column-------------------
-if (file.exists(args$all_sample_sets)) {
-  full_case_set = suppressMessages(read_tsv(args$all_sample_sets))
-} else {
-  message(paste("Warning: case set is requested, but the case set file", full_case_set_path, "is not found."))
-  stop("Exiting because did not found case set-defining file")
+cat("Arguments from snakemake...\n")
+cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
+cat(paste("Output directory:", output_dir, "\n"))
+cat(paste("Sample set:", sample_set, "\n"))
+cat(paste("Launch date:", launch_date, "\n"))
+cat(paste("Include non-coding:", include_non_coding, "\n"))
+cat(paste("Mode:", mode, "\n"))
+
+# pandas df from snakemake is passed as a character vector
+# This converts it into a dataframe
+num_rows <- length(meta)/length(meta_cols)
+meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
+# Format NA
+meta_matrix[meta_matrix==""] <- NA
+# Convert to dataframe and name columns
+metadata <- as.data.frame(meta_matrix)
+colnames(metadata) <- meta_cols
+
+# Get subsetting values for this sample_set
+# Renaming the variable required to subset the df correctly
+case_set <- sample_set
+subsetting_values <- full_subsetting_categories %>%
+  filter(sample_set == case_set) %>%
+  as.list(.)
+
+# Split comma sep values
+subsetting_values <- lapply(subsetting_values, function(x) unlist(str_split(x, ",")))
+# Change "NA" character to NA object
+subsetting_values <- lapply(subsetting_values,function(x) ifelse(x=="NA",NA,x))
+
+cat("Subsetting values (list):\n")
+print(subsetting_values)
+
+# Function for getting the sample ids
+subset_samples <- function(categories, meta) {
+
+  if ("time_point" %in% names(categories) && length(categories$time_point)==1){
+    if(categories$time_point == "primary_only"){
+      # Make a vector of acceptable values to store in subsetting_values list
+      categories$time_point <- c(NA, "A", "1")
+    } else if (categories$time_point == "non-primary-only"){
+      # Make a vector mutually exclusive with the one above
+      categories$time_point <- unique(meta$time_point[!meta$time_point %in% c(NA, "A", "1")])
+    } else if(categories$time_point == "all"){
+      categories$time_point <- unique(meta$time_point)
+    }
+  }
+
+  for (col in names(categories)[-1]){
+      meta <- meta %>%
+          filter(.data[[col]] %in% categories[[col]])
+  }
+
+  samples <- meta %>%
+    pull(sample_id)
+
+  return(samples)
 }
 
-full_case_set =
-  full_case_set %>% rename_at(vars(matches(
-    "sample_id", ignore.case = TRUE
-  )),
-  ~ "Tumor_Sample_Barcode")
+# Get sample ids of the sample_set
+this_subset_samples <- subset_samples(subsetting_values, metadata)
 
-# get case set as defined in the file
-this_subset_samples =
-  full_case_set %>%
-  dplyr::filter(!!sym(args$case_set) == 1) %>%
-  pull(Tumor_Sample_Barcode)
+# Load master mafs and get mutations for the case set-------------------
+maf_files <- snakemake@input[["maf"]]
+if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
+  cat("Loading genome maf...\n")
+  subset_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "genome")])) %>%
+    filter(Tumor_Sample_Barcode %in% this_subset_samples)
 
+} else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
+  cat("Loading capture maf...\n")
+  subset_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "capture")])) %>%
+    filter(Tumor_Sample_Barcode %in% this_subset_samples)
 
-# Load master maf and get mutations for the maf subset-------------------
-message("Loading master maf and finding available data for samples in requested subset...")
-if (length(args$master_maf)>1){
-  message("More than one maf file is supplied. Concatenating them into single file.")
-  master_maf =
-    tibble(filename = args$master_maf) %>% # create a data frame
-    # holding the file names
-    mutate(file_contents = map(filename, # read files into
-                             ~ read_tsv(args$master_maf, col_types = cols())) # a new data column
-    ) %>%
-    unnest(cols = c(file_contents)) %>%
-    select(-filename)
-} else {
-  master_maf = suppressWarnings(read_tsv(args$master_maf, col_types = cols()))
+} else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
+  cat("Loading genome maf...\n")
+  genome_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "genome")])) %>%
+    filter(Tumor_Sample_Barcode %in% this_subset_samples)
+
+  cat("Loading capture maf...\n")
+  capture_maf <- suppressMessages(read_tsv(maf_files[str_detect(maf_files, "capture")])) %>%
+    filter(!Tumor_Sample_Barcode %in% unique(genome_maf$Tumor_Sample_Barcode)) %>%
+    filter(Tumor_Sample_Barcode %in% this_subset_samples)
+
+  subset_maf <- rbind(genome_maf, capture_maf)
 }
-
-subset_maf =
-  master_maf %>%
-  dplyr::filter(Tumor_Sample_Barcode %in% this_subset_samples)
 
 # subset for coding only if user requested
-if (args$include_non_coding) {
-  message("Proceeding with non-coding mutations...")
+if (include_non_coding) {
+  cat("Proceeding with non-coding mutations...\n")
 } else{
-  message("Excluding non-coding mutations...")
+  cat("Excluding non-coding mutations...\n")
   coding_class = c("Frame_Shift_Del",
                 "Frame_Shift_Ins",
                 "In_Frame_Del",
@@ -110,26 +146,40 @@ if (args$include_non_coding) {
       dplyr::filter(Variant_Classification %in% coding_class)
 }
 
-# report any missing samples
+# Check if output dir extists, create if not-------------------
+if (!dir.exists(file.path(output_dir))){
+  cat("Output directory for sample_set and launch date combo does not exist. Creating it...\n")
+  cat(output_dir,"\n")
+  dir.create(file.path(output_dir), recursive = TRUE)
+} else {
+  cat("Output directory for sample_set and launch date combo exists.\n")
+  cat(output_dir,"\n")
+}
+
+# Report missing samples and calculate the md5sum-------------------
 missing_samples = setdiff(this_subset_samples,
                           unique(subset_maf$Tumor_Sample_Barcode))
 
 if (length(missing_samples)==0) {
-  message(paste("Success! Found mutations for all samples.", length(this_subset_samples), "patients will be used in the analysis"))
+  cat(paste("Success! Found mutations for all samples.", length(this_subset_samples), "patients will be used in the analysis\n"))
+  md5sum <- digest(this_subset_samples)
+  final_sample_set <- this_subset_samples
 } else {
-  message(paste("WARNING:", length(missing_samples), "will not be available for the analysis."))
-  message("Did not find mutations for these samples in the master input maf:")
-  message(missing_samples)
+  cat(paste("WARNING:", length(missing_samples), "will not be available for the analysis.\n"))
+  cat("Writing missing sample ids to file... \n")
+  final_sample_set <- unique(subset_maf$Tumor_Sample_Barcode)
+  md5sum <- digest(final_sample_set)
+  write_tsv(data.frame(missing_samples), paste0(output_dir, "/", md5sum, "_missing_sample_ids.txt"))
 }
 
 # Format maf according to the requirements of each individual tool --------------------------------------
-message(paste("preparing maf file to be used with", args$mode))
+cat("preparing maf file to be used with", mode, "\n")
 # MutSig2CV
-if (args$mode == "MutSig2CV") {
+if (mode == "MutSig2CV") {
   # check that the maf file is in grch37-based coordinates
   if (grepl("38", subset_maf$NCBI_Build[1])) {
-    message("Requested mode is MutSig2CV, but the supplied file is in the hg38-based coordinates.")
-    message("Unfortunatelly, MutSig only works for grch37-based maf files.")
+    cat("Requested mode is MutSig2CV, but the supplied file is in the hg38-based coordinates.\n")
+    cat("Unfortunatelly, MutSig only works for grch37-based maf files.\n")
     stop("Please supply the mutation data in grch37-based version.")
   }
 
@@ -144,7 +194,7 @@ if (args$mode == "MutSig2CV") {
            "type"="Variant_Classification",
            "classification"="Variant_Type")
 
-  subset_maf =
+subset_maf =
   subset_maf %>%
     select(chr, pos, gene, patient, ref_allele, newbase, type, classification)
 
@@ -153,11 +203,11 @@ if (args$mode == "MutSig2CV") {
 }
 
 # dNdS
-if (args$mode == "dNdS") {
+if (mode == "dNdS") {
   # check that the maf file is in grch37-based coordinates
   if (grepl("38", subset_maf$NCBI_Build[1])) {
-    message("Requested mode is dNdS, but the supplied file is in the hg38-based coordinates.")
-    message("Unfortunatelly, dNdS is configured to only work for grch37-based maf files.")
+    cat("Requested mode is dNdS, but the supplied file is in the hg38-based coordinates.\n")
+    cat("Unfortunatelly, dNdS is configured to only work for grch37-based maf files.\n")
     stop("Please supply the mutation data in grch37-based version.")
   }
 
@@ -178,8 +228,8 @@ if (args$mode == "dNdS") {
 
 }
 
-if (args$mode == "FishHook") {
-  
+if (mode == "FishHook") {
+
   subset_maf =
     subset_maf %>%
     select(Hugo_Symbol,
@@ -189,23 +239,29 @@ if (args$mode == "FishHook") {
            End_Position,
            Variant_Classification,
            Strand)
-  
+
   grouping_column = "Tumor_Sample_Barcode"
-  
+
 }
 
 
-# prepare maf file contents for documentation purposes
+# Prepare maf file contents for documentation purposes
 contents = subset_maf %>%
   group_by(across(all_of(grouping_column))) %>%
   summarise(N_mutations=n()) %>%
   ungroup %>%
-  mutate(non_coding_included=args$include_non_coding)
+  mutate(non_coding_included=include_non_coding)
 
-# Output --------------------------------------------------------------------------------------
+# Write out final maf file -------------------
+cat("Writing resulting maf to file...\n")
+write_tsv(subset_maf, paste0(output_dir, "/", md5sum, ".maf"))
 
-message("Writing resulting maf to file...")
-write_tsv(subset_maf, paste0(args$output_path, "/", args$case_set, ".maf"))
-write_tsv(contents, paste0(args$output_path, "/", args$case_set, ".maf.content"))
+# Write out contents file -------------------
+cat("Writing maf contents grouped by sample to file...\n")
+write_tsv(contents, paste0(output_dir, "/", md5sum, ".maf.content"))
 
-message("DONE!")
+# Writing empty file for snakemake checkpoint rule output
+file.create(paste0(output_dir, "/done"))
+
+cat("DONE!")
+sink()
