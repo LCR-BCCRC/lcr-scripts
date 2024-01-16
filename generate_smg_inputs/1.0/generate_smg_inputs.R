@@ -74,7 +74,7 @@ print(subsetting_values)
 subset_samples <- function(categories, meta) {
 
   if ("time_point" %in% names(categories) && length(categories$time_point)==1){
-    if(categories$time_point == "primary_only"){
+    if(categories$time_point == "primary-only"){
       # Make a vector of acceptable values to store in subsetting_values list
       categories$time_point <- c(NA, "A", "1")
     } else if (categories$time_point == "non-primary-only"){
