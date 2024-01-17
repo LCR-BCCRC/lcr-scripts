@@ -1,13 +1,13 @@
 #!/usr/bin/env Rscript
 
-# TO DO: update desc
 # Description:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
-#   This script is intended for use with the SMG modules in LCR-modules (MutSig2CV, dNdS, HotMAPS,
-#   OncodriveFML).
+#   This script is intended for use with the SMG (MutSig2CV, dNdS, HotMAPS,
+#   OncodriveFML) and SMR (gistic2) modules in in LCR-modules.
 #   It expects to be run as part of a snakemake workflow which provides a file with categories
 #   to subset the metadata in order to get samples IDs of interest. The snakemake workflow will also provide
 #   seq_type, launch_date, and output directory values.
+#   The expected input file type for SMR modules is seg and for SMG modules it is maf.
 
 # Log both the stdout and stderr
 log <- file(snakemake@log[[1]], open="wt")
