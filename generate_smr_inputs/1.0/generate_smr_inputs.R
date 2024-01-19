@@ -1,5 +1,6 @@
 # /usr/bin/env Rscript
 
+# NOTE BEFORE: This script is outdated. Keeping for legacy purposes. Use generate_smg_inputs/1.1/ instead
 # Description:
 #   Adapted from generate_smg_inputs/1.0/generate_smg_inputs.R.
 #   This script is intended for generating input to SMR modules in LCR-modules (gistic2).
