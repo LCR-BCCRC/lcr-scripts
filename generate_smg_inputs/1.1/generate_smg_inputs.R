@@ -129,7 +129,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
 
   } else if ("seg" %in% names(snakemake@input)) {
     subset_input <- genome_input %>%
-      filter(ID %in% this_sample_set)
+      filter(ID %in% this_subset_samples)
   }
 } else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
   cat("Loading capture input file...\n")
@@ -142,7 +142,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
 
   } else if ("seg" %in% names(snakemake@input)) {
     subset_input <- capture_input %>%
-      filter(ID %in% this_sample_set)
+      filter(ID %in% this_subset_samples)
   }
 } else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
   cat("Loading genome input file ...\n")
@@ -164,7 +164,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
 
   } else if ("seg" %in% names(snakemake@input)) {
     genome_subset <- genome_input %>%
-      filter(ID %in% this_sample_set)
+      filter(ID %in% this_subset_samples)
 
     capture_subset <- capture_input %>%
       filter(!ID %in% unique(genome_subset$ID)) %>%
@@ -466,7 +466,6 @@ if (mode == "gistic2") {
     select(-overlap_status, -region_size)
   }
 
-  subset_input <- subset_input_checked
 }
 
 # Write out appropriate files based on inputs -------------------
@@ -486,6 +485,7 @@ if ("maf" %in% names(snakemake@input)){
 
 } else if ("seg" %in% names(snakemake@input)){
   cat("Writing combined seg data to file... \n")
+  subset_input
   write_tsv(subset_input, paste0(output_dir, "/", md5sum, ".seg"))
 
   cat("Writing sample ids to file... \n")
