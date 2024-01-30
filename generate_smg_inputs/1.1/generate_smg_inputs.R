@@ -466,7 +466,6 @@ if (mode == "gistic2") {
     select(-overlap_status, -region_size)
   }
 
-  subset_input <- subset_input_checked
 }
 
 # Write out appropriate files based on inputs -------------------
@@ -486,6 +485,7 @@ if ("maf" %in% names(snakemake@input)){
 
 } else if ("seg" %in% names(snakemake@input)){
   cat("Writing combined seg data to file... \n")
+  subset_input
   write_tsv(subset_input, paste0(output_dir, "/", md5sum, ".seg"))
 
   cat("Writing sample ids to file... \n")
