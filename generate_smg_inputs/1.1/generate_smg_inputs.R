@@ -281,7 +281,7 @@ if (mode == "dNdS") {
   grouping_column <- "sampleID"
 }
 
-if (mode == "FishHook") {
+if (mode == "fishHook") {
   subset_input <- subset_input %>%
     select(Hugo_Symbol,
            Tumor_Sample_Barcode,
