@@ -468,6 +468,18 @@ if (mode == "gistic2") {
 
 }
 
+if (mode == "OncodriveCLUSTL") {
+  grouping_column <- "Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
+if (mode == "OncodriveFML") {
+  grouping_column <- "Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
 # Write out appropriate files based on inputs -------------------
 if ("maf" %in% names(snakemake@input)){
   # Prepare maf file contents for documentation purposes
