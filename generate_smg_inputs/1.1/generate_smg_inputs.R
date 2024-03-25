@@ -306,6 +306,18 @@ if (mode == "HotMAPS") {
   subset_input <- subset_input %>% unique()
 }
 
+if (mode == "OncodriveCLUSTL") {
+  grouping_column <- "Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
+if (mode == "OncodriveFML") {
+  grouping_column <- "Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
 if (mode == "gistic2") {
   # Sort by chrom, start, end
   subset_input <- subset_input %>%
@@ -466,18 +478,6 @@ if (mode == "gistic2") {
     select(-overlap_status, -region_size)
   }
 
-}
-
-if (mode == "OncodriveCLUSTL") {
-  grouping_column <- "Tumor_Sample_Barcode"
-
-  subset_input <- subset_input %>% unique()
-}
-
-if (mode == "OncodriveFML") {
-  grouping_column <- "Tumor_Sample_Barcode"
-
-  subset_input <- subset_input %>% unique()
 }
 
 # Write out appropriate files based on inputs -------------------
