@@ -12,7 +12,7 @@
 # This is a Python script intended to identify SNVs from ATAC-Seq BAM files
 
 
-# FUNCTIONS:
+# Functions:
 
 # extract_barcode : will extract CB_Values (barcodes) from the BAM file
 # process_reads : requires BAM file and reference genome FASTA file, identifies SNVs
@@ -22,6 +22,7 @@
 # maf_comparison : filters MAF file by "SNP", then compares the generated tsv file against it to confirm matches
 # find_matching_barcodes : looks for any barcodes that picked up on multiple SNVs for further validation
 
+# Output: Multiple tsv files, but maf_comparison is most informative
 
 
 ##### SETUP #####
@@ -121,7 +122,7 @@ def write_tsv(snv_file, snv_multi, output):
 
 
 
-# Compares all results from snv_file checked against the MAF file, and adds additional columns from the MAF to the file for more info
+# Compares all results from snv_file checked against the MAF file, and adds additional corresponding columns from the MAF to the file for more info
 def maf_comparison(maf_file, snv_file, output_file):
     # using pandas to read MAF file
     maf_data = pd.read_csv(maf_file, sep='\t', comment='#', header=0, dtype=str)
@@ -156,6 +157,7 @@ def maf_comparison(maf_file, snv_file, output_file):
             merged_data = pd.concat([merged_data, merged_row.to_frame().T], ignore_index=False)
 
     # merged data to a new tsv file --> "MAF_comparison"
+    # contains all columns from MAF file, with added barcode information at the end including # of reads and lists the barcodes
     merged_data.to_csv(output_file, sep='\t', index=False)
 
 
