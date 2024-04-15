@@ -3,7 +3,6 @@
 
 
 ##### ATTRIBUTION #####
-
 # MBB 498 Project - Rachel LaFrance
 
 
@@ -34,23 +33,25 @@ import pandas as pd
 
 
 ### input and output files ###
+# Change to appropriate input files before running!
 def main():
     # the destination of the patient BAM file and reference genome to run process_reads function
-    bam_file = "" #input file name
-    reference_fasta = "reference_genome.fa"
+    bam_file = "99-13280_subset.bam" # an example input file name
+    reference_fasta = "reference_genome.fa" # reference genome 
     output = process_reads(bam_file, reference_fasta)
 
     # name the output files
-    snv_file = "mpileup.tsv"
-    snv_multi = "multiple_barcodes.tsv"
+    snv_file = "mpileup.tsv" # outputs all SNVs detected, used just to ensure the code works and is used in the next function
+    snv_multi = "multiple_barcodes.tsv" # outputs SNVs detected by multiple barcodes - just informational, but could be used in the next function
     write_tsv(snv_file, snv_multi, output)
 
     # the destination for patient MAF, desired file chosen from write_tsv function above, and named output
-    maf_comparison("data/99-13280.maf", snv_file, "MAF_comparison.tsv")
+    maf_comparison("99-13280.maf", "mpileup.tsv", "MAF_comparison.tsv")  
+    # example of patient MAF file, snv_file from function above, and example output file for this function
 
-    # use the maf_comparison file above as input
-    comparison_file = "MAF_comparison.tsv" 
-    output_file = "matched_barcodes.tsv"
+    # optional! looks for a barcode that picked up on multiple SNVs for further validation
+    maf_comparison_file = "MAF_comparison.tsv" # use the file generated above as the input
+    output_file = "matched_barcodes.tsv" # example name of output file of the matched barcodes
     find_matching_barcodes(comparison_file, output_file)
 
 
@@ -163,10 +164,10 @@ def maf_comparison(maf_file, snv_file, output_file):
 
 
 # Iterates through CB_Values to identify if multiple SNVs are picked up from the same barcode
-def find_matching_barcodes(comparison_file, output_file):
+def find_matching_barcodes(maf_comparison_file, output_file):
     matching_CB_and_Chr_values = {}
     
-    with open(comparison_file, 'r') as comp_f:
+    with open(maf_comparison_file, 'r') as comp_f:
         next(comp_f)  # to skip header
         for line in comp_f:
             fields = line.strip().split('\t')
@@ -190,3 +191,4 @@ def find_matching_barcodes(comparison_file, output_file):
 
 if __name__ == "__main__":
     main()
+
