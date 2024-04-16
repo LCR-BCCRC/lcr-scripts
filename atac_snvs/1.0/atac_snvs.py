@@ -3,7 +3,8 @@
 
 
 ##### ATTRIBUTION #####
-# MBB 498 Project - Rachel LaFrance
+# MBB 498 Project
+# Author: Rachel LaFrance
 
 
 
@@ -15,9 +16,9 @@
 
 # extract_barcode : will extract CB_Values (barcodes) from the BAM file
 # process_reads : requires BAM file and reference genome FASTA file, identifies SNVs
-# write_tsv : tsv file
+# write_tsv : tsv file(s)
     # snv_file = all SNVs detected
-    # snv_multi = multiple barcoded reads per SNV
+    # snv_multi = only multiple (>1) barcoded reads per SNV
 # maf_comparison : filters MAF file by "SNP", then compares the generated tsv file against it to confirm matches
 # find_matching_barcodes : looks for any barcodes that picked up on multiple SNVs for further validation
 
@@ -36,8 +37,8 @@ import pandas as pd
 # Change to appropriate input files before running!
 def main():
     # the destination of the patient BAM file and reference genome to run process_reads function
-    bam_file = "99-13280_subset.bam" # an example input file name
-    reference_fasta = "reference_genome.fa" # reference genome 
+    bam_file = "99-13280_subset.bam" #example directory "data/genome_bams/99-13280_subset.bam"
+    reference_fasta = "reference_genome.fa" # reference genome: https://www.bcgsc.ca/downloads/lcr-modules/genome_fastas/grch38.fa
     output = process_reads(bam_file, reference_fasta)
 
     # name the output files
