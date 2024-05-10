@@ -123,6 +123,11 @@ genes$lengths <-
   as.data.frame() %>%
   rownames_to_column("gene")
 
+genes$tpm <-
+  genes$txi$abundance %>%
+  as.data.frame() %>%
+  rownames_to_column("gene")
+
 # Output --------------------------------------------------------------------------------------
 
 message("Writing transcript-level counts to file...")
@@ -133,6 +138,7 @@ write_rds(transcripts$txi, paste0(args$output_path, "/salmon.transcripts.txi.rds
 message("Writing gene-level counts to file...")
 fwrite(genes$counts, paste0(args$output_path, "/salmon.genes.counts.tsv"), sep = "\t")
 fwrite(genes$lengths, paste0(args$output_path, "/salmon.genes.lengths.tsv"), sep = "\t")
+fwrite(genes$tpm, paste0(args$output_path, "/salmon.genes.tpm.tsv"), sep = "\t")
 write_rds(genes$txi, paste0(args$output_path, "/salmon.genes.txi.rds"))
 
 metadata_out <- metadata[metadata$sample_id %in% sample_table$sample_id, ] 
