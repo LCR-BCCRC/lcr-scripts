@@ -3,17 +3,40 @@
 # Requires that your GSC JIRA/wiki password is stored in an environment variable
 # See https://www.bcgsc.ca/wiki/display/PIPE/API+interface+module+How-to for instructions
 
-# Find merged bam file paths for some libraries
-# bams <- query_api(endpoint = "merge", library = c("A68797", "A55760"))
+# For more details about different endpoints see https://www.bcgsc.ca/data/bioapps-docs/bioapps.api/docs/.
+
+##### EXAMPLES #####
+
+# Find all library IDs generated under a given SOW:
+# sow_query <- query_api("library/info", sow = "GSC-0391")
+# library_ids <- sow_query$name
+# protocols <- sow_query$protocol.name
+
+# Get all SOWs associated with a set of library IDs:
+# lib_query <- query_api("library/info", library = c("D03016", "B82386", "D03019"))
+# lib_query <- unnest(lib_query, "sows", names_sep = "_")
+# library_ids <- lib_query$name
+# sows <- lib_query$sows_code
+
+# Retrieve merge bam paths WITH library IDs:
+# merge_query <- query_api("merge", library = "A86467")
+# merge_query <- unnest(merge_query, "libraries", names_sep = "_")
+# library_ids <- merge_query$libraries_name
+# data_path <- merge_query$data_path
+
+# Get non-merge paths WITH library IDs:
+# libcore_query <- query_api("aligned_libcore/info", library = "A86467")
+# library_ids <- libcore_query$libcore.library.name
+# data_path <- libcore_query$data_path
+# Get QC info from libcore query:
+# bioqc <- libcore_query$libcore.bio_qc_comments
 
 # Find fastq files for some libraries
-# fastqs <- query_api(endpoint = "merge_fastq", library = "F138635")
-
-# Get comprehensive details about individual lanes of sequencing
-# libcore <- query_api(endpoint = "aligned_libcore/info", library = c("A68797", "A55760"))
-# libcore$bio_qc_comments
-
-# For more details about different endpoints see https://www.bcgsc.ca/data/bioapps-docs/bioapps.api/docs/.
+# (merge_fastq endpoint does not return library IDs)
+# fastqs <- bind_rows(lapply(c("F138635", "F138636"), function(x) {
+#     fqs <- query_api(endpoint = "merge_fastq", library = x) %>%
+#         mutate(library_id = x)
+# }))
 
 suppressWarnings(suppressPackageStartupMessages({
     message("Loading packages...")
