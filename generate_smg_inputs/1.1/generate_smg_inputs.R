@@ -285,7 +285,13 @@ if (mode == "dNdS") {
   grouping_column <- "sampleID"
 }
 
-if (mode == "FishHook") {
+if (mode == "fishHook") {
+  if (grepl("38", subset_input$NCBI_Build[1])) {
+    cat("Requested mode is fishHook, but the supplied file is in the hg38-based coordinates.\n")
+    cat("Unfortunately, fishHook is configured to only work for grch37-based maf files.\n")
+    stop("Please supply the mutation data in grch37-based version.")
+  }
+
   subset_input <- subset_input %>%
     select(Hugo_Symbol,
            Tumor_Sample_Barcode,
@@ -306,6 +312,18 @@ if (mode == "HotMAPS") {
   }
 
   grouping_column <-"Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
+if (mode == "OncodriveCLUSTL") {
+  grouping_column <- "Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
+if (mode == "OncodriveFML") {
+  grouping_column <- "Tumor_Sample_Barcode"
 
   subset_input <- subset_input %>% unique()
 }
@@ -470,18 +488,6 @@ if (mode == "gistic2") {
     select(-overlap_status, -region_size)
   }
 
-}
-
-if (mode == "OncodriveCLUSTL") {
-  grouping_column <- "Tumor_Sample_Barcode"
-
-  subset_input <- subset_input %>% unique()
-}
-
-if (mode == "OncodriveFML") {
-  grouping_column <- "Tumor_Sample_Barcode"
-
-  subset_input <- subset_input %>% unique()
 }
 
 # Write out appropriate files based on inputs -------------------
