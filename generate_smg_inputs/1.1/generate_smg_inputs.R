@@ -98,8 +98,12 @@ subset_samples <- function(categories, meta) {
   }
 
   for (col in names(categories)[-1]){
+    if(length(categories[[col]]) == 1 & is.na(categories[[col]])) { # excludes the NA case in time_point
+      next
+    } else { 
       meta <- meta %>%
           filter(.data[[col]] %in% categories[[col]])
+    }
   }
 
   samples <- meta %>%
