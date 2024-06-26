@@ -282,6 +282,12 @@ if (mode == "dNdS") {
 }
 
 if (mode == "fishHook") {
+  if (grepl("38", subset_input$NCBI_Build[1])) {
+    cat("Requested mode is fishHook, but the supplied file is in the hg38-based coordinates.\n")
+    cat("Unfortunately, fishHook is configured to only work for grch37-based maf files.\n")
+    stop("Please supply the mutation data in grch37-based version.")
+  }
+
   subset_input <- subset_input %>%
     select(Hugo_Symbol,
            Tumor_Sample_Barcode,
