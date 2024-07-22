@@ -56,6 +56,15 @@ if ("seg" %in% names(snakemake@input)){
   cat(paste("Projection:", projection, "\n"))
 }
 
+# Before doing anything, check that rainstorm isn't trying to
+# run on capture data
+if (mode == "rainstorm"){
+  if ("capture" %in% subsetting_values$seq_type | str_detect(input_files, "capture")){
+    cat("Requested mode is rainstorm, but the supplied maf and/or subsetting categories indicate capture data.\n")
+    stop("Please supply a maf with ONLY genome data and seq_type only genome in the sample subsetting categories.")
+  }
+}
+
 # Determine sample ids in sample set -----------------------------------------------------
 # pandas df from snakemake is passed as a character vector
 # This converts it into a dataframe
@@ -100,7 +109,7 @@ subset_samples <- function(categories, meta) {
   for (col in names(categories)[-1]){
     if(length(categories[[col]]) == 1 & is.na(categories[[col]])) { # excludes the NA case in time_point
       next
-    } else { 
+    } else {
       meta <- meta %>%
           filter(.data[[col]] %in% categories[[col]])
     }
@@ -323,6 +332,12 @@ if (mode == "OncodriveCLUSTL") {
 }
 
 if (mode == "OncodriveFML") {
+  grouping_column <- "Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
+if (mode == "rainstorm"){
   grouping_column <- "Tumor_Sample_Barcode"
 
   subset_input <- subset_input %>% unique()
