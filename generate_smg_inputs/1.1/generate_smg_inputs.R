@@ -43,6 +43,8 @@ if ("maf" %in% names(snakemake@input)){
 meta <- snakemake@params[['metadata']]
 meta_cols <- snakemake@params[['metadata_cols']]
 
+save(snakemake, file="/projects/rmorin_scratch/sgillis_temp/test_rainstorm/rainstorm_snakemakeobj_v1_1.RData")
+
 cat("Arguments from snakemake...\n")
 cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
 cat(paste("Output directory:", output_dir, "\n"))
@@ -54,15 +56,6 @@ if ("maf" %in% names(snakemake@input)){
 }
 if ("seg" %in% names(snakemake@input)){
   cat(paste("Projection:", projection, "\n"))
-}
-
-# Before doing anything, check that rainstorm isn't trying to
-# run on capture data
-if (mode == "rainstorm"){
-  if ("capture" %in% subsetting_values$seq_type | str_detect(input_files, "capture")){
-    cat("Requested mode is rainstorm, but the supplied maf and/or subsetting categories indicate capture data.\n")
-    stop("Please supply a maf with ONLY genome data and seq_type only genome in the sample subsetting categories.")
-  }
 }
 
 # Determine sample ids in sample set -----------------------------------------------------
@@ -90,6 +83,8 @@ subsetting_values <- lapply(subsetting_values,function(x) ifelse(x=="NA",NA,x))
 
 cat("Subsetting values (list):\n")
 print(subsetting_values)
+
+
 
 # Function for getting the sample ids
 subset_samples <- function(categories, meta) {
@@ -131,11 +126,23 @@ if ("maf" %in% names(snakemake@input)){
   input_files <- snakemake@input[["seg"]]
 }
 
+# Check that rainstorm isn't trying to run on capture data
+if (mode == "rainstorm"){
+  if ("capture" %in% subsetting_values$seq_type | str_detect(input_files, "capture")){
+    cat("Requested mode is rainstorm, but the supplied maf and/or subsetting categories indicate capture data.\n")
+    stop("Please supply a maf with ONLY genome data and seq_type only genome in the sample subsetting categories.")
+  }
+}
+
 if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome input file ...\n")
-  genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")]))
-  cat("Subsetting to sample set...\n")
+  if(mode == "rainstorm"){
+    genome_input <- suppressMessages(read_tsv(input_files, col_select = 1:45))
+  }else {
+    genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")]))
+  }
 
+  cat("Subsetting to sample set...\n")
   if ("maf" %in% names(snakemake@input)){
     subset_input <- genome_input %>%
       filter(Tumor_Sample_Barcode %in% this_subset_samples)
