@@ -82,6 +82,8 @@ subsetting_values <- lapply(subsetting_values,function(x) ifelse(x=="NA",NA,x))
 cat("Subsetting values (list):\n")
 print(subsetting_values)
 
+
+
 # Function for getting the sample ids
 subset_samples <- function(categories, meta) {
 
@@ -100,7 +102,7 @@ subset_samples <- function(categories, meta) {
   for (col in names(categories)[-1]){
     if(length(categories[[col]]) == 1 & is.na(categories[[col]])) { # excludes the NA case in time_point
       next
-    } else { 
+    } else {
       meta <- meta %>%
           filter(.data[[col]] %in% categories[[col]])
     }
@@ -122,11 +124,23 @@ if ("maf" %in% names(snakemake@input)){
   input_files <- snakemake@input[["seg"]]
 }
 
+# Check that rainstorm isn't trying to run on capture data
+if (mode == "rainstorm"){
+  if ("capture" %in% subsetting_values$seq_type | str_detect(input_files, "capture")){
+    cat("Requested mode is rainstorm, but the supplied maf and/or subsetting categories indicate capture data.\n")
+    stop("Please supply a maf with ONLY genome data and seq_type only genome in the sample subsetting categories.")
+  }
+}
+
 if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome input file ...\n")
-  genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")]))
-  cat("Subsetting to sample set...\n")
+  if(mode == "rainstorm"){
+    genome_input <- suppressMessages(read_tsv(input_files, col_select = 1:45))
+  }else {
+    genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")]))
+  }
 
+  cat("Subsetting to sample set...\n")
   if ("maf" %in% names(snakemake@input)){
     subset_input <- genome_input %>%
       filter(Tumor_Sample_Barcode %in% this_subset_samples)
@@ -323,6 +337,12 @@ if (mode == "OncodriveCLUSTL") {
 }
 
 if (mode == "OncodriveFML") {
+  grouping_column <- "Tumor_Sample_Barcode"
+
+  subset_input <- subset_input %>% unique()
+}
+
+if (mode == "rainstorm"){
   grouping_column <- "Tumor_Sample_Barcode"
 
   subset_input <- subset_input %>% unique()
