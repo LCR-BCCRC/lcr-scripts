@@ -43,8 +43,6 @@ if ("maf" %in% names(snakemake@input)){
 meta <- snakemake@params[['metadata']]
 meta_cols <- snakemake@params[['metadata_cols']]
 
-save(snakemake, file="/projects/rmorin_scratch/sgillis_temp/test_rainstorm/rainstorm_snakemakeobj_v1_1.RData")
-
 cat("Arguments from snakemake...\n")
 cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
 cat(paste("Output directory:", output_dir, "\n"))
