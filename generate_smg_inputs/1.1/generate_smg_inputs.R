@@ -25,6 +25,14 @@ suppressPackageStartupMessages({
 })
 )
 
+# Get threads SLURM parameter if not running locally -----------------------------------------------------
+if (Sys.getenv("SLURM_CPUS_PER_TASK") == ""){
+  threads <- 1
+}else {
+  threads <- strtoi(Sys.getenv("SLURM_CPUS_PER_TASK"))
+  cat(paste("threads: ", threads, "\n"))
+}
+
 # Determine arguments from snakemake -----------------------------------------------------
 subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
 full_subsetting_categories <- suppressMessages(read_tsv(subsetting_categories_file, comment="#"))
@@ -100,7 +108,7 @@ subset_samples <- function(categories, meta) {
   }
 
   for (col in names(categories)[-1]){
-    if(length(categories[[col]]) == 1 & is.na(categories[[col]])) { # excludes the NA case in time_point
+    if(length(categories[[col]]) == 1 && is.na(categories[[col]])) { # excludes the NA case in time_point
       next
     } else {
       meta <- meta %>%
@@ -132,12 +140,24 @@ if (mode == "rainstorm"){
   }
 }
 
+# Read in only minimally necessary columns
+relevant_maf_columns <- c("Hugo_Symbol", "Tumor_Sample_Barcode", "NCBI_Build", "Chromosome", "Start_Position", "End_Position", "Strand", "Variant_Classification", "Variant_Type", "Reference_Allele", "Tumor_Seq_Allele2", "HGVSp_Short", "Transcript_ID", "Protein_position")
+
 if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome input file ...\n")
-  if(mode == "rainstorm"){
-    genome_input <- suppressMessages(read_tsv(input_files, col_select = 1:45))
-  }else {
-    genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")]))
+  if ("maf" %in% names(snakemake@input)){
+    if(mode == "rainstorm"){
+      genome_input <- suppressMessages(read_tsv(input_files,
+                                                col_select = all_of(relevant_maf_columns),
+                                                num_threads = threads))
+    }else{
+      genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")],
+                                                col_select = all_of(relevant_maf_columns),
+                                                num_threads = threads))
+    }
+
+  } else if ("seg" %in% names(snakemake@input)){
+    genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")], num_threads = threads))
   }
 
   cat("Subsetting to sample set...\n")
@@ -151,7 +171,13 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   }
 } else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
   cat("Loading capture input file...\n")
-  capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")]))
+  if ("maf" %in% names(snakemake@input)){
+    capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")],
+                                                col_select = all_of(relevant_maf_columns),
+                                                num_threads = threads))
+  } else if ("seg" %in% names(snakemake@input)){
+    capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")], num_threads = threads))
+  }
 
   cat("Subsetting to sample set...\n")
   if ("maf" %in% names(snakemake@input)){
@@ -164,10 +190,22 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   }
 } else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
   cat("Loading genome input file ...\n")
-  genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")]))
+  if ("maf" %in% names(snakemake@input)){
+    genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")],
+                                                col_select = all_of(relevant_maf_columns),
+                                                num_threads = threads))
+  } else if ("seg" %in% names(snakemake@input)){
+    genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")], num_threads = threads))
+  }
 
   cat("Loading capture input file...\n")
-  capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")]))
+  if ("maf" %in% names(snakemake@input)){
+    capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")],
+                                                col_select = all_of(relevant_maf_columns),
+                                                num_threads = threads))
+  } else if ("seg" %in% names(snakemake@input)){
+    capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")], num_threads = threads))
+  }
 
   cat("Subsetting to sample set...\n")
   if ("maf" %in% names(snakemake@input)){
@@ -353,7 +391,7 @@ if (mode == "gistic2") {
   subset_input <- subset_input %>%
     arrange(ID, chrom, start, end)
 
-  # Filter to only canonical chromosomes -------------------
+  # Filter to only canonical chromosomes (gistic2) -------------------
   cat("Filtering to only canonical chromosomes... \n")
   if (projection %in% "hg38"){
     subset_input <- subset_input %>%
