@@ -25,13 +25,8 @@ suppressPackageStartupMessages({
 })
 )
 
-# Get threads SLURM parameter if not running locally -----------------------------------------------------
-if (Sys.getenv("SLURM_CPUS_PER_TASK") == ""){
-  threads <- 1
-}else {
-  threads <- strtoi(Sys.getenv("SLURM_CPUS_PER_TASK"))
-  cat(paste("threads: ", threads, "\n"))
-}
+# Reading in large marf/seg files is more efficient when uses more than one thread -----------------------------------------------------
+threads <- 4
 
 # Determine arguments from snakemake -----------------------------------------------------
 subsetting_categories_file <- snakemake@input[["subsetting_categories"]]
