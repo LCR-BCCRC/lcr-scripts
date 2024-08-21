@@ -37,6 +37,7 @@ sample_set <- snakemake@wildcards[["sample_set"]]
 launch_date <- snakemake@wildcards[["launch_date"]]
 
 mode <- snakemake@params[["mode"]]
+
 if ("maf" %in% names(snakemake@input)){
   include_non_coding <- snakemake@params[["include_non_coding"]]
 } else if ("seg" %in% names(snakemake@input)){
@@ -150,7 +151,6 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
                                                 col_select = all_of(relevant_maf_columns),
                                                 num_threads = threads))
     }
-
   } else if ("seg" %in% names(snakemake@input)){
     genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")], num_threads = threads))
   }
@@ -159,11 +159,11 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   if ("maf" %in% names(snakemake@input)){
     subset_input <- genome_input %>%
       filter(Tumor_Sample_Barcode %in% this_subset_samples)
-
   } else if ("seg" %in% names(snakemake@input)) {
     subset_input <- genome_input %>%
       filter(ID %in% this_subset_samples)
   }
+
 } else if (!("genome" %in% subsetting_values$seq_type) && "capture" %in% subsetting_values$seq_type) { # capture only
   cat("Loading capture input file...\n")
   if ("maf" %in% names(snakemake@input)){
@@ -178,11 +178,11 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   if ("maf" %in% names(snakemake@input)){
     subset_input <- capture_input %>%
       filter(Tumor_Sample_Barcode %in% this_subset_samples)
-
   } else if ("seg" %in% names(snakemake@input)) {
     subset_input <- capture_input %>%
       filter(ID %in% this_subset_samples)
   }
+
 } else if ("genome" %in% subsetting_values$seq_type && "capture" %in% subsetting_values$seq_type) { # both
   cat("Loading genome input file ...\n")
   if ("maf" %in% names(snakemake@input)){
@@ -211,7 +211,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
       filter(!Tumor_Sample_Barcode %in% unique(genome_subset$Tumor_Sample_Barcode)) %>%
       filter(Tumor_Sample_Barcode %in% this_subset_samples)
 
-    subset_input <- rbind(genome_subset, capture_subset)
+    subset_input <- bind_rows(genome_subset, capture_subset)
 
   } else if ("seg" %in% names(snakemake@input)) {
     genome_subset <- genome_input %>%
@@ -221,7 +221,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
       filter(!ID %in% unique(genome_subset$ID)) %>%
       filter(ID %in% this_subset_samples)
 
-    subset_input <- rbind(genome_subset, capture_subset)
+    subset_input <- bind_rows(genome_subset, capture_subset)
   }
 }
 
@@ -560,7 +560,6 @@ if ("maf" %in% names(snakemake@input)){
 
 } else if ("seg" %in% names(snakemake@input)){
   cat("Writing combined seg data to file... \n")
-  subset_input
   write_tsv(subset_input, paste0(output_dir, "/", md5sum, ".seg"))
 
   cat("Writing sample ids to file... \n")
