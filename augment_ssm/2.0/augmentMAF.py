@@ -15,14 +15,6 @@ todo:
     I did not touch the "_get_read_support" function, didn't want to break it. But it could use a review
     and maybe some refactoring.
 
-Example:
-# example importing it into a script
-from augmentMAF import AugmentMAF
-AM_object = AugmentMAF(sample_id="sample1", index_maf="index.maf", index_bam="index.bam",
-                        add_maf_files=["maf1.maf", "maf2.maf"], genome_build="hg38",
-                        output="output.maf", threads=6, min_alt_count=3)
-
-
 Author: Kurt Yakimovich et al.
 """
 
