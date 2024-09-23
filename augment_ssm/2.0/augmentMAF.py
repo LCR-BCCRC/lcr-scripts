@@ -19,12 +19,11 @@ Author: Kurt Yakimovich et al.
 """
 
 import pandas as pd
-from pathlib import Path 
+from pathlib import Path
 import pysam
 import os
 import multiprocessing
 import argparse
-import shutil
 
 def get_args():
     parser = argparse.ArgumentParser()
