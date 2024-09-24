@@ -119,7 +119,7 @@ class AugmentMAF(object):
 
 
         """
-        if not self.master_maf:
+        if self.master_maf is None:
             print("No additional maf files provided ... returning index maf")
             # add standard column anyways
             self.index_maf["origin_samples"] = ""
@@ -192,7 +192,6 @@ class AugmentMAF(object):
         if len(self.add_maf_files) > 0:
             return self._get_missing_maf_rows()
         else:
-            print("No additional maf files provided ...")
             return None
 
     def mark_origin(self, add_mafs: pd.DataFrame) -> pd.DataFrame:
