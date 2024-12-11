@@ -46,6 +46,7 @@ if ("maf" %in% names(snakemake@input)){
 
 meta <- snakemake@params[['metadata']]
 meta_cols <- snakemake@params[['metadata_cols']]
+meta_shape <- snakemake@params[['metadata_dim']]
 
 cat("Arguments from snakemake...\n")
 cat(paste("Sample sets file:", subsetting_categories_file, "\n"))
@@ -63,8 +64,7 @@ if ("seg" %in% names(snakemake@input)){
 # Determine sample ids in sample set -----------------------------------------------------
 # pandas df from snakemake is passed as a character vector
 # This converts it into a dataframe
-num_rows <- length(meta)/length(meta_cols)
-meta_matrix <- t(matrix(meta, nrow = 25, ncol = num_rows))
+meta_matrix <- t(matrix(meta, nrow = meta_shape[2], ncol = meta_shape[1]))
 # Format NA
 meta_matrix[meta_matrix==""] <- NA
 # Convert to dataframe and name columns
