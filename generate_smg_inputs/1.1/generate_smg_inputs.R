@@ -310,24 +310,20 @@ if (mode == "MutSig2CV") {
 }
 
 if (mode == "dNdS") {
-  # check that the maf file is in grch37-based coordinates
-  if (grepl("38", subset_input$NCBI_Build[1])) {
-    cat("Requested mode is dNdS, but the supplied file is in the hg38-based coordinates.\n")
-    cat("Unfortunatelly, dNdS is configured to only work for grch37-based maf files.\n")
-    stop("Please supply the mutation data in grch37-based version.")
-  }
 
   subset_input <- subset_input %>%
       select(Tumor_Sample_Barcode,
               Chromosome,
               Start_Position,
               Reference_Allele,
-              Tumor_Seq_Allele2) %>%
+              Tumor_Seq_Allele2,
+              NCBI_Build) %>%
       `names<-`(c("sampleID",
                   "chr",
                   "pos",
                   "ref",
-                  "mut"))
+                  "mut",
+                  "NCBI_Build"))
 
   grouping_column <- "sampleID"
 }
