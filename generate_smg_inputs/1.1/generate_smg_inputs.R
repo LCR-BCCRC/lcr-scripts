@@ -338,16 +338,6 @@ if (mode == "fishHook") {
     cat("Unfortunately, fishHook is configured to only work for grch37-based maf files.\n")
     stop("Please supply the mutation data in grch37-based version.")
   }
-
-  subset_input <- subset_input %>%
-    select(Hugo_Symbol,
-           Tumor_Sample_Barcode,
-           Chromosome,
-           Start_Position,
-           End_Position,
-           Variant_Classification,
-           Strand)
-
   grouping_column <- "Tumor_Sample_Barcode"
 }
 
