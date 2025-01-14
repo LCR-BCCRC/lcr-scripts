@@ -137,7 +137,8 @@ if (mode == "rainstorm"){
 }
 
 # Read in only minimally necessary columns
-relevant_maf_columns <- c("Hugo_Symbol", "Tumor_Sample_Barcode", "NCBI_Build", "Chromosome", "Start_Position", "End_Position", "Strand", "Variant_Classification", "Variant_Type", "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "HGVSp_Short", "Transcript_ID", "Protein_position")
+relevant_maf_columns <- c("Hugo_Symbol", "Tumor_Sample_Barcode", "NCBI_Build", "Chromosome", "Start_Position", "End_Position", "Strand", "Variant_Classification", 
+  "Variant_Type", "Reference_Allele", "Tumor_Seq_Allele1", "Tumor_Seq_Allele2", "HGVSp_Short", "Transcript_ID", "Protein_position", "t_depth", "t_alt_count")
 
 if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_values$seq_type)) { # genome only
   cat("Loading genome input file ...\n")
