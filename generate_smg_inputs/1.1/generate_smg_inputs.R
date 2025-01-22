@@ -342,7 +342,28 @@ if (mode == "fishHook") {
            Start_Position,
            End_Position,
            Variant_Classification,
-           Strand)
+           Strand
+    )
+
+  grouping_column <- "Tumor_Sample_Barcode"
+}
+
+if (mode == "dlbclass") {
+  # Required columns:
+  # ['Hugo_Symbol', 'Tumor_Sample_Barcode', 'Variant_Classification', 'Protein_Change']
+
+  if (unique(maf$NCBI_Build) != "GRCh37") {
+    cat("Requested mode is dlbclass, but the supplied file is in not in grch37-based coordinates.\n")
+    cat("Unfortunately, dlbclass is configured to only work for grch37-based maf files.\n")
+    stop("Please supply the mutation data in grch37-based version.")
+  }
+
+  subset_input <- subset_input %>%
+    select(Hugo_Symbol,
+      Tumor_Sample_Barcode,
+      Variant_Classification,
+      Protein_Change = HGVSp_Short
+    )
 
   grouping_column <- "Tumor_Sample_Barcode"
 }
