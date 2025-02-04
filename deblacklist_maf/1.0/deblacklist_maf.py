@@ -5,9 +5,9 @@ Remove blacklisted variants from MAF files
 
 This script was created by adapting parts of the `annotate_ssm_blacklist()` GAMBLR function
 to support existing blacklist scripts that exist within GAMBL. 
-Generally, the minimum columns required are `chrpos` and `blacklist_count`
-Ideally, columns should include `ref` and `alt` for the reference and alt alleles
-All "filterable" columns are: `chrpos` `ref` `alt` `blacklist_count`
+Generally, the minimum column required is `chrpos`
+Ideally, columns should include `Reference_Allele` and `Tumor_Seq_Allele2` for the reference and alt alleles
+All "filterable" columns are: `chrpos` `Reference_Allele` `Tumor_Seq_Allele2`
 """
 
 import sys
@@ -70,8 +70,7 @@ def deblacklist(maf, blacklist, drop_threshold, minimum_cols, additional_cols):
     logger.warning(f"Filtering by columns: {' '.join(filter_cols)}")
 
     # Get unique combinations in blacklist
-    blacklist_df = blacklist_df[blacklist_df["blacklist_count"] > drop_threshold]
-    logger.warning(f"{len(blacklist_df)} rows remaining after subsetting blacklist variants with blacklist_counts at or above the drop threshold of {drop_threshold}")
+    logger.warning(f"{blacklist}: {len(blacklist_df)} rows in blacklist.")
 
     values = set(map(tuple, blacklist_df[filter_cols].values))
 
@@ -90,8 +89,8 @@ def deblacklist(maf, blacklist, drop_threshold, minimum_cols, additional_cols):
 def main(args):
     maf = pd.read_table(args.input, comment="#", sep="\t")
 
-    minimum_cols = ["chrpos","blacklist_count"]
-    additional_cols = ["ref","alt"]
+    minimum_cols = ["chrpos"]
+    additional_cols = ["Reference_Allele","Tumor_Seq_Allele2"]
 
     for blacklist in args.blacklists:
         maf = deblacklist(maf, blacklist, args.drop_threshold, minimum_cols, additional_cols)
