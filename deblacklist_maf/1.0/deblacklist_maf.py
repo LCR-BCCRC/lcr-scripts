@@ -38,16 +38,13 @@ def parse_arguments():
     parser.add_argument('-o', '--output',
                         type=str, required=True,
                         help='Deblacklisted output MAF')
-    parser.add_argument('-d','--drop-threshold',
-                        type=int, default=4,
-                        help='Minimum number of blacklist occurrences required to drop mutation')
     parser.add_argument('-b', '--blacklists',
                         type=str, nargs='*',
                         help='Blacklist tables. Can provide multiple filepaths separated by spaces')
 
     return parser.parse_args()
 
-def deblacklist(maf, blacklist, drop_threshold, minimum_cols, additional_cols):
+def deblacklist(maf, blacklist, minimum_cols, additional_cols):
 
     logger.warning(f"Applying {blacklist} blacklist...")
     logger.warning(f"MAF file has {len(maf)} rows prior to blacklist variant removal")
@@ -77,6 +74,7 @@ def deblacklist(maf, blacklist, drop_threshold, minimum_cols, additional_cols):
     if not values:
         variants_dropped = 0
     else:
+        maf["Chromosome"] = maf["Chromosome"].apply(lambda x: str(x))
         blacklisted_rows = maf[filter_cols].apply(lambda x, values: tuple(x) in values, args=(values,), axis=1)
         variants_dropped = sum(blacklisted_rows)
         maf = maf[~blacklisted_rows]
@@ -93,7 +91,7 @@ def main(args):
     additional_cols = ["Reference_Allele","Tumor_Seq_Allele2"]
 
     for blacklist in args.blacklists:
-        maf = deblacklist(maf, blacklist, args.drop_threshold, minimum_cols, additional_cols)
+        maf = deblacklist(maf, blacklist, minimum_cols, additional_cols)
 
     maf.to_csv(args.output, sep="\t", na_rep="NA", index=False)
 
