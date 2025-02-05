@@ -70,12 +70,12 @@ fi
 # The perl pipe part will assign the neutral segment log.ratio and no LOH for the missing segments.
 # For the missing segments, +1 is added to start position and 1 is substracted from the end position
 # to ensure they do not overlap with original segments of seg file by 1 position.
-# 0.00 are explicitly used to easily identify segments supplemented by this script
+# 99 are explicitly used to easily identify segments supplemented by this script
 
 if [[ "$MODE" == *"SEG"* ]]; then
     # Make variable available to use within perl
     export THIS_SAMPLE_ID
-    bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.00"; $a[4]="0.00"; $a[5]=$ENV{THIS_SAMPLE_ID}; print join "\t", @a;' > $RESULTS_PATH.temp
+    bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="99"; $a[4]="99"; $a[5]=$ENV{THIS_SAMPLE_ID}; print join "\t", @a;' > $RESULTS_PATH.temp
 
 elif [[ "$MODE" == *"subclones"* ]]; then
     # Make variable available to use within perl
@@ -87,7 +87,7 @@ elif [[ "$MODE" == *"sequenza"* ]]; then
     # Make variable available to use within perl
     export NUM_COLUMNS
     bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed \
-    | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; foreach my $column (3..5) {$a[$column]="NA"}; $a[6]="1"; foreach my $column (7..8) {$a[$column]="NA"}; $a[9]="2"; foreach my $column (10..11) {$a[$column]="1"}; $a[$ENV{NUM_COLUMNS}]="NA"; print join "\t", @a;' > $RESULTS_PATH.temp
+    | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; foreach my $column (3..5) {$a[$column]="NA"}; $a[6]="1"; foreach my $column (7..8) {$a[$column]="NA"}; $a[9]="99"; foreach my $column (10..11) {$a[$column]="1"}; $a[$ENV{NUM_COLUMNS}]="NA"; print join "\t", @a;' > $RESULTS_PATH.temp
 
 fi
 
@@ -101,15 +101,20 @@ if [[ "$MODE" == *"SEG"* ]]; then
     # After substracting blacklisted regions, seg file needs the column with sample ID to be shifted back to first position
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' | perl -lane 'print if ($F[3]-$F[2])>1;' > $RESULTS_PATH.deblacklisted.seg
 
+    # Return back the header
+    cat $RESULTS_PATH.header | perl -p -e 'chomp; $_ .= "\tdummy_segment\n"' > $RESULTS_PATH
+
+    # Add new column indicating whether the segment is filled in (1) or is an
+    # original output (0)
+    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[4] == 99 && $F[5] == 99) ? 1 : 0))' >> $RESULTS_PATH
 elif [[ "$MODE" == *"subclones"* ]] || [[ "$MODE" == *"sequenza"* ]] ; then
     # Subclones file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
 
+    # Return back the header
+    cat $RESULTS_PATH.header $RESULTS_PATH.deblacklisted.seg > $RESULTS_PATH
 fi
 
-
-# Return back the header
-cat $RESULTS_PATH.header $RESULTS_PATH.deblacklisted.seg > $RESULTS_PATH
 
 # Cleanup
 rm $RESULTS_PATH.temp
