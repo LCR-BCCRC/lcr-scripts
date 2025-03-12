@@ -336,7 +336,7 @@ if (mode == "dNdS") {
 if (mode == "fishHook") {
   subset_input <- subset_input %>%
     select(Hugo_Symbol, Tumor_Sample_Barcode, NCBI_Build, Chromosome, Start_Position, End_Position, Strand, Variant_Classification, 
-      Variant_Type, Reference_Allele, Tumor_Seq_Allele1, t_depth, t_alt_count)
+      Variant_Type, Reference_Allele, Tumor_Seq_Allele2, t_depth, t_alt_count)
 
   grouping_column <- "Tumor_Sample_Barcode"
 }
