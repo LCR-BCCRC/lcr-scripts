@@ -151,11 +151,11 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   if ("maf" %in% names(snakemake@input)){
     if(mode == "rainstorm"){
       genome_input <- suppressMessages(read_tsv(input_files,
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
     }else{
       genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
     }
   } else if ("seg" %in% names(snakemake@input)){
@@ -175,7 +175,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   cat("Loading capture input file...\n")
   if ("maf" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
   } else if ("seg" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")], num_threads = threads))
@@ -194,7 +194,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   cat("Loading genome input file ...\n")
   if ("maf" %in% names(snakemake@input)){
     genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
   } else if ("seg" %in% names(snakemake@input)){
     genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")], num_threads = threads))
@@ -203,7 +203,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   cat("Loading capture input file...\n")
   if ("maf" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
   } else if ("seg" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")], num_threads = threads))
@@ -612,7 +612,7 @@ if ("maf" %in% names(snakemake@input)){
 }
 
 # Writing empty file for snakemake checkpoint rule output
-file.create(paste0(output_dir, "/done"))
+file.create(paste0(output_dir, "/", sentinel))
 
 cat("DONE!")
 sink()
