@@ -25,7 +25,7 @@ suppressPackageStartupMessages({
 })
 )
 
-# Reading in large marf/seg files is more efficient when uses more than one thread -----------------------------------------------------
+# Reading in large maf/seg files is more efficient when uses more than one thread -----------------------------------------------------
 threads <- 4
 
 # Determine arguments from snakemake -----------------------------------------------------
