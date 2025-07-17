@@ -38,7 +38,10 @@ launch_date <- snakemake@wildcards[["launch_date"]]
 
 mode <- snakemake@params[["mode"]]
 
-if ("maf" %in% names(snakemake@input)){
+# set the name of the output sentinel file (by default: "done")
+sentinel <- "done"
+
+if ("maf" %in% names(snakemake@input)) {
   include_non_coding <- snakemake@params[["include_non_coding"]]
 } else if ("seg" %in% names(snakemake@input)){
   projection <- snakemake@wildcards[["projection"]]
@@ -77,6 +80,10 @@ case_set <- sample_set
 subsetting_values <- full_subsetting_categories %>%
   filter(sample_set == case_set) %>%
   as.list(.)
+
+if (length(subsetting_values$sample_set) == 0) {
+  stop(paste0("The specified sample set(s) do not match any of the options in the sample sets file ", subsetting_categories_file, ". "))
+}
 
 # Split comma sep values
 subsetting_values <- lapply(subsetting_values, function(x) unlist(str_split(x, ",")))
@@ -145,11 +152,11 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   if ("maf" %in% names(snakemake@input)){
     if(mode == "rainstorm"){
       genome_input <- suppressMessages(read_tsv(input_files,
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
     }else{
       genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
     }
   } else if ("seg" %in% names(snakemake@input)){
@@ -169,7 +176,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   cat("Loading capture input file...\n")
   if ("maf" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
   } else if ("seg" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")], num_threads = threads))
@@ -188,7 +195,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   cat("Loading genome input file ...\n")
   if ("maf" %in% names(snakemake@input)){
     genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
   } else if ("seg" %in% names(snakemake@input)){
     genome_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "genome")], num_threads = threads))
@@ -197,7 +204,7 @@ if ("genome" %in% subsetting_values$seq_type && !("capture" %in% subsetting_valu
   cat("Loading capture input file...\n")
   if ("maf" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")],
-                                                col_select = all_of(relevant_maf_columns),
+                                                col_select = any_of(relevant_maf_columns),
                                                 num_threads = threads))
   } else if ("seg" %in% names(snakemake@input)){
     capture_input <- suppressMessages(read_tsv(input_files[str_detect(input_files, "capture")], num_threads = threads))
@@ -335,6 +342,27 @@ if (mode == "fishHook") {
       Variant_Type, Reference_Allele, Tumor_Seq_Allele2, t_depth, t_alt_count)
 
   grouping_column <- "Tumor_Sample_Barcode"
+}
+
+if (mode == "dlbclass" && "maf" %in% names(snakemake@input)) {
+  # Required columns:
+  # ['Hugo_Symbol', 'Tumor_Sample_Barcode', 'Variant_Classification', 'Protein_Change']
+
+  if (unique(subset_input$NCBI_Build) != "GRCh37") {
+    cat("Requested mode is dlbclass, but the supplied file is in not in grch37-based coordinates.\n")
+    cat("Unfortunately, dlbclass is configured to only work for grch37-based maf files.\n")
+    stop("Please supply the mutation data in grch37-based version.")
+  }
+
+  subset_input <- subset_input %>%
+    select(Hugo_Symbol,
+      Tumor_Sample_Barcode,
+      Variant_Classification,
+      Protein_Change = HGVSp_Short
+    )
+
+  grouping_column <- "Tumor_Sample_Barcode"
+  sentinel <- "maf.done"
 }
 
 if (mode == "HotMAPS") {
@@ -526,7 +554,27 @@ if (mode == "gistic2") {
     subset_input <- subset_input_checked %>%
     select(-overlap_status, -region_size)
   }
+}
 
+if (mode == "dlbclass" && "seg" %in% names(snakemake@input)) {
+  # Filter to only canonical chromosomes (gistic2) -------------------
+  cat("Filtering to only canonical chromosomes... \n")
+  subset_input <- subset_input %>%
+    filter(str_detect(chrom, regex("^[XY\\d]+$", ignore_case = TRUE)))
+
+  # Sort by chrom, start, end
+  subset_input <- subset_input %>%
+    arrange(ID, chrom, start, end) %>%
+    mutate(Sample = ID) %>% # retain ID column for outputting sample_ids
+    select(
+      Sample = ID,
+      Chromosome = chrom,
+      Start = start,
+      End = end,
+      ID,
+      log.ratio
+    )
+  sentinel <- "seg.done"
 }
 
 # Write out appropriate files based on inputs -------------------
@@ -553,7 +601,7 @@ if ("maf" %in% names(snakemake@input)){
 }
 
 # Writing empty file for snakemake checkpoint rule output
-file.create(paste0(output_dir, "/done"))
+file.create(paste0(output_dir, "/", sentinel))
 
 cat("DONE!")
 sink()
