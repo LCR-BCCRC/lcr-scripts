@@ -7,8 +7,10 @@
 # 
 # IMPORTANT!
 # First ensure completion of the script without errors. 
-# After that, you should compare all the files in tests/output/ using git diff:
+# After that, you should check that all the files in tests/output/ have fresh time stamps, indicating they were overwritten by the run
+# Next, check for changes to their contents using git diff
 # git diff tests/output/*
+# The files should all be identical. 
 
 hg38_chain="hg38ToHg19.over.chain.gz"
 grch37_chain="hg19ToHg38.over.chain.gz"
