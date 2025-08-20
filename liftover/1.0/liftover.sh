@@ -21,81 +21,16 @@ INPUT_FILE="$2"
 OUTPUT_FILE="$3"
 CHAIN="$4"
 HEADER="$5"
-MINMATCH="${6:-0.95}"
-CREATE_LOG=${7:-"NO"}
-echo "MINMATCH: $MINMATCH"
-
-# Second, if the input file has header, save it temporarily in a separate file
-# Prepend with chr if chromosomes are not prepended, othervise liftOver silently outputs empty file
-
-if [[ "$HEADER" == *"YES"* ]]; then
-    echo "Header is specified as $HEADER, handling it separately ..."
-    head -1 $INPUT_FILE > $OUTPUT_FILE.header
-    tail -n+2 $INPUT_FILE > $OUTPUT_FILE.bed
-elif [[ "$HEADER" == *"NO"* ]]; then
-    echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
-    cat $INPUT_FILE > $OUTPUT_FILE.bed
-else
-    echo "You specified header $HEADER, which is not recognized. Please specify YES or NO."
-    exit 1 # terminate and indicate error
-fi
+MINMATCH="$6"
 
 
 # First, check that proper mode is specified, rearrange columns for seg file, and collapse extra columns together
 if [[ "$MODE" == *"SEG"* ]]; then
     echo "Running in the $MODE mode ..."
-    cat "$OUTPUT_FILE.bed" \
-    | perl -ne '
-        ## Apply blacklisted_hg38.bed ##
-        use strict; use warnings;
-        our $S_I; our $E_I; 
-        BEGIN {
-            $S_I=2; $E_I=3; 
-        }
-
-        chomp; my @a = split /\t/;
-        # pass header (should no longer be needed)
-        #if (/seg\.mean|log\.ratio/) { print join("\t",$a[1],$a[2],$a[3], join("|",@a)),"\n"; next; }
-
-        # normalize chr
-        my $chr = $a[1]; 
-        $chr = ($chr eq "23") ? "X" : $chr;
-        $chr = "chr$chr" unless $chr =~ /^chr/;
-        
-
-        # convert to 0-based BED coords
-        my ($s1,$e1) = ($a[$S_I]-1, $a[$E_I]);  # [s1,e1)
-        # remove decimal point and trailing digits from coordinates
-        # these should theoretically never happen but this protects against it
-        $s1 =~ s/\..+//;
-        $e1 =~ s/\..+//;
-        
-        my $extra = join "|", @a;
-        print join("\t", $chr, $s1, $e1, "$extra\n");
-
-    ' > "$OUTPUT_FILE.collapsed"
-
-cat $OUTPUT_FILE.collapsed \
-| perl -ne '
-    # split [start,end) into chunks of size <= $chunk_size (BED semantics)
-    BEGIN { $chunk_size = 150000 }
-    chomp; @a = split /\t/;
-    my ($chr,$s,$e) = @a[0,1,2];
-    my $chunk = 1;
-
-    # guard bad/empty ranges
-    next if !defined $s || !defined $e || $e <= $s;
-
-    while ($s + $chunk_size < $e) {
-        my $ce = $s + $chunk_size;
-        print "$chr\t$s\t$ce\t$a[3]|CHUNK_$chunk\n";
-
-        $s = $ce;                # no +1 for BED half-open
-        $chunk++;
-    }
-    print "$chr\t$s\t$e\t$a[3]|CHUNK_$chunk\n";   # remainder (only if $s < $e)
-
-  ' > "$OUTPUT_FILE.chunked"
+    cat $INPUT_FILE \
+    | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[1,2,3,0,4..$#F]"' \
+    | perl -ne '@a=split("\t");$ncol=3;while($ncol>0){$first = shift @a;print "$first\t";$ncol--;}print join "|", @a;' \
+    > $OUTPUT_FILE.collapsed
 elif [[ "$MODE" == *"BED"* ]]; then
     echo "Running in the $MODE mode ..."
     cat $INPUT_FILE \
@@ -106,139 +41,60 @@ else
     exit 1 # terminate and indicate error
 fi
 
-UNMAPPED="${OUTPUT_FILE%.*}.unmapped.bed"
-
-# Running liftOver
-if [[ "$MODE" == *"SEG"* ]]; then
-    #run liftover on chunked seg data
-    echo "liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED"
-    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED
-    cat $OUTPUT_FILE.chunked.lift.bed \
-        | perl -ne '@a=split;@b = split /\|/, $a[3];
-                   print "$b[0]\t$a[0]\t$a[1]\t$a[2]\t" . join("\t",@b[$#b-2..$#b-1]) . "\n";' \
-        > $OUTPUT_FILE.lifted-temp.bed 
-    rm $OUTPUT_FILE.chunked.lift.bed
-    rm $OUTPUT_FILE.collapsed
-    rm $OUTPUT_FILE.chunked
-    rm $OUTPUT_FILE.bed
-    echo "DONE running liftover, created $OUTPUT_FILE.lifted-temp.bed"
+# Second, if the input file has header, save it temporarily in a separate file
+# Prepend with chr if chromosomes are not prepended, othervise liftOver silently outputs empty file
+if [[ "$HEADER" == *"YES"* ]]; then
+    echo "Header is specified as $HEADER, handling it separately ..."
+    head -1 $OUTPUT_FILE.collapsed > $OUTPUT_FILE.header
+    tail -n+2 $OUTPUT_FILE.collapsed \
+    | perl -lane 'if ( /^chr/ ) { print } else { s/^/chr/;print }' \
+    > $OUTPUT_FILE.bed
+elif [[ "$HEADER" == *"NO"* ]]; then
+    echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
+    cat $OUTPUT_FILE.collapsed \
+    | perl -lane 'if ( /^chr/ ) { print } else { s/^/chr/;print }' \
+    > $OUTPUT_FILE.bed
 else
-    # run liftOver
-    echo "Running UCSC liftOver with minimum match of converted regions set to $MINMATCH ..."
-    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.bed $CHAIN $OUTPUT_FILE.lifted-temp.bed $UNMAPPED
+    echo "You specified header $HEADER, which is not recognized. Please specify YES or NO."
+    rm $OUTPUT_FILE.collapsed
+    exit 1 # terminate and indicate error
 fi
 
-
-# Now, split back all concatenated columns into the separate ones and rearrange back if it is SEG file
-# Also merge all segments that are adjacent and share the same values 
-if [[ "$MODE" == *"SEG"* ]]; then
-    echo "merging adjacent segments from chunking"
-    # Ensure sorted by ID, chrom, then start
-    cp $OUTPUT_FILE.lifted-temp.bed $OUTPUT_FILE.unmerged
-    sort -k1,1 -k2,2V -k3,3n $OUTPUT_FILE.unmerged | \
-    perl -F'\t' -ane '
-    BEGIN { $EPS = 1e-6; }               # tolerance for float equality (seg.mean)
-    next if /^\s*$/;                     # skip blank lines
-
-    # If there is a header (first field literally "ID"), print & skip
-    if ($. == 1 && $F[0] eq "ID") { print join("\t", @F); next; }
-
-    my $n = @F;                          # number of columns
-    my ($id,$chr,$s,$e) = @F[0,1,2,3];
-    my ($last2,$last1) = @F[$n-2,$n-1];  # last two columns (e.g. seg.mean, C)
-
-    # Float-equality helper (for the penultimate column, typically seg.mean)
-    sub same_float { my ($a,$b,$eps)=@_; return abs($a-$b) <= $eps; }
-
-    if (!defined $cur_id) {
-        # seed current run
-        ($cur_id,$cur_chr,$cur_s,$cur_e) = ($id,$chr,$s,$e);
-        @cur_tail = @F[4..$#F];            # keep columns 5..end from the first chunk
-        ($cur_last2,$cur_last1) = ($last2,$last1);
-        next;
-    }
-
-    # Check if we should merge with current run
-    if (   $id  eq $cur_id
-        && $chr eq $cur_chr
-        && $last1 eq $cur_last1
-        && ( $last2 eq $cur_last2 || same_float($last2,$cur_last2,$EPS) )
-        && $s <= $cur_e + 1              # contiguous (allowing off-by-one stitching)
-        ) {
-        # extend current run
-        $cur_e = $e;
-    } else {
-        # flush previous run
-        print join("\t", $cur_id,$cur_chr,$cur_s,$cur_e,@cur_tail);
-        # start a new run
-        ($cur_id,$cur_chr,$cur_s,$cur_e) = ($id,$chr,$s,$e);
-        @cur_tail = @F[4..$#F];
-        ($cur_last2,$cur_last1) = ($last2,$last1);
-    }
-
-    END {
-        if (defined $cur_id) {
-        print join("\t", $cur_id,$cur_chr,$cur_s,$cur_e,@cur_tail);
-        }
-    }
-    ' > $OUTPUT_FILE.merged_noheader
-    rm $OUTPUT_FILE.lifted-temp.bed
-    rm $OUTPUT_FILE.unmerged
-    rm $UNMAPPED
-fi
-
-LOG="$INPUT_FILE.log"
-if [[ "$CREATE_LOG" == *"YES"* ]]; then
-    #check the total segment size before and after our chopping/lifting and write to a log file
-    if [[ "$MODE" == *"SEG"* ]]; then
-        cat $INPUT_FILE \
-        | perl -ne '
-        chomp;
-        @a=split("\t");
-        next if $a[1] =~ /chrom/;
-        $seg_len = $a[3] - $a[2];
-        $total+=$seg_len;
-        $totals{$a[1]}+=$seg_len;
-        END {for(sort keys %totals){print "$_\t$totals{$_}\n";}; print "Cumulative segment length before liftOver:\t$total\n"};
-        ' > $LOG
-        cat $OUTPUT_FILE \
-        | perl -ne 'chomp;
-        @a=split("\t");
-        next if $a[1] =~ /chrom/;
-        $seg_len = $a[3] - $a[2];
-        $total+=$seg_len;
-        $totals{$a[1]}+=$seg_len;
-        END {for(sort keys %totals){print "$_\t$totals{$_}\n";}; print "Cumulative segment length after liftOver:\t$total\n"};
-        ' >> $LOG
-    fi
-fi
+# Now, run the liftOver
+echo "Running UCSC liftOver with minimum match of converted regions set to $MINMATCH ..."
+UNMAPPED="${OUTPUT_FILE%.*}.unmapped.bed"
+liftOver -minMatch=$MINMATCH $OUTPUT_FILE.bed $CHAIN $OUTPUT_FILE.lifted-temp.bed $UNMAPPED
 
 # Next, if the input file had header, merge it back to the lifted file
-#if [[ "$MODE" == *"SEG"* ]]; then
-    if [[ "$HEADER" == *"YES"* ]]; then
-        echo "merging with header: $OUTPUT_FILE.header and $OUTPUT_FILE.noheader"
-        sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader > $OUTPUT_FILE.sort.noheader \
-        && rm $OUTPUT_FILE.merged_noheader
-        cat $OUTPUT_FILE.header $OUTPUT_FILE.sort.noheader > $OUTPUT_FILE \
-        && rm $OUTPUT_FILE.sort.noheader \
-        && echo "done adding header" \
-        && rm $OUTPUT_FILE.header # this is only specific if input has header, so clean up this temp file here
-    else
-        cat $OUTPUT_FILE.merged_noheader \
-        | sort -k1,1 -k2,2n -V \
-        | perl -ne 's/\|/\t/g;print;' \
-        > $OUTPUT_FILE
-        rm $OUTPUT_FILE.merged_noheader
-    fi
-#fi
+if [[ "$HEADER" == *"YES"* ]]; then
+    cat $OUTPUT_FILE.header > $OUTPUT_FILE.merged
+    cat $OUTPUT_FILE.lifted-temp.bed \
+    | sort -k1,1 -k2,2n -V \
+    >> $OUTPUT_FILE.merged
+    rm $OUTPUT_FILE.header # this is only specific if input has header, so clean up this temp file here
+else
+    cat $OUTPUT_FILE.lifted-temp.bed \
+    | sort -k1,1 -k2,2n -V \
+    > $OUTPUT_FILE.merged
+fi
 
-#cut -f 1-7 ${OUTPUT_FILE%.tsv}.merged_by_segment.tsv > $OUTPUT_FILE
+# Now, split back all concatenated columns into the separate ones and rearrange back if it is SEG file
+if [[ "$MODE" == *"SEG"* ]]; then
+    cat $OUTPUT_FILE.merged \
+    | perl -ne 's/\|/\t/g;print;' \
+    | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[3,0..2,4..$#F]"' \
+    > $OUTPUT_FILE
+else
+    cat $OUTPUT_FILE.merged \
+    | perl -ne 's/\|/\t/g;print;' \
+    > $OUTPUT_FILE
+fi
 
 # Cleanup
-#echo "Completed successfully, cleaning up temp files ..."
-#rm $OUTPUT_FILE.collapsed
-#rm $OUTPUT_FILE.bed
-#rm $OUTPUT_FILE.lifted-temp.bed
-#rm $OUTPUT_FILE.merged
+echo "Completed successfully, cleaning up temp files ..."
+rm $OUTPUT_FILE.collapsed
+rm $OUTPUT_FILE.bed
+rm $OUTPUT_FILE.lifted-temp.bed
+rm $OUTPUT_FILE.merged
 
 echo "Done!"

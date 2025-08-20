@@ -1,0 +1,15 @@
+Done lifting tests/input/test.grch37.seg to tests/output/test.grch37.to_hg38.seg
+Done lifting tests/input/test.hg38.seg to tests/output/test.hg38.to_grch37.seg
+Done lifting tests/input/test.grch37.withheader.seg to tests/output/test.grch37.withheader.to_hg38.seg
+tests/input/test.grch37.withheader.seg: 425211274
+tests/output/test.grch37.withheader.to_hg38.seg: 406442619
+4% change
+Done lifting tests/input/test.hg38.withheader.seg to tests/output/test.hg38.withheader.to_grch37.seg
+tests/input/test.hg38.withheader.seg: 420814403
+tests/output/test.hg38.withheader.to_grch37.seg: 411093651
+2% change
+Done lifting tests/input/test.grch37.bed to tests/output/test.grch37.to_hg38.bed
+tests/input/test.grch37.bed: 425211274
+tests/output/test.grch37.to_hg38.bed: 309905838
+27% change
+Done lifting tests/output/test.grch37.to_hg38.bed to tests/output/test.grch37.roundtrip.bed

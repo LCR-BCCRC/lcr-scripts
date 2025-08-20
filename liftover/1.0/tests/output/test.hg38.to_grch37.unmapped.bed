@@ -1,0 +1,14 @@
+#Split in new
+chr1	143200000	149824459	DLBCL11258T|2650.0|-0.807288
+#Partially deleted in new
+chr1	248945923	248956421	DLBCL11258T|0.0|0.0
+#Partially deleted in new
+chr9	1	10500	DLBCL11258T|0.0|0.0
+#Split in new
+chr9	61500000	123441960	DLBCL11258T|24102.0|-0.0783918
+#Partially deleted in new
+chr9	138334218	138394716	DLBCL11258T|0.0|0.0
+#Partially deleted in new
+chr18	1	11103	DLBCL11258T|0.0|0.0
+#Partially deleted in new
+chr18	80262786	80373284	DLBCL11258T|0.0|0.0

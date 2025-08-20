@@ -31,9 +31,15 @@ report_change () {
 }
 
 
-# test SEG mode lifting both directions
-#../liftover.sh SEG input/test.grch37.seg output/test.grch37.to_hg38.seg $grch37_chain NO
-#../liftover.sh SEG input/test.hg38.seg output/test.hg38.to_grch37.seg $hg38_chain NO
+# test SEG mode lifting both directions (no-header mode)
+IN="tests/input/test.grch37.seg"
+OUT="tests/output/test.grch37.to_hg38.seg"
+./liftover.sh SEG $IN $OUT $grch37_chain NO 0.95
+IN="tests/input/test.hg38.seg"
+OUT="tests/output/test.hg38.to_grch37.seg"
+./liftover.sh SEG $IN $OUT $hg38_chain NO 0.95
+
+
 IN="tests/input/test.grch37.withheader.seg"
 OUT="tests/output/test.grch37.withheader.to_hg38.seg"
 ./liftover.sh SEG $IN $OUT $grch37_chain YES 0.95
