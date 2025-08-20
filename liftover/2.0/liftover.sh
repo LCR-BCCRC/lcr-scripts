@@ -29,17 +29,17 @@ CHAIN="$4"
 HEADER={$5:-"NO"}
 MINMATCH="${6:-0.95}"
 CREATE_LOG=${7:-"NO"}
-echo "===HEADER: $HEADER MINMATCH: $MINMATCH CREATE_LOG: $CREATE_LOG==="
+#echo "===HEADER: $HEADER MINMATCH: $MINMATCH CREATE_LOG: $CREATE_LOG==="
 
 # Second, if the input file has header, save it temporarily in a separate file
 # Prepend with chr if chromosomes are not prepended, othervise liftOver silently outputs empty file
 
 if [[ "$HEADER" == *"YES"* ]]; then
-    echo "Header is specified as $HEADER, handling it separately ..."
+    #echo "Header is specified as $HEADER, handling it separately ..."
     head -1 $INPUT_FILE > $OUTPUT_FILE.header
     tail -n+2 $INPUT_FILE > $OUTPUT_FILE.nohead
 elif [[ "$HEADER" == *"NO"* ]]; then
-    echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
+    #echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
     cat $INPUT_FILE > $OUTPUT_FILE.nohead
 else
     echo "You specified header $HEADER, which is not recognized. Please specify YES or NO."
@@ -49,7 +49,7 @@ fi
 
 # First, check that proper mode is specified, rearrange columns for seg file, and collapse extra columns together
 if [[ "$MODE" == *"SEG"* ]]; then
-    echo "Running in $MODE mode ..."
+    #echo "Running in $MODE mode ..."
     cat "$OUTPUT_FILE.nohead" \
     | perl -ne '
         ## Apply blacklisted_hg38.bed ##
@@ -103,7 +103,7 @@ cat $OUTPUT_FILE.collapsed \
 
   ' > "$OUTPUT_FILE.chunked" && rm $OUTPUT_FILE.nohead
 elif [[ "$MODE" == *"BED"* ]]; then
-    echo "Running in the $MODE mode ..."
+    #echo "Running in the $MODE mode ..."
     cat $OUTPUT_FILE.nohead \
     | perl -ne '@a=split("\t"); $a[0] = "chr$a[0]" unless $a[0] =~ /^chr/; $ncol=3;while($ncol>0){$first = shift @a;print "$first\t";$ncol--;}print join "|", @a;' \
     > $OUTPUT_FILE.collapsed && rm $OUTPUT_FILE.nohead
@@ -117,8 +117,8 @@ UNMAPPED="${OUTPUT_FILE%.*}.unmapped"
 # Running liftOver
 if [[ "$MODE" == *"SEG"* ]]; then
     #run liftover on chunked seg data
-    echo "liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED"
-    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED
+    #echo "liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED"
+    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED 2> /dev/null
 
     cat $OUTPUT_FILE.chunked.lift.bed \
         | perl -ne '@a=split;@b = split /\|/, $a[3];
@@ -127,11 +127,11 @@ if [[ "$MODE" == *"SEG"* ]]; then
     rm $OUTPUT_FILE.chunked.lift.bed
     rm $OUTPUT_FILE.collapsed
     rm $OUTPUT_FILE.chunked
-    echo "DONE running liftover, created $OUTPUT_FILE.lifted-temp.bed"
+    #echo "DONE running liftover, created $OUTPUT_FILE.lifted-temp.bed"
 else
     # run liftOver
-    echo "Running UCSC liftOver with minimum match of converted regions set to $MINMATCH ..."
-    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.collapsed $CHAIN $OUTPUT_FILE.lifted-temp.bed $UNMAPPED && rm $OUTPUT_FILE.collapsed
+    #echo "Running UCSC liftOver with minimum match of converted regions set to $MINMATCH ..."
+    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.collapsed $CHAIN $OUTPUT_FILE.lifted-temp.bed $UNMAPPED && rm $OUTPUT_FILE.collapsed 2> /dev/null
 
 fi
 
@@ -139,7 +139,7 @@ fi
 # Now, split back all concatenated columns into the separate ones and rearrange back if it is SEG file
 # Also merge all segments that are adjacent and share the same values 
 if [[ "$MODE" == *"SEG"* ]]; then
-    echo "merging adjacent segments from chunking"
+    #echo "merging adjacent segments from chunking"
     # Ensure sorted by ID, chrom, then start
     cp $OUTPUT_FILE.lifted-temp.bed $OUTPUT_FILE.unmerged
     sort -k1,1 -k2,2V -k3,3n $OUTPUT_FILE.unmerged | \
@@ -228,7 +228,6 @@ if [[ "$HEADER" == *"YES"* ]]; then
     && rm $OUTPUT_FILE.merged_noheader
     cat $OUTPUT_FILE.header $OUTPUT_FILE.sort.noheader > $OUTPUT_FILE \
     && rm $OUTPUT_FILE.sort.noheader \
-    && echo "done adding header" \
     && rm $OUTPUT_FILE.header # this is only specific if input has header, so clean up this temp file here
 else
     if [[ "$MODE" == *"SEG"* ]]; then
