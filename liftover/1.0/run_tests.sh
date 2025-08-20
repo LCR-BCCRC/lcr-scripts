@@ -64,5 +64,11 @@ OUT="tests/output/test.grch37.to_hg38.bed"
 IN_SIZE=`cat $IN | perl -ane '$size = $F[2]-$F[1];$total+=$size;END{print "$total\n";}'`
 OUT_SIZE=`cat $OUT | perl -ane '$size = $F[2]-$F[1];$total+=$size;END{print "$total\n";}'`
 report_change $IN $IN_SIZE $OUT $OUT_SIZE
+#reverse the process
+./liftover.sh BED $OUT tests/output/test.grch37.roundtrip.bed $hg38_chain NO 0.95
 
-./liftover.sh BED tests/output/test.grch37.to_hg38.bed tests/output/test.grch37.roundtrip.bed $hg38_chain NO 0.95
+IN="tests/input/battenberg_hg38_with_header.bed"
+OUT="tests/output/battenberg_hg38_with_header.to_grch37.bed"
+./liftover.sh BED $IN $OUT $hg38_chain YES 0.95
+
+

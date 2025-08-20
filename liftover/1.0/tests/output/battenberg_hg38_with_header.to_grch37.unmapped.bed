@@ -1,0 +1,102 @@
+#Split in new
+chr1	10001	841165	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr1	248935536	248956421	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr2	1	10796	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr2	242037350	242193528	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr3	1	18684	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr3	198048972	198295558	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr4	1	86906	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr4	9196198	9534462	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr4	189847397	190214554	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr5	181315812	181538258	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr6	1	192156	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr6	170612498	170805978	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr7	1	80499	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr7	57939807	58099999	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr7	62100001	62249454	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr7	62249455	63011948	81|0|1|NA|NA|NA
+#Partially deleted in new
+chr7	159329993	159345972	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr8	1	206512	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr8	145075237	145138635	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr9	38773524	42199999	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr9	61500001	68416611	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr9	138174509	138394716	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr10	10001	48485	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr10	133422387	133797421	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr11	10001	197336	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr11	50816993	50999999	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr11	134989792	135086621	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr12	10001	79118	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr12	133251079	133275308	1.0|1.0|1.0|1.0|1.0|1.0
+#Deleted in new
+chr13	10001	15999999	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr13	114295294	114364327	1.0|1.0|1.0|1.0|1.0|1.0
+#Deleted in new
+chr14	10001	15999999	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr14	18200001	19969821	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr14	106881247	107043717	1.0|1.0|1.0|1.0|1.0|1.0
+#Deleted in new
+chr15	10001	15999999	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr15	101867597	101991188	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr16	1	33806	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr16	89997733	90338344	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr17	1	174244	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr18	1	125370	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr18	79998684	80373284	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr19	1	275699	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr19	58585942	58617615	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr20	64324354	64444166	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr21	1	10499999	1.0|1.0|1.0|1.0|1.0|1.0
+#Partially deleted in new
+chr21	46681424	46709982	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chr22	10001	13999999	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chrX	1	1343030	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chrX	1343031	2698739	1|1|1|NA|NA|NA
+#Partially deleted in new
+chrX	155997016	156040894	1.0|1.0|1.0|1.0|1.0|1.0
+#Split in new
+chrY	1	10299999	1.0|1.0|1.0|1.0|1.0|1.0

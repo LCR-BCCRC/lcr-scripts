@@ -19,7 +19,24 @@
 # by breaking each segment into many chunks and merging the chunks afterward. There will still be some loss of segments in this process.
 # This chunking process is currently *not* implemented for BED mode.
 
-set -e
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+# --- helpful helpers ---
+die() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+warn() { printf 'WARN: %s\n' "$*" >&2; }
+
+require_cmd() {
+  for c in "$@"; do
+    command -v "$c" >/dev/null 2>&1 || die "Required command not found in PATH: $c"
+  done
+}
+
+# Show line on failure (nice for debugging)
+trap 'die "Command failed (exit $?) at line $LINENO: ${BASH_COMMAND}"' ERR
+
+export LC_ALL=C
+export LANG=C
 
 # Read variables to store the arguments from command line
 MODE="$1"
@@ -52,7 +69,6 @@ if [[ "$MODE" == *"SEG"* ]]; then
     #echo "Running in $MODE mode ..."
     cat "$OUTPUT_FILE.nohead" \
     | perl -ne '
-        ## Apply blacklisted_hg38.bed ##
         use strict; use warnings;
         our $S_I; our $E_I; 
         BEGIN {
@@ -60,8 +76,6 @@ if [[ "$MODE" == *"SEG"* ]]; then
         }
 
         chomp; my @a = split /\t/;
-        # pass header (should no longer be needed)
-        #if (/seg\.mean|log\.ratio/) { print join("\t",$a[1],$a[2],$a[3], join("|",@a)),"\n"; next; }
 
         # normalize chr
         my $chr = $a[1]; 
@@ -84,29 +98,75 @@ if [[ "$MODE" == *"SEG"* ]]; then
 cat $OUTPUT_FILE.collapsed \
 | perl -ne '
     # split [start,end) into chunks of size <= $chunk_size (BED semantics)
-    BEGIN { $chunk_size = 150000 }
+    BEGIN { $chunk_size = 150000;our $segid = 1; }
     chomp; @a = split /\t/;
     my ($chr,$s,$e) = @a[0,1,2];
-    my $chunk = 1;
+
 
     # guard bad/empty ranges
     next if !defined $s || !defined $e || $e <= $s;
 
     while ($s + $chunk_size < $e) {
         my $ce = $s + $chunk_size;
-        print "$chr\t$s\t$ce\t$a[3]|CHUNK_$chunk\n";
+        print "$chr\t$s\t$ce\t$a[3]|SEGMENT_$segid\n";
 
         $s = $ce;                # no +1 for BED half-open
         $chunk++;
     }
-    print "$chr\t$s\t$e\t$a[3]|CHUNK_$chunk\n";   # remainder (only if $s < $e)
-
-  ' > "$OUTPUT_FILE.chunked" && rm $OUTPUT_FILE.nohead
+    print "$chr\t$s\t$e\t$a[3]|SEGMENT_$segid\n";   # remainder (only if $s < $e)
+    $segid++;
+  ' > "$OUTPUT_FILE.chunked" && rm $OUTPUT_FILE.nohead && rm $OUTPUT_FILE.collapsed
 elif [[ "$MODE" == *"BED"* ]]; then
     #echo "Running in the $MODE mode ..."
-    cat $OUTPUT_FILE.nohead \
-    | perl -ne '@a=split("\t"); $a[0] = "chr$a[0]" unless $a[0] =~ /^chr/; $ncol=3;while($ncol>0){$first = shift @a;print "$first\t";$ncol--;}print join "|", @a;' \
-    > $OUTPUT_FILE.collapsed && rm $OUTPUT_FILE.nohead
+    cat "$OUTPUT_FILE.nohead" \
+    | perl -ne '
+        use strict; use warnings;
+        our $S_I; our $E_I; our $chr_I;
+        BEGIN {
+            $S_I=1; $E_I=2; $chr_I = 0;
+        }
+
+        chomp; my @a = split /\t/;
+        
+        # normalize chr
+        my $chr = $a[$chr_I]; 
+        $chr = ($chr eq "23") ? "X" : $chr;
+        $chr = "chr$chr" unless $chr =~ /^chr/;
+        
+        my ($s,$e) = ($a[$S_I], $a[$E_I]);  
+        # remove decimal point and trailing digits from coordinates
+        # these should theoretically never happen but this protects against it
+        $s =~ s/\..+//;
+        $e =~ s/\..+//;
+   
+        my $ncol=3;
+        print "$chr\t$s\t$e\t";
+        print join "|", @a[$ncol..$#a];
+        print "\n";
+    ' > "$OUTPUT_FILE.collapsed"
+    echo "wrote $OUTPUT_FILE.collapsed"
+
+cat $OUTPUT_FILE.collapsed \
+| perl -ne '
+    # split [start,end) into chunks of size <= $chunk_size (BED semantics)
+    BEGIN {$| = 1; $chunk_size = 150000; our $seg_id = 1;}
+    chomp; @a = split /\t/;
+    my ($chr,$s,$e) = @a[0,1,2];
+    my $chunk = 1;
+
+    # guard bad/empty ranges
+    next if !defined $s || !defined $e || $e <= $s;
+    
+    while ($s + $chunk_size < $e) {
+        my $ce = $s + $chunk_size;
+        print "$chr\t$s\t" . ($ce-1) . "\t$a[3]|SEGMENT_$seg_id\n";
+
+        $s = $ce;                # no +1 for BED half-open
+    }
+    
+    print "$chr\t$s\t$e\t$a[3]|SEGMENT_$seg_id\n";   # remainder (only if $s < $e)
+    $seg_id++;
+  ' > "$OUTPUT_FILE.chunked" && rm $OUTPUT_FILE.nohead && rm $OUTPUT_FILE.collapsed
 else
     echo "You specified mode $MODE, which is not supported. Please provide SEG or BED file."
     exit 1 # terminate and indicate error
@@ -114,85 +174,60 @@ fi
 
 UNMAPPED="${OUTPUT_FILE%.*}.unmapped"
 
-# Running liftOver
-if [[ "$MODE" == *"SEG"* ]]; then
-    #run liftover on chunked seg data
-    #echo "liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED"
-    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED 2> /dev/null
-
-    cat $OUTPUT_FILE.chunked.lift.bed \
-        | perl -ne '@a=split;@b = split /\|/, $a[3];
-                   print "$b[0]\t$a[0]\t$a[1]\t$a[2]\t" . join("\t",@b[$#b-2..$#b-1]) . "\n";' \
-        > $OUTPUT_FILE.lifted-temp.bed 
-    rm $OUTPUT_FILE.chunked.lift.bed
-    rm $OUTPUT_FILE.collapsed
-    rm $OUTPUT_FILE.chunked
-    #echo "DONE running liftover, created $OUTPUT_FILE.lifted-temp.bed"
-else
-    # run liftOver
-    #echo "Running UCSC liftOver with minimum match of converted regions set to $MINMATCH ..."
-    liftOver -minMatch=$MINMATCH $OUTPUT_FILE.collapsed $CHAIN $OUTPUT_FILE.lifted-temp.bed $UNMAPPED && rm $OUTPUT_FILE.collapsed 2> /dev/null
-
-fi
-
+liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED 2> /dev/null
+rm $OUTPUT_FILE.chunked
 
 # Now, split back all concatenated columns into the separate ones and rearrange back if it is SEG file
 # Also merge all segments that are adjacent and share the same values 
-if [[ "$MODE" == *"SEG"* ]]; then
-    #echo "merging adjacent segments from chunking"
-    # Ensure sorted by ID, chrom, then start
-    cp $OUTPUT_FILE.lifted-temp.bed $OUTPUT_FILE.unmerged
-    sort -k1,1 -k2,2V -k3,3n $OUTPUT_FILE.unmerged | \
-    perl -F'\t' -ane '
-    BEGIN { $EPS = 1e-6; }               # tolerance for float equality (seg.mean)
+
+sort -k1,1 -k2,2n $OUTPUT_FILE.chunked.lift.bed  \
+    | perl -s -F'\t' -ane ' # we pass some variables into the script at the end of this code block
+    BEGIN{use strict;}
     next if /^\s*$/;                     # skip blank lines
 
     # If there is a header (first field literally "ID"), print & skip
     if ($. == 1 && $F[0] eq "ID") { print join("\t", @F); next; }
-
+    
     my $n = @F;                          # number of columns
-    my ($id,$chr,$s,$e) = @F[0,1,2,3];
-    my ($last2,$last1) = @F[$n-2,$n-1];  # last two columns (e.g. seg.mean, C)
+    
+    my ($chr,$s,$e) = @F[0,1,2];
 
-    # Float-equality helper (for the penultimate column, typically seg.mean)
-    sub same_float { my ($a,$b,$eps)=@_; return abs($a-$b) <= $eps; }
+    
+    my $lastcol = @F[$#F];  #all the concatenated fields from original file
 
     if (!defined $cur_id) {
         # seed current run
-        ($cur_id,$cur_chr,$cur_s,$cur_e) = ($id,$chr,$s,$e);
-        @cur_tail = @F[4..$#F];            # keep columns 5..end from the first chunk
-        ($cur_last2,$cur_last1) = ($last2,$last1);
+        ($cur_chr,$cur_s,$cur_e,$cur_id) = ($chr,$s,$e,$lastcol);
+        $cur_tail = $lastcol;         # keep column 4
         next;
     }
 
-    # Check if we should merge with current run
-    if (   $id  eq $cur_id
+    if (   $lastcol  eq $cur_id
         && $chr eq $cur_chr
-        && $last1 eq $cur_last1
-        && ( $last2 eq $cur_last2 || same_float($last2,$cur_last2,$EPS) )
         && $s <= $cur_e + 1              # contiguous (allowing off-by-one stitching)
         ) {
         # extend current run
         $cur_e = $e;
+
     } else {
         # flush previous run
-        print join("\t", $cur_id,$cur_chr,$cur_s,$cur_e,@cur_tail);
+        print join("\t", $cur_chr, $cur_s, $cur_e, $cur_id);
         # start a new run
-        ($cur_id,$cur_chr,$cur_s,$cur_e) = ($id,$chr,$s,$e);
-        @cur_tail = @F[4..$#F];
-        ($cur_last2,$cur_last1) = ($last2,$last1);
+        ($cur_id,$cur_chr,$cur_s,$cur_e) = ($lastcol,$chr,$s,$e);
     }
 
     END {
         if (defined $cur_id) {
-        print join("\t", $cur_id,$cur_chr,$cur_s,$cur_e,@cur_tail);
+        print join("\t", $cur_chr, $cur_s, $cur_e, $cur_id);
         }
     }
-    ' > $OUTPUT_FILE.merged_noheader
-    rm $OUTPUT_FILE.lifted-temp.bed
-    rm $OUTPUT_FILE.unmerged
-    #rm $UNMAPPED
-fi
+    '   | perl -ne 's/\|SEGMENT_\S+$//;s/\|/\t/g;print;' > $OUTPUT_FILE.merged_noheader
+
+    rm $OUTPUT_FILE.chunked.lift.bed
+    rm $UNMAPPED
+
+        # merge bed and ensure all columns beyond 3 are identical after removing CHUNK_ID
+
 
 LOG="$INPUT_FILE.log"
 if [[ "$CREATE_LOG" == *"YES"* ]]; then
@@ -221,11 +256,16 @@ if [[ "$CREATE_LOG" == *"YES"* ]]; then
 fi
 
 # Next, if the input file had header, merge it back to the lifted file
-
 if [[ "$HEADER" == *"YES"* ]]; then
-    
-    sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader > $OUTPUT_FILE.sort.noheader \
-    && rm $OUTPUT_FILE.merged_noheader
+    if [[ "$MODE" == *"SEG"* ]]; then
+        sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
+        | perl -ane 'print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[$#F-1..$#F]), "\n";' \
+        > $OUTPUT_FILE.sort.noheader 
+    else
+        sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
+        > $OUTPUT_FILE.sort.noheader 
+    fi
+    rm $OUTPUT_FILE.merged_noheader
     cat $OUTPUT_FILE.header $OUTPUT_FILE.sort.noheader > $OUTPUT_FILE \
     && rm $OUTPUT_FILE.sort.noheader \
     && rm $OUTPUT_FILE.header # this is only specific if input has header, so clean up this temp file here
@@ -233,11 +273,13 @@ else
     if [[ "$MODE" == *"SEG"* ]]; then
         cat $OUTPUT_FILE.merged_noheader \
         | sort -k1,1 -k2,2n -V \
-        | perl -ne 's/\|/\t/g;print;' \
+        | perl -ane 'print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[$#F-1..$#F]), "\n";' \
         > $OUTPUT_FILE && rm $OUTPUT_FILE.merged_noheader
+        #|
+        #| perl -ne 's/\|/\t/g;print;' \
     else
-        sort -k1,1 -k2,2n -V $OUTPUT_FILE.lifted-temp.bed \
-        > $OUTPUT_FILE && rm $OUTPUT_FILE.lifted-temp.bed
+        sort -k1,1 -k2,2n -V $OUTPUT_FILE.merged_noheader \
+        > $OUTPUT_FILE && rm $OUTPUT_FILE.merged_noheader
 
     fi
 fi

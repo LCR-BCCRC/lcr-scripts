@@ -8,8 +8,12 @@ Done lifting tests/input/test.hg38.withheader.seg to tests/output/test.hg38.with
 tests/input/test.hg38.withheader.seg: 420814403
 tests/output/test.hg38.withheader.to_grch37.seg: 411093651
 2% change
+wrote tests/output/test.grch37.to_hg38.bed.collapsed
 Done lifting tests/input/test.grch37.bed to tests/output/test.grch37.to_hg38.bed
 tests/input/test.grch37.bed: 425211274
-tests/output/test.grch37.to_hg38.bed: 309905838
-27% change
+tests/output/test.grch37.to_hg38.bed: 406442566
+4% change
+wrote tests/output/test.grch37.roundtrip.bed.collapsed
 Done lifting tests/output/test.grch37.to_hg38.bed to tests/output/test.grch37.roundtrip.bed
+wrote tests/output/battenberg_hg38_with_header.to_grch37.bed.collapsed
+Done lifting tests/input/battenberg_hg38_with_header.bed to tests/output/battenberg_hg38_with_header.to_grch37.bed
