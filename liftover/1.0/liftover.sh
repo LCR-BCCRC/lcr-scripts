@@ -25,10 +25,26 @@ MINMATCH="${6:-0.95}"
 CREATE_LOG=${7:-"NO"}
 echo "MINMATCH: $MINMATCH"
 
+# Second, if the input file has header, save it temporarily in a separate file
+# Prepend with chr if chromosomes are not prepended, othervise liftOver silently outputs empty file
+
+if [[ "$HEADER" == *"YES"* ]]; then
+    echo "Header is specified as $HEADER, handling it separately ..."
+    head -1 $INPUT_FILE > $OUTPUT_FILE.header
+    tail -n+2 $INPUT_FILE > $OUTPUT_FILE.bed
+elif [[ "$HEADER" == *"NO"* ]]; then
+    echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
+    cat $INPUT_FILE > $OUTPUT_FILE.bed
+else
+    echo "You specified header $HEADER, which is not recognized. Please specify YES or NO."
+    exit 1 # terminate and indicate error
+fi
+
+
 # First, check that proper mode is specified, rearrange columns for seg file, and collapse extra columns together
 if [[ "$MODE" == *"SEG"* ]]; then
     echo "Running in the $MODE mode ..."
-    cat "$INPUT_FILE" \
+    cat "$OUTPUT_FILE.bed" \
     | perl -ne '
         ## Apply blacklisted_hg38.bed ##
         use strict; use warnings;
@@ -38,8 +54,8 @@ if [[ "$MODE" == *"SEG"* ]]; then
         }
 
         chomp; my @a = split /\t/;
-        # pass header
-        if (/seg\.mean|log\.ratio/) { print join("\t",$a[1],$a[2],$a[3], join("|",@a)),"\n"; next; }
+        # pass header (should no longer be needed)
+        #if (/seg\.mean|log\.ratio/) { print join("\t",$a[1],$a[2],$a[3], join("|",@a)),"\n"; next; }
 
         # normalize chr
         my $chr = $a[1]; 
@@ -90,23 +106,6 @@ else
     exit 1 # terminate and indicate error
 fi
 
-# Second, if the input file has header, save it temporarily in a separate file
-# Prepend with chr if chromosomes are not prepended, othervise liftOver silently outputs empty file
-if [[ "$HEADER" == *"YES"* ]]; then
-    echo "Header is specified as $HEADER, handling it separately ..."
-    head -1 $OUTPUT_FILE.collapsed > $OUTPUT_FILE.header
-    tail -n+2 $OUTPUT_FILE.collapsed \
-    | perl -lane 'if ( /^chr/ ) { print } else { s/^/chr/;print }' \
-    > $OUTPUT_FILE.bed
-elif [[ "$HEADER" == *"NO"* ]]; then
-    echo "Header is specified as $HEADER, the first entry of $MODE file will not be treated as header. Processing ..."
-    cat $OUTPUT_FILE.collapsed \
-    | perl -lane 'if ( /^chr/ ) { print } else { s/^/chr/;print }' \
-    > $OUTPUT_FILE.bed
-else
-    echo "You specified header $HEADER, which is not recognized. Please specify YES or NO."
-    exit 1 # terminate and indicate error
-fi
 UNMAPPED="${OUTPUT_FILE%.*}.unmapped.bed"
 
 # Running liftOver
@@ -215,17 +214,15 @@ if [[ "$CREATE_LOG" == *"YES"* ]]; then
 fi
 
 # Next, if the input file had header, merge it back to the lifted file
-if [[ "$MODE" == *"SEG"* ]]; then
+#if [[ "$MODE" == *"SEG"* ]]; then
     if [[ "$HEADER" == *"YES"* ]]; then
-        echo "merging with header $OUTPUT_FILE.header"
-        cat $OUTPUT_FILE.header  | perl -ne 's/\|/\t/g;print;' \
-        | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[3,0..2,$#F-1..$#F]"' > $OUTPUT_FILE
-        echo "DONE"
-        cat $OUTPUT_FILE.merged_noheader \
-        | sort -k1,1 -k2,2n -V >> $OUTPUT_FILE
-        echo "done adding header"
-        rm $OUTPUT_FILE.merged_noheader
-        rm $OUTPUT_FILE.header # this is only specific if input has header, so clean up this temp file here
+        echo "merging with header: $OUTPUT_FILE.header and $OUTPUT_FILE.noheader"
+        sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader > $OUTPUT_FILE.sort.noheader \
+        && rm $OUTPUT_FILE.merged_noheader
+        cat $OUTPUT_FILE.header $OUTPUT_FILE.sort.noheader > $OUTPUT_FILE \
+        && rm $OUTPUT_FILE.sort.noheader \
+        && echo "done adding header" \
+        && rm $OUTPUT_FILE.header # this is only specific if input has header, so clean up this temp file here
     else
         cat $OUTPUT_FILE.merged_noheader \
         | sort -k1,1 -k2,2n -V \
@@ -233,7 +230,7 @@ if [[ "$MODE" == *"SEG"* ]]; then
         > $OUTPUT_FILE
         rm $OUTPUT_FILE.merged_noheader
     fi
-fi
+#fi
 
 #cut -f 1-7 ${OUTPUT_FILE%.tsv}.merged_by_segment.tsv > $OUTPUT_FILE
 
