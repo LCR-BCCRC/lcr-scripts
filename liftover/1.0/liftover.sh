@@ -15,6 +15,9 @@
 
 set -e
 
+export LC_ALL=C
+export LANG=C
+
 # Read variables to store the arguments from command line
 MODE="$1"
 INPUT_FILE="$2"
