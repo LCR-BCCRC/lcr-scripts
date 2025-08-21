@@ -172,7 +172,7 @@ else
     exit 1 # terminate and indicate error
 fi
 
-UNMAPPED="${OUTPUT_FILE%.*}.unmapped"
+UNMAPPED="${OUTPUT_FILE%.*}.unmapped.bed"
 
 liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED 2> /dev/null
 rm $OUTPUT_FILE.chunked
@@ -224,7 +224,6 @@ sort -k1,1 -k2,2n $OUTPUT_FILE.chunked.lift.bed  \
     '   | perl -ne 's/\|SEGMENT_\S+$//;s/\|/\t/g;print;' > $OUTPUT_FILE.merged_noheader
 
     rm $OUTPUT_FILE.chunked.lift.bed
-    rm $UNMAPPED
 
         # merge bed and ensure all columns beyond 3 are identical after removing CHUNK_ID
 
