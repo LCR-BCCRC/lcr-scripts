@@ -27,5 +27,5 @@ echo "testing purecn mode"
 ./cnv2igv.py  --mode purecn --preserve_log_ratio $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.preserved.seg
 
 echo "testing battenberg mode"
-./cnv2igv.py --preserve_log_ratio --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.seg
+./cnv2igv.py --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.seg
 ./cnv2igv.py --preserve_log_ratio --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.preserved.seg
