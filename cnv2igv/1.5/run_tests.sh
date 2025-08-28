@@ -26,6 +26,12 @@ echo "testing purecn mode"
 ./cnv2igv.py  --mode purecn $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.seg
 ./cnv2igv.py  --mode purecn --preserve_log_ratio $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.preserved.seg
 
+echo "testing sample_id override"
+./cnv2igv.py  --mode purecn $in_dir/DLBCL-RICOVER_258-Tumor_dnacopy.seg > $out_dir/DLBCL-RICOVER_258-Tumor_dnacopy.seg
+./cnv2igv.py  --mode purecn --sample DLBCL-RICOVER_258-Tumor $in_dir/DLBCL-RICOVER_258-Tumor_dnacopy.seg > $out_dir/DLBCL-RICOVER_258-Tumor_dnacopy_explicit_sample.seg
+
+
 echo "testing battenberg mode"
 ./cnv2igv.py --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.seg
 ./cnv2igv.py --preserve_log_ratio --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.preserved.seg
+

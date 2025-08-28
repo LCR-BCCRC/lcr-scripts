@@ -22,6 +22,8 @@ class Parser:
         self.sample   = sample
         self.loh_type = loh_type
         self.logr_type = logr_type
+        # If the user provided --sample (not default), prefer it verbatim
+        self._prefer_arg_sample = (sample is not None and sample != 'SAMPLE')
 
     @abstractmethod
     def is_header(self, line):
@@ -32,6 +34,15 @@ class Parser:
     def parse_segment(self, line, logr_type):
         ''' Return Segment object '''
         pass
+
+    def resolve_sample(self, line_sample=None):
+        """Return the ID to use for this row without mutating self.sample."""
+        if self._prefer_arg_sample:
+            return self.sample
+        # fallbacks if user did not provide --sample
+        if line_sample and line_sample.strip():
+            return line_sample.strip()
+        return self.sample  # last resort
 
     def get_loh_flag(self):
         ''' Return string indicating if segment is LOH or not. '''
@@ -67,22 +78,19 @@ class PurecnParser(Parser):
         super().__init__(stream, sample, loh_type, logr_type)
 
     def is_header(self, line):
-        chrm = line.split('\t', 1)[1]
-        return True if chrm.startswith("chr") else False
+        toks = line.rstrip('\n').split('\t')
+        # expect header like: ID    chromosome  start  end ...
+        return len(toks) > 1 and (toks[0].lower() in ('id', 'sample')
+                                  or toks[1].lower().startswith('chrom'))
 
     def parse_segment(self, line, logr_type):
-        _line = line.split('\t')
-        self.sample, chrm, start, end = _line[0:4]
-        start = int(float(start))
-        end = int(float(end))
-        cn = _line[6].rstrip("\n")
-        if logr_type == "corrected":
-            logr = self.calculate_logratio(cn)
-        else:
-            logr = _line[5]
-
-        return(Segment(chrm, start, end, cn, logr, self.sample))
-
+        t = line.rstrip('\n').split('\t')
+        line_sample, chrm, start, end = t[0:4]
+        start = int(float(start)); end = int(float(end))
+        cn = t[6]
+        logr = self.calculate_logratio(cn) if logr_type == "corrected" else t[5]
+        sample_id = self.resolve_sample(line_sample)
+        return Segment(chrm, start, end, cn, logr, sample_id)
 
 class CNVKitParser(Parser):
     def __init__(self, stream, sample, loh_type):
@@ -303,14 +311,14 @@ class ControlfreecParser(Parser):
 
 class Segment:
     def __init__(self, chrm, start, end, cn, logr, sample, loh_flag = 'NA'):
-        self.chrm     = chrm
-        self.start    = start
-        self.end      = end
-        self.loh      = loh_flag
-        self.cn       = cn
+        self.chrm     = str(chrm)
+        self.start    = str(int(float(start)))
+        self.end      = str(int(float(end)))
+        self.loh      = str(loh_flag)
+        self.cn       = str(cn)
         self.cn_state = self.get_cnv_state()
-        self.logr     = logr
-        self.sample   = sample
+        self.logr     = str(logr)
+        self.sample   = str(sample)
 
     def get_cnv_state(self):
         cn_state = 'NEUT'
@@ -326,21 +334,26 @@ class Segment:
             cn_state = 'HOMD'
         return(cn_state)
 
-    def to_full(self,prepend):
-        if prepend:
-          self.chrm = "chr"+self.chrm
-        return('\t'.join([self.sample, self.chrm, str(self.start), str(self.end), self.loh, self.cn, self.logr]))
+    @staticmethod
+    def _maybe_chr(prepend, chrm):
+        if not prepend:
+            return chrm
+        return chrm if str(chrm).startswith("chr") else "chr" + str(chrm)
+
+    def to_full(self, prepend):
+        ch = self._maybe_chr(prepend, self.chrm)
+        return '\t'.join([self.sample, ch, str(self.start), str(self.end),
+                          self.loh, self.cn, self.logr])
+
     def to_igv(self, prepend):
-        if prepend:
-            self.chrm = "chr"+self.chrm
-        return('\t'.join([self.sample, self.chrm, str(self.start), \
-                          str(self.end), self.loh, self.cn, self.logr]))
+        ch = self._maybe_chr(prepend, self.chrm)
+        return '\t'.join([self.sample, ch, str(self.start), str(self.end),
+                          self.loh, self.cn, self.logr])
 
     def to_oncocircos(self, prepend):
-        if prepend:
-            self.chrm = "chr"+self.chrm
-        return('\t'.join([self.sample, self.chrm, self.start, \
-                          self.end, self.loh, self.logr, self.cn_state]))
+        ch = self._maybe_chr(prepend, self.chrm)
+        return '\t'.join([self.sample, ch, str(self.start), str(self.end),
+                          self.loh, self.logr, self.cn_state])
 
 # Argument Parser --------------------------------------------------------
 
