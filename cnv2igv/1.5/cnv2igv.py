@@ -73,6 +73,8 @@ class PurecnParser(Parser):
     def parse_segment(self, line, logr_type):
         _line = line.split('\t')
         self.sample, chrm, start, end = _line[0:4]
+        start = int(float(start))
+        end = int(float(end))
         cn = _line[6].rstrip("\n")
         if logr_type == "corrected":
             logr = self.calculate_logratio(cn)
@@ -327,12 +329,12 @@ class Segment:
     def to_full(self,prepend):
         if prepend:
           self.chrm = "chr"+self.chrm
-        return('\t'.join([self.sample, self.chrm, self.start, self.end, self.loh, self.cn, self.logr]))
+        return('\t'.join([self.sample, self.chrm, str(self.start), str(self.end), self.loh, self.cn, self.logr]))
     def to_igv(self, prepend):
         if prepend:
             self.chrm = "chr"+self.chrm
-        return('\t'.join([self.sample, self.chrm, self.start, \
-                          self.end, self.loh, self.cn, self.logr]))
+        return('\t'.join([self.sample, self.chrm, str(self.start), \
+                          str(self.end), self.loh, self.cn, self.logr]))
 
     def to_oncocircos(self, prepend):
         if prepend:
