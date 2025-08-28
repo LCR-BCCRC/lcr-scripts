@@ -63,9 +63,10 @@ else
     exit 1 # terminate and indicate error
 fi
 
-
+CHR_COL=1
 # First, check that proper mode is specified, rearrange columns for seg file, and collapse extra columns together
 if [[ "$MODE" == *"SEG"* ]]; then
+    CHR_COL=2
     #echo "Running in $MODE mode ..."
     cat "$OUTPUT_FILE.nohead" \
     | perl -ne '
@@ -82,7 +83,6 @@ if [[ "$MODE" == *"SEG"* ]]; then
         $chr = ($chr eq "23") ? "X" : $chr;
         $chr = "chr$chr" unless $chr =~ /^chr/;
         
-
         # convert to 0-based BED coords
         my ($s1,$e1) = ($a[$S_I]-1, $a[$E_I]);  # [s1,e1)
         # remove decimal point and trailing digits from coordinates
@@ -95,12 +95,12 @@ if [[ "$MODE" == *"SEG"* ]]; then
 
     ' > "$OUTPUT_FILE.collapsed"
 
-cat $OUTPUT_FILE.collapsed \
-| perl -ne '
-    # split [start,end) into chunks of size <= $chunk_size (BED semantics)
-    BEGIN { $chunk_size = 150000;our $segid = 1; }
-    chomp; @a = split /\t/;
-    my ($chr,$s,$e) = @a[0,1,2];
+    cat $OUTPUT_FILE.collapsed \
+       | perl -ne '
+       # split [start,end) into chunks of size <= $chunk_size (BED semantics)
+       BEGIN { $chunk_size = 150000;our $segid = 1; }
+       chomp; @a = split /\t/;
+       my ($chr,$s,$e) = @a[0,1,2];
 
 
     # guard bad/empty ranges
@@ -146,8 +146,8 @@ elif [[ "$MODE" == *"BED"* ]]; then
     ' > "$OUTPUT_FILE.collapsed"
     echo "wrote $OUTPUT_FILE.collapsed"
 
-cat $OUTPUT_FILE.collapsed \
-| perl -ne '
+  cat $OUTPUT_FILE.collapsed \
+  | perl -ne '
     # split [start,end) into chunks of size <= $chunk_size (BED semantics)
     BEGIN {$| = 1; $chunk_size = 150000; our $seg_id = 1;}
     chomp; @a = split /\t/;
@@ -253,13 +253,31 @@ if [[ "$CREATE_LOG" == *"YES"* ]]; then
         ' >> $LOG
     fi
 fi
+# Determine whether to retain the chr prefix based on the paradigm used in the input file
+DELIM=$'\t'   # TSV
+HAS_CHR=$(
+  awk -v c="$CHR_COL" -v FS="$DELIM" '
+    NR==1 { next }                     # skip header
+    /^#/ { next }                      # (optional) skip comment lines
+    { v = $c; sub(/\r$/, "", v) }      # trim CR if Windows line endings
+    v ~ /^chr/ { found=1; exit }       # found any data row starting with "chr"
+    END { print found ? 1 : 0 }        # print once
+  ' "$INPUT_FILE"
+)
+echo "chr prefix on column $CHR_COL? $HAS_CHR"
 
 # Next, if the input file had header, merge it back to the lifted file
 if [[ "$HEADER" == *"YES"* ]]; then
     if [[ "$MODE" == *"SEG"* ]]; then
+      if [[ "$HAS_CHR" == "1" ]]; then
         sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
-        | perl -ane 'print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[$#F-1..$#F]), "\n";' \
+        | perl -ane 'print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[7..$#F]), "\n";' \
         > $OUTPUT_FILE.sort.noheader 
+      else
+        sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
+        | perl -ane '$F[0] =~ s/chr//; print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[7..$#F]), "\n";' \
+        > $OUTPUT_FILE.sort.noheader
+      fi
     else
         sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
         > $OUTPUT_FILE.sort.noheader 
@@ -272,7 +290,7 @@ else
     if [[ "$MODE" == *"SEG"* ]]; then
         cat $OUTPUT_FILE.merged_noheader \
         | sort -k1,1 -k2,2n -V \
-        | perl -ane 'print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[$#F-1..$#F]), "\n";' \
+        | perl -ane 'print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[7..$#F]), "\n";' \
         > $OUTPUT_FILE && rm $OUTPUT_FILE.merged_noheader
         #|
         #| perl -ne 's/\|/\t/g;print;' \
