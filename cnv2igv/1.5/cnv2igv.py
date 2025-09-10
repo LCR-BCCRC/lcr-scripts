@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 
 # Globals ----------------------------------------------------------------
 
-MODES = ['sclust', 'sequenza', 'titan', 'cnvkit', 'purecn','battenberg', 'controlfreec'] # add new seg filetypes here
+MODES = ['sclust', 'sequenza', 'titan', 'cnvkit', 'purecn', 'purecn_cnvkit', 'battenberg', 'controlfreec'] # add new seg filetypes here
 LOH_TYPES = ['neutral', 'deletion', 'any']
 
 # Classes ----------------------------------------------------------------
@@ -16,12 +16,14 @@ class Parser:
     ''' Extend this class and implement is_header(), parse_segment() methods.
         get_loh_flag() is optional.
     '''
-    def __init__(self, stream, sample, loh_type, logr_type = "corrected"):
+    def __init__(self, stream, sample, mode, loh_type, logr_type = "corrected"):
         self.stream   = open(stream, 'r')
         self.filename = stream
         self.sample   = sample
+        self.mode = mode
         self.loh_type = loh_type
         self.logr_type = logr_type
+
         # If the user provided --sample (not default), prefer it verbatim
         self._prefer_arg_sample = (sample is not None and sample != 'SAMPLE')
 
@@ -31,7 +33,7 @@ class Parser:
         pass
 
     @abstractmethod
-    def parse_segment(self, line, logr_type):
+    def parse_segment(self, line, logr_type, mode):
         ''' Return Segment object '''
         pass
 
@@ -74,8 +76,8 @@ class Parser:
         return(str(logr))
 
 class PurecnParser(Parser):
-    def __init__(self, stream, sample, loh_type, logr_type):
-        super().__init__(stream, sample, loh_type, logr_type)
+    def __init__(self, stream, sample, mode, loh_type, logr_type):
+        super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
         toks = line.rstrip('\n').split('\t')
@@ -83,34 +85,34 @@ class PurecnParser(Parser):
         return len(toks) > 1 and (toks[0].lower() in ('id', 'sample')
                                   or toks[1].lower().startswith('chrom'))
 
-    def parse_segment(self, line, logr_type):
+    def parse_segment(self, line, logr_type, mode):
         t = line.rstrip('\n').split('\t')
         line_sample, chrm, start, end = t[0:4]
         start = int(float(start)); end = int(float(end))
         cn = t[6]
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else t[5]
         sample_id = self.resolve_sample(line_sample)
-        return Segment(chrm, start, end, cn, logr, sample_id)
+        return Segment(chrm, start, end, cn, logr, sample_id, mode)
 
 class CNVKitParser(Parser):
-    def __init__(self, stream, sample, loh_type):
-        super().__init__(stream, sample, loh_type)
+    def __init__(self, stream, sample, mode, loh_type):
+        super().__init__(stream, sample, mode, loh_type)
 
     def is_header(self, line):
         chrm = line.split('\t', 1)[0]
         return True if chrm.startswith("chr") else False
 
-    def parse_segment(self, line):
+    def parse_segment(self, line, mode):
         _line = line.split('\t')
         chrm, start, end = _line[0:3]
         cn = _line[5] #NOTE: if the input is the cnvkit seg file then this is wrong. The last column is log ratio.
         logr = self.calculate_logratio(cn)
 
-        return(Segment(chrm, start, end, cn, logr, self.sample))
+        return(Segment(chrm, start, end, cn, logr, self.sample, mode))
 
 class SequenzaParser(Parser):
-    def __init__(self, stream, sample, loh_type, logr_type):
-        super().__init__(stream, sample, loh_type, logr_type)
+    def __init__(self, stream, sample, mode, loh_type, logr_type):
+        super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
         chrm = line.split('\t', 1)[0]
@@ -125,7 +127,7 @@ class SequenzaParser(Parser):
         else:
             return False
 
-    def parse_segment(self, line, logr_type):
+    def parse_segment(self, line, logr_type, mode):
         _line = line.split('\t')
         chrm, start, end = _line[0:3]
         if chrm.startswith('"'):
@@ -148,7 +150,7 @@ class SequenzaParser(Parser):
         start = str(int(float(start)))
         end = str(int(float(end)))
 
-        return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
+        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
 
     def get_loh_flag(self, cn, a, b):
         cn = int(cn)
@@ -171,14 +173,14 @@ class SequenzaParser(Parser):
         return(loh_flag)
 
 class BattenbergParser(Parser):
-    def __init__(self, stream, sample, loh_type, logr_type):
-        super().__init__(stream, sample, loh_type, logr_type)
+    def __init__(self, stream, sample, mode, loh_type, logr_type):
+        super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
         chrm = line.split('\t', 1)[0]
         return True if chrm == "chr" else False
 
-    def parse_segment(self, line, logr_type):
+    def parse_segment(self, line, logr_type, mode):
         _line = line.split('\t')
         chrm, start, end, BAF, pval, orig_logr, cn_orig, nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A = _line[0:13]
         if not chrm.startswith("chr"):
@@ -193,7 +195,7 @@ class BattenbergParser(Parser):
         else:
             logr = str(math.log2(float(cn)/2))
             #logr = str(math.log(float(cn), 2) - 1)
-        return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
+        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
 
     #actually use the LOH information from Battenberg, The column is nMin1_A (if < 1, LOH)
     def get_loh_flag(self, nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A):
@@ -283,14 +285,14 @@ class TitanParser(Parser):
 
 
 class ControlfreecParser(Parser):
-    def __init__(self, stream, sample, loh_type):
-        super().__init__(stream, sample, loh_type)
+    def __init__(self, stream, sample, mode, loh_type):
+        super().__init__(stream, sample, mode, loh_type)
 
     def is_header(self, line):
         chrm = line.split('\t', 1)[0]
         return True if chrm == "chr" else False
 
-    def parse_segment(self, line, loh_type):
+    def parse_segment(self, line, loh_type, mode):
         _line = line.split('\t')
         chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval = _line[0:11]
         if not chrm.startswith("chr"):
@@ -306,11 +308,11 @@ class ControlfreecParser(Parser):
             logr = self.calculate_logratio(cn)
         else:
             logr = str(0.0)
-        return(Segment(chrm, start, end, cn, logr, self.sample, loh_flag))
+        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
 
 
 class Segment:
-    def __init__(self, chrm, start, end, cn, logr, sample, loh_flag = 'NA'):
+    def __init__(self, chrm, start, end, cn, logr, sample, mode, loh_flag = 'NA'):
         self.chrm     = str(chrm)
         self.start    = str(int(float(start)))
         self.end      = str(int(float(end)))
@@ -319,6 +321,7 @@ class Segment:
         self.cn_state = self.get_cnv_state()
         self.logr     = str(logr)
         self.sample   = str(sample)
+        self.mode   = str(mode)
 
     def get_cnv_state(self):
         cn_state = 'NEUT'
@@ -343,12 +346,12 @@ class Segment:
     def to_full(self, prepend):
         ch = self._maybe_chr(prepend, self.chrm)
         return '\t'.join([self.sample, ch, str(self.start), str(self.end),
-                          self.loh, self.cn, self.logr])
+                          self.mode, self.loh, self.cn, self.logr])
 
     def to_igv(self, prepend):
         ch = self._maybe_chr(prepend, self.chrm)
         return '\t'.join([self.sample, ch, str(self.start), str(self.end),
-                          self.loh, self.cn, self.logr])
+                          self.mode, self.loh, self.cn, self.logr])
 
     def to_oncocircos(self, prepend):
         ch = self._maybe_chr(prepend, self.chrm)
@@ -395,31 +398,31 @@ def main():
     # - add filetype to MODES list above
     # - add condition for new filetype here and instantiate your own Parser as parser
     if mode == 'sequenza':
-        parser = SequenzaParser(seg_file, sample, loh_type, logr_type)
-    elif mode == 'purecn':
-        parser = PurecnParser(seg_file, sample, loh_type, logr_type)
+        parser = SequenzaParser(seg_file, sample, mode, loh_type, logr_type)
+    elif mode == 'purecn' or mode == 'purecn_cnvkit':
+        parser = PurecnParser(seg_file, sample, mode, loh_type, logr_type)
     elif mode == 'sclust':
         parser = SClustParser(seg_file, sample, loh_type)
     elif mode == 'titan':
         parser = TitanParser(seg_file, sample, loh_type)
     elif mode == 'cnvkit':
-        parser = CNVKitParser(seg_file, sample, loh_type)
+        parser = CNVKitParser(seg_file, sample, mode, loh_type)
     elif mode == "battenberg":
-        parser = BattenbergParser(seg_file, sample, loh_type, logr_type)
+        parser = BattenbergParser(seg_file, sample, mode, loh_type, logr_type)
     elif mode == 'controlfreec':
-        parser = ControlfreecParser(seg_file, sample, loh_type)
+        parser = ControlfreecParser(seg_file, sample, mode, loh_type)
 
     if preserve:
-      header = 'ID\tchrom\tstart\tend\tLOH_flag\tCN\tlog.ratio'
+      header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tlog.ratio'
     else:
-    	header = 'ID\tchrom\tstart\tend\tLOH_flag\tCN\tlog.ratio'
+    	header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tlog.ratio'
     if not oncocircos:
         print(header)
 
     for line in parser.stream:
         if parser.is_header(line):
             continue
-        seg = parser.parse_segment(line, logr_type = logr_type)
+        seg = parser.parse_segment(line, logr_type = logr_type, mode = mode)
 
         if oncocircos:
             print(seg.to_oncocircos(prepend))
