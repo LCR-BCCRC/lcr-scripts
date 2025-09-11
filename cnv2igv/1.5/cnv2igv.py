@@ -66,6 +66,7 @@ class Parser:
           segment_states_maj = nMaj1_A*1
         cn = segment_states_min + segment_states_maj
         return(str(cn))
+
     def calculate_logratio(self, cn):
         cn   = float(cn)
         logr = None
@@ -95,19 +96,32 @@ class PurecnParser(Parser):
         return Segment(chrm, start, end, cn, logr, sample_id, mode)
 
 class CNVKitParser(Parser):
-    def __init__(self, stream, sample, mode, loh_type):
-        super().__init__(stream, sample, mode, loh_type)
+    def __init__(self, stream, sample, mode, loh_type, logr_type):
+        super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
+        # expect header like: chromosome, start, end, gene, log2, baf, cn, ...
         chrm = line.split('\t', 1)[0]
-        return True if chrm.startswith("chr") else False
 
-    def parse_segment(self, line, mode):
+        if chrm.startswith('"'):
+            chrm = chrm[1:]
+        if chrm.endswith('"'):
+            chrm = chrm[0:-1]
+
+        if chrm == "chromosome":
+            return True
+        else:
+            return False
+
+    def parse_segment(self, line, logr_type, mode):
         _line = line.split('\t')
         chrm, start, end = _line[0:3]
-        cn = _line[5] #NOTE: if the input is the cnvkit seg file then this is wrong. The last column is log ratio.
-        logr = self.calculate_logratio(cn)
-
+        if chrm.startswith('"'):
+            chrm = chrm[1:]
+        if chrm.endswith('"'):
+            chrm = chrm[0:-1]
+        cn = _line[6]
+        logr = self.calculate_logratio(cn) if logr_type == "corrected" else _line[4]
         return(Segment(chrm, start, end, cn, logr, self.sample, mode))
 
 class SequenzaParser(Parser):
@@ -115,6 +129,7 @@ class SequenzaParser(Parser):
         super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
+        # expect header like: chromosome, start.pos, end.pos, ...
         chrm = line.split('\t', 1)[0]
 
         if chrm.startswith('"'):
@@ -285,14 +300,14 @@ class TitanParser(Parser):
 
 
 class ControlfreecParser(Parser):
-    def __init__(self, stream, sample, mode, loh_type):
-        super().__init__(stream, sample, mode, loh_type)
+    def __init__(self, stream, sample, mode, loh_type, logr_type):
+        super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
         chrm = line.split('\t', 1)[0]
         return True if chrm == "chr" else False
 
-    def parse_segment(self, line, loh_type, mode):
+    def parse_segment(self, line, mode, logr_type):
         _line = line.split('\t')
         chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval = _line[0:11]
         if not chrm.startswith("chr"):
@@ -303,7 +318,7 @@ class ControlfreecParser(Parser):
             loh_flag = str(0)
         else:
             loh_flag = str(1)
-        # calsulate logratio for somatic events that pass significance threshold
+        # calculate logratio for somatic events that pass significance threshold
         if somgerm == "somatic" and not "NA" in str(pval) and float(pval) <= 0.1:
             logr = self.calculate_logratio(cn)
         else:
@@ -385,7 +400,7 @@ def main():
     loh_type   = args.loh_type
     oncocircos = args.oncocircos
     gistic     = args.gistic
-    preserve = args.preserve_log_ratio
+    preserve   = args.preserve_log_ratio
     parser     = None
     if preserve:
         logr_type = "raw"
@@ -406,16 +421,15 @@ def main():
     elif mode == 'titan':
         parser = TitanParser(seg_file, sample, loh_type)
     elif mode == 'cnvkit':
-        parser = CNVKitParser(seg_file, sample, mode, loh_type)
+        parser = CNVKitParser(seg_file, sample, mode, loh_type, logr_type)
     elif mode == "battenberg":
         parser = BattenbergParser(seg_file, sample, mode, loh_type, logr_type)
     elif mode == 'controlfreec':
-        parser = ControlfreecParser(seg_file, sample, mode, loh_type)
+        if preserve:
+          raise ValueError("controlfreec raw output does not have log ratio. Do not use --preserve_log_ratio")
+        parser = ControlfreecParser(seg_file, sample, mode, loh_type, logr_type)
 
-    if preserve:
-      header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tlog.ratio'
-    else:
-    	header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tlog.ratio'
+    header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tlog.ratio'
     if not oncocircos:
         print(header)
 
