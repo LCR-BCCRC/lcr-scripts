@@ -20,6 +20,8 @@ out_dir="tests/output"
 echo "testing sequenza mode"
 ./cnv2igv.py  --sample "Sequenza_SAMPLE1" --mode sequenza $in_dir/sequenza_segments.txt > $out_dir/sequenza_segments.seg
 ./cnv2igv.py  --sample "Sequenza_SAMPLE1" --mode sequenza --preserve_log_ratio $in_dir/sequenza_segments.txt > $out_dir/sequenza_segments.preserved.seg
+./cnv2igv.py  --sample "Sequenza_SAMPLE1" --mode sequenza $in_dir/sequenza_segments_with_NA.txt > $out_dir/sequenza_segments_with_NA.seg
+./cnv2igv.py  --sample "Sequenza_SAMPLE1" --mode sequenza --preserve_log_ratio $in_dir/sequenza_segments_with_NA.txt > $out_dir/sequenza_segments_with_NA.preserved.seg
 
 echo "testing purecn mode"
 ./cnv2igv.py  --mode purecn $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.seg

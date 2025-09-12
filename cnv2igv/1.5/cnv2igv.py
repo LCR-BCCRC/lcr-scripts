@@ -49,6 +49,7 @@ class Parser:
     def get_loh_flag(self):
         ''' Return string indicating if segment is LOH or not. '''
         pass
+
     # battenberg needs its own function because it outputs CN for each subclone separately
     def calculate_cn_battenberg(self, nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A):
         logr = None
@@ -89,7 +90,6 @@ class PurecnParser(Parser):
     def parse_segment(self, line, logr_type, mode):
         t = line.rstrip('\n').split('\t')
         line_sample, chrm, start, end = t[0:4]
-        start = int(float(start)); end = int(float(end))
         cn = t[6]
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else t[5]
         sample_id = self.resolve_sample(line_sample)
@@ -102,12 +102,10 @@ class CNVKitParser(Parser):
     def is_header(self, line):
         # expect header like: chromosome, start, end, gene, log2, baf, cn, ...
         chrm = line.split('\t', 1)[0]
-
         if chrm.startswith('"'):
             chrm = chrm[1:]
         if chrm.endswith('"'):
             chrm = chrm[0:-1]
-
         if chrm == "chromosome":
             return True
         else:
@@ -121,8 +119,31 @@ class CNVKitParser(Parser):
         if chrm.endswith('"'):
             chrm = chrm[0:-1]
         cn = _line[6]
+        cn1 = None if _line[7] == '' else _line[7]
+        cn2 =  None if _line[8] == '' else _line[8]
+        loh_flag = self.get_loh_flag(cn, cn1, cn2)
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else _line[4]
-        return(Segment(chrm, start, end, cn, logr, self.sample, mode))
+        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
+
+    def get_loh_flag(self, cn, cn1, cn2):
+        cn = int(cn)
+        loh_flag = '0'
+        if self.loh_type == 'neutral':
+            if cn == 0 :
+                loh_flag = 'NA'
+            elif cn == 2 and cn1 == 2:
+                loh_flag = '1'
+        elif self.loh_type == 'deletion':
+            if cn == 0:
+                loh_flag = 'NA'
+            elif cn == 1 and (cn1 + cn2) == 1:
+                loh_flag = '1'
+        elif self.loh_type == 'any':
+            if cn == 0:
+                loh_flag = 'NA'
+            elif cn2 == 0 and cn1 + cn2 > 0:
+                loh_flag = '1'
+        return(loh_flag)
 
 class SequenzaParser(Parser):
     def __init__(self, stream, sample, mode, loh_type, logr_type):
@@ -131,12 +152,10 @@ class SequenzaParser(Parser):
     def is_header(self, line):
         # expect header like: chromosome, start.pos, end.pos, ...
         chrm = line.split('\t', 1)[0]
-
         if chrm.startswith('"'):
             chrm = chrm[1:]
         if chrm.endswith('"'):
             chrm = chrm[0:-1]
-
         if chrm == "chromosome":
             return True
         else:
@@ -151,39 +170,35 @@ class SequenzaParser(Parser):
             chrm = chrm[0:-1]
         cn, a, b = _line[9:12]
         depth_ratio = _line[6]
+        # Follow what is done for battenberg: replace NAs with zero
+        # will set logr = -10 in "corrected mode"
         if cn == 'NA':
-            cn = 2 # assume it's diploid
+            cn = 0
         if a == 'NA':
-            a = 1
+            a = 0
         if b == 'NA':
-            b =1
+            b = 0
         loh_flag = self.get_loh_flag(cn, a, b)
-        if logr_type == "corrected":
-            logr = self.calculate_logratio(cn)
-        else:
-            logr = depth_ratio
-        start = str(int(float(start)))
-        end = str(int(float(end)))
-
+        logr = self.calculate_logratio(cn) if logr_type == "corrected" else depth_ratio
         return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
 
     def get_loh_flag(self, cn, a, b):
         cn = int(cn)
         loh_flag = '0'
         if self.loh_type == 'neutral':
-            if a == 'NA':
+            if cn == 0 :
                 loh_flag = 'NA'
             elif cn == 2 and int(a) == 2:
                 loh_flag = '1'
         elif self.loh_type == 'deletion':
-            if a == 'NA' or b == 'NA':
+            if cn == 0:
                 loh_flag = 'NA'
             elif cn == 1 and (int(a) + int(b)) == 1:
                 loh_flag = '1'
         elif self.loh_type == 'any':
-            if b == 'NA':
+            if cn == 0:
                 loh_flag = 'NA'
-            elif cn <= 2 and int(b) == 0:
+            elif int(b) == 0 and int(a) + int(b) > 0:
                 loh_flag = '1'
         return(loh_flag)
 
@@ -202,14 +217,9 @@ class BattenbergParser(Parser):
             chrm = "chr"+ str(chrm)
         loh_flag = self.get_loh_flag(nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A)
         cn = self.calculate_cn_battenberg(nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A)
-        #logr = math.log2(cn/2)
         basename = os.path.basename(self.filename)
         self.sample = basename.replace("_subclones.txt", "")
-        if logr_type == "raw":
-            logr = orig_logr
-        else:
-            logr = str(math.log2(float(cn)/2))
-            #logr = str(math.log(float(cn), 2) - 1)
+        logr = self.calculate_logratio(cn) if logr_type == "corrected" else orig_logr
         return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
 
     #actually use the LOH information from Battenberg, The column is nMin1_A (if < 1, LOH)
@@ -224,7 +234,7 @@ class BattenbergParser(Parser):
         elif self.loh_type == 'any':
             # segments with no information of their copy number state:
             if "NA" in str(nMin1_A):
-                loh_flag = '0'
+                loh_flag = 'NA'
             # events with no subclones and no minor allele are set with loh flag
             elif "NA" in str(frac2_A) and float(nMin1_A) == 0:
                 loh_flag = '1'
