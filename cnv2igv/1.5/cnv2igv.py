@@ -129,19 +129,19 @@ class CNVKitParser(Parser):
         cn = int(cn)
         loh_flag = '0'
         if self.loh_type == 'neutral':
-            if cn == 0 :
+            if cn1 == None:
                 loh_flag = 'NA'
-            elif cn == 2 and cn1 == 2:
+            elif cn == 2 and int(cn2) == 0:
                 loh_flag = '1'
         elif self.loh_type == 'deletion':
-            if cn == 0:
+            if cn1 == None:
                 loh_flag = 'NA'
-            elif cn == 1 and (cn1 + cn2) == 1:
+            elif cn == 1 and (int(cn1) + int(cn2)) == 1:
                 loh_flag = '1'
         elif self.loh_type == 'any':
-            if cn == 0:
+            if cn1 == None:
                 loh_flag = 'NA'
-            elif cn2 == 0 and cn1 + cn2 > 0:
+            elif int(cn2) == 0 and int(cn1) + int(cn2) > 0:
                 loh_flag = '1'
         return(loh_flag)
 
