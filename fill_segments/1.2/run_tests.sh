@@ -23,20 +23,14 @@ grch37_blacklist="src/blacklisted.grch37.bed"
 in_dir="tests/input"
 out_dir="tests/output"
 
-echo "testing seg mode with purecn input"
-./fill_segments.sh $hg38_chrArms $in_dir/DLBCL10538T_dnacopy.seg $hg38_blacklist $out_dir/DLBCL10538T_dnacopy.filled.seg DLBCL10538T SEG
-
-echo "testing seg mode with purecn preserved input"
-./fill_segments.sh $hg38_chrArms $in_dir/DLBCL10538T_dnacopy.preserved.seg $hg38_blacklist $out_dir/DLBCL10538T_dnacopy.preserved.filled.seg DLBCL10538T SEG
-
-echo "testing seg mode with battenberg input"
-./fill_segments.sh $hg38_chrArms $in_dir/SP116712_subclones.seg $hg38_blacklist $out_dir/SP116712_subclones.filled.seg SP116712 SEG
-
-echo "testing seg mode with battenberg preserved input"
-./fill_segments.sh $hg38_chrArms $in_dir/SP116712_subclones.preserved.seg $hg38_blacklist $out_dir/SP116712_subclones.preserved.filled.seg SP116712 SEG
+echo "testing seg mode"
+./fill_segments.sh $grch37_chrArms $in_dir/DLBCL10538T_dnacopy.seg $grch37_blacklist $out_dir/DLBCL10538T_dnacopy.filled.seg DLBCL10538T SEG
+./fill_segments.sh $hg38_chrArms $in_dir/cnvkit_hg38.seg  $hg38_blacklist $out_dir/cnvkit_hg38.filled.seg P_FL_089 SEG
+./fill_segments.sh $grch37_chrArms $in_dir/cnvkit_hg38.to_grch37.seg $grch37_blacklist $out_dir/cnvkit_hg38.to_grch37.filled.seg P_FL_089 SEG
 
 echo "testing subclones mode"
 ./fill_segments.sh $hg38_chrArms $in_dir/SP116712_subclones.txt $hg38_blacklist $out_dir/SP116712_subclones.filled.txt SP116712 subclones
 
 echo "testing sequenza mode"
 ./fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments.txt $hg38_blacklist $out_dir/sequenza_segments.filled.txt Sequenza_SAMPLE1 sequenza
+./fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments_with_NA.txt $hg38_blacklist $out_dir/sequenza_segments_with_NA.filled.txt Sequenza_SAMPLE2 sequenza

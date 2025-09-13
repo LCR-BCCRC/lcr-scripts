@@ -33,11 +33,11 @@ elif [[ "$MODE" == *"subclones"* ]] || [[ "$MODE" == *"sequenza"* ]] ; then
     # Strip header
     cat $INPUT_PATH | grep -v "start" > $RESULTS_PATH.headerless.bed
 else
-    echo "You specified mode $MODE, which is not supported. Please provide seg file or battenberg subclones."
+    echo "You specified mode $MODE, which is not supported. Please provide SEG, subclones, or sequenza."
     exit 1 # terminate and indicate error
 fi
 
-# Count number of columns  - to be used to fill the subclones file
+# Number of columns in the file, needed when filling the segments
 NUM_COLUMNS=$(cat $RESULTS_PATH.headerless.bed | perl -lane 'print $#F; exit')
 
 # If there is inconsistent chr prefixing between SEG file and bed file of chromosome coordinates,
@@ -67,7 +67,7 @@ fi
 
 
 # Run bedtools substract to find regions that are missing from seg file.
-# The perl pipe part will assign the neutral segment log.ratio and no LOH for the missing segments.
+# The perl pipe part will assign the neutral segment log.ratio and LOH_flag of NA for the missing segments.
 # For the missing segments, +1 is added to start position and 1 is substracted from the end position
 # to ensure they do not overlap with original segments of seg file by 1 position.
 # Filled segments are given normal copy number values and are tracked by the dummy_segment column.
@@ -99,6 +99,7 @@ cat $RESULTS_PATH.headerless.bed $RESULTS_PATH.temp | sort -k1,1 -k2,2n -V | per
 # Now, remove blacklisted regions (centromeres and p arm telomeres) from this file.
 
 if [[ "$MODE" == *"SEG"* ]]; then
+
     # After substracting blacklisted regions, seg file needs the column with sample ID to be shifted back to first position
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' | perl -lane 'print if ($F[3]-$F[2])>1;' > $RESULTS_PATH.deblacklisted.seg
 
@@ -107,8 +108,11 @@ if [[ "$MODE" == *"SEG"* ]]; then
 
     # Populate dummy_segment column indicating whether the segment is filled in (1) or is an
     # original output (0), then change the "99" to "0.0"
+    # also get the value of the "module" column -- expected to always be after "end" column
+    MODULE=$(cut -f4 $RESULTS_PATH.headerless.bed | sort | uniq)
+    export MODULE
     cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[$#F-1] == 99 && $F[$#F] == 99) ? 1 : 0))'\
-     | perl -lane '@a=split; if ($a[$#a-2] == 99 && $a[$#a-1] == 99) {foreach my $column (4..$ENV{NUM_COLUMNS}) {$a[$column]="0.0"}}; print join "\t", @a;' >> $RESULTS_PATH
+     | perl -lane '@a=split; if($a[4]=="99") {$a[4]=$ENV{MODULE}}; if($a[5]=="99") {$a[5]="NA"}; if($a[6]=="99") {$a[6]="2"}; if($a[7]=="99") {$a[7]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH
 elif [[ "$MODE" == *"sequenza"* ]] ; then
     # Sequenza txt file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
@@ -118,7 +122,7 @@ elif [[ "$MODE" == *"sequenza"* ]] ; then
 
     # Populate dummy_segment column indicating whether the segment is filled in (1) or is an
     # original output (0), then change the "99" to "2"
-    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; ; if($a[9]="99") {$a[9]="2"}; print join "\t", @a;' >> $RESULTS_PATH
+    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; ; if ($a[9]=="99") {$a[9]="2"}; print join "\t", @a;' >> $RESULTS_PATH
 elif [[ "$MODE" == *"subclones"* ]]; then
     # Subclones file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
@@ -128,7 +132,7 @@ elif [[ "$MODE" == *"subclones"* ]]; then
 
     # Populate dummy_segment column indicating whether the segment is filled in (1) or is an
     # original output (0), then change the "99" to "1.0"
-    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; if($a[9]="99") {$a[9]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH
+    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; if($a[9]=="99") {$a[9]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH
 fi
 
 
