@@ -34,3 +34,6 @@ echo "testing subclones mode"
 echo "testing sequenza mode"
 ./fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments.txt $hg38_blacklist $out_dir/sequenza_segments.filled.txt Sequenza_SAMPLE1 sequenza
 ./fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments_with_NA.txt $hg38_blacklist $out_dir/sequenza_segments_with_NA.filled.txt Sequenza_SAMPLE2 sequenza
+
+echo "testing non-canonical chrm removal"
+./fill_segments.sh $hg38_chrArms $in_dir/test.grch37.withheader.to_hg38.seg $hg38_blacklist $out_dir/test.grch37.withheader.to_hg38.filled.seg DLBCL11258T SEG

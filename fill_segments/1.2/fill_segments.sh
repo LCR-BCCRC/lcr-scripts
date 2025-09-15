@@ -104,7 +104,7 @@ if [[ "$MODE" == *"SEG"* ]]; then
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -pale 'BEGIN { $"="\t"; } $_ = "@F[$#F,0..$#F-1]"' | perl -lane 'print if ($F[3]-$F[2])>1;' > $RESULTS_PATH.deblacklisted.seg
 
     # Return back the header with dummy_segment column added
-    cat $RESULTS_PATH.header | perl -p -e 'chomp; $_ .= "\tdummy_segment\n"' > $RESULTS_PATH
+    cat $RESULTS_PATH.header | perl -p -e 'chomp; $_ .= "\tdummy_segment\n"' > $RESULTS_PATH.allchrms.seg
 
     # Populate dummy_segment column indicating whether the segment is filled in (1) or is an
     # original output (0), then change the "99" to "0.0"
@@ -112,27 +112,40 @@ if [[ "$MODE" == *"SEG"* ]]; then
     MODULE=$(cut -f4 $RESULTS_PATH.headerless.bed | sort | uniq)
     export MODULE
     cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[$#F-1] == 99 && $F[$#F] == 99) ? 1 : 0))'\
-     | perl -lane '@a=split; if($a[4]=="99") {$a[4]=$ENV{MODULE}}; if($a[5]=="99") {$a[5]="NA"}; if($a[6]=="99") {$a[6]="2"}; if($a[7]=="99") {$a[7]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH
+     | perl -lane '@a=split; if($a[4]=="99") {$a[4]=$ENV{MODULE}}; if($a[5]=="99") {$a[5]="NA"}; if($a[6]=="99") {$a[6]="2"}; if($a[7]=="99") {$a[7]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH.allchrms.seg
 elif [[ "$MODE" == *"sequenza"* ]] ; then
     # Sequenza txt file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
 
     # Return back the header with dummy_segment column added
-    cat $RESULTS_PATH.header | perl -p -e 'chomp; $_ .= "\tdummy_segment\n"' > $RESULTS_PATH
+    cat $RESULTS_PATH.header | perl -p -e 'chomp; $_ .= "\tdummy_segment\n"' > $RESULTS_PATH.allchrms.seg
 
     # Populate dummy_segment column indicating whether the segment is filled in (1) or is an
     # original output (0), then change the "99" to "2"
-    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; ; if ($a[9]=="99") {$a[9]="2"}; print join "\t", @a;' >> $RESULTS_PATH
+    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; ; if ($a[9]=="99") {$a[9]="2"}; print join "\t", @a;' >> $RESULTS_PATH.allchrms.seg
 elif [[ "$MODE" == *"subclones"* ]]; then
     # Subclones file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
 
     # Return back the header with dummy_segment column added
-    cat $RESULTS_PATH.header | perl -p -e 'chomp; $_ .= "\tdummy_segment\n"' > $RESULTS_PATH
+    cat $RESULTS_PATH.header | perl -p -e 'chomp; $_ .= "\tdummy_segment\n"' > $RESULTS_PATH.allchrms.seg
 
     # Populate dummy_segment column indicating whether the segment is filled in (1) or is an
     # original output (0), then change the "99" to "1.0"
-    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; if($a[9]=="99") {$a[9]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH
+    cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[9] == 99) ? 1 : 0))' | perl -lane '@a=split; if($a[9]=="99") {$a[9]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH.allchrms.seg
+fi
+
+# Subset to canonical chrms
+# Prefix of output is set to match that of the chrom arms file earlier in this script
+# so we can use $ARM_IS_PREFIXED as a way to tell if the output is prefixed
+if [[ "$MODE" == *"SEG"* && "$ARM_IS_PREFIXED" == *"chr"* ]]; then
+    awk -F"\t" -v OFS="\t" '$2 ~ /^chrom$|^chr[0-9]{1,2}$|^chr(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
+elif [[ "$MODE" == *"SEG"* && ! "$ARM_IS_PREFIXED" == *"chr"* ]]; then
+    awk -F"\t" -v OFS="\t" '$2 ~ /^chrom$|^[0-9]{1,2}$|^(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
+elif [[ ! "$MODE" == *"SEG"* && "$ARM_IS_PREFIXED" == *"chr"* ]]; then
+    awk -F"\t" -v OFS="\t" '$1 ~ /^chromosome$|^chr$|^chr[0-9]{1,2}$|^chr(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
+elif [[ ! "$MODE" == *"SEG"* && ! "$ARM_IS_PREFIXED" == *"chr"* ]]; then
+    awk -F"\t" -v OFS="\t" '$1 ~ /^chromosome$|^chr$|^[0-9]{1,2}$|^(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
 fi
 
 
@@ -142,3 +155,4 @@ rm $RESULTS_PATH.header
 rm $RESULTS_PATH.headerless.bed
 rm $RESULTS_PATH.merged.seg
 rm $RESULTS_PATH.deblacklisted.seg
+rm $RESULTS_PATH.allchrms.seg
