@@ -318,8 +318,8 @@ class ControlfreecParser(Parser):
         return True if chrm == "chr" else False
 
     def parse_segment(self, line, mode, logr_type):
-        _line = line.split('\t')
-        chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval = _line[0:11]
+        _line = line.rstrip('\n').split('\t')
+        chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval, log2 = _line[0:12]
         if not chrm.startswith("chr"):
             chrm = "chr"+ str(chrm)
         # if both alleles are not present in genotype, it indicates LOH event
@@ -329,8 +329,10 @@ class ControlfreecParser(Parser):
         else:
             loh_flag = str(1)
         # calculate logratio for somatic events that pass significance threshold
-        if somgerm == "somatic" and not "NA" in str(pval) and float(pval) <= 0.1:
+        if logr_type == "corrected" and somgerm == "somatic" and not "NA" in str(pval) and float(pval) <= 0.1:
             logr = self.calculate_logratio(cn)
+        elif logr_type == "raw" and somgerm == "somatic" and not "NA" in str(pval) and float(pval) <= 0.1:
+            logr = str(log2)
         else:
             logr = str(0.0)
         return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
@@ -435,8 +437,6 @@ def main():
     elif mode == "battenberg":
         parser = BattenbergParser(seg_file, sample, mode, loh_type, logr_type)
     elif mode == 'controlfreec':
-        if preserve:
-          raise ValueError("controlfreec raw output does not have log ratio. Do not use --preserve_log_ratio")
         parser = ControlfreecParser(seg_file, sample, mode, loh_type, logr_type)
 
     header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tlog.ratio'

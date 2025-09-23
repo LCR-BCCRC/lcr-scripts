@@ -36,8 +36,8 @@ echo "testing battenberg mode"
 ./cnv2igv.py --preserve_log_ratio --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.preserved.seg
 
 echo "testing controlfreec mode"
-# cannot be run with --preserve_log_ratio since there is no logr in the output
-./cnv2igv.py --mode controlfreec $in_dir/controlfreec_grch37.txt > $out_dir/controlfreec_grch37.seg
+./cnv2igv.py --mode controlfreec $in_dir/controlfreec_grch37_withlog2.txt > $out_dir/controlfreec_grch37_withlog2.seg
+./cnv2igv.py --preserve_log_ratio --mode controlfreec $in_dir/controlfreec_grch37_withlog2.txt > $out_dir/controlfreec_grch37_withlog2.preserved.seg
 
 echo "testing cnvkit mode"
 ./cnv2igv.py --mode cnvkit --sample P_FL_089 $in_dir/cnvkit_hg38.cns > $out_dir/cnvkit_hg38.seg
