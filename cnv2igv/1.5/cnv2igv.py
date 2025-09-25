@@ -169,7 +169,7 @@ class SequenzaParser(Parser):
         if chrm.endswith('"'):
             chrm = chrm[0:-1]
         cn, a, b = _line[9:12]
-        depth_ratio = _line[6]
+        depth_ratio = float(_line[6])
         # Follow what is done for battenberg: replace NAs with zero
         # will set logr = -10 in "corrected mode"
         if cn == 'NA':
@@ -179,7 +179,10 @@ class SequenzaParser(Parser):
         if b == 'NA':
             b = 0
         loh_flag = self.get_loh_flag(cn, a, b)
-        logr = self.calculate_logratio(cn) if logr_type == "corrected" else depth_ratio
+        if logr_type == "corrected":
+            logr = self.calculate_logratio(cn)
+        else:
+            logr = str(math.log(depth_ratio, 2))
         return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
 
     def get_loh_flag(self, cn, a, b):
