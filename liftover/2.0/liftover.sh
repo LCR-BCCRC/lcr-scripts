@@ -12,14 +12,14 @@
 # bash liftover.sh <mode> <input file> <output file> <chain> [header] [minmatch] [create_log]
 # Example:
 # bash liftover.sh SEG some_hg19_file.seg lifted_hg38_file.seg /some/path/hg19ToHg38.over.chain.gz YES 0.9775 YES
-# 
+#
 
 # KNOWN LIMITATIONS:
 # Lifting large segments commonly fails. In SEG mode, this is dealt with (mostly)
 # by breaking each segment into many chunks and merging the chunks afterward. There will still be some loss of segments in this process.
 # This chunking process is currently *not* implemented for BED mode.
 
-set -Eeuo pipefail
+set -eu
 IFS=$'\n\t'
 
 # --- helpful helpers ---
@@ -71,25 +71,25 @@ if [[ "$MODE" == *"SEG"* ]]; then
     cat "$OUTPUT_FILE.nohead" \
     | perl -ne '
         use strict; use warnings;
-        our $S_I; our $E_I; 
+        our $S_I; our $E_I;
         BEGIN {
-            $S_I=2; $E_I=3; 
+            $S_I=2; $E_I=3;
         }
 
         chomp; my @a = split /\t/;
 
         # normalize chr
-        my $chr = $a[1]; 
+        my $chr = $a[1];
         $chr = ($chr eq "23") ? "X" : $chr;
         $chr = "chr$chr" unless $chr =~ /^chr/;
-        
+
         # convert to 0-based BED coords
         my ($s1,$e1) = ($a[$S_I]-1, $a[$E_I]);  # [s1,e1)
         # remove decimal point and trailing digits from coordinates
         # these should theoretically never happen but this protects against it
         $s1 =~ s/\..+//;
         $e1 =~ s/\..+//;
-        
+
         my $extra = join "|", @a;
         print join("\t", $chr, $s1, $e1, "$extra\n");
 
@@ -127,18 +127,18 @@ elif [[ "$MODE" == *"BED"* ]]; then
         }
 
         chomp; my @a = split /\t/;
-        
+
         # normalize chr
-        my $chr = $a[$chr_I]; 
+        my $chr = $a[$chr_I];
         $chr = ($chr eq "23") ? "X" : $chr;
         $chr = "chr$chr" unless $chr =~ /^chr/;
-        
-        my ($s,$e) = ($a[$S_I], $a[$E_I]);  
+
+        my ($s,$e) = ($a[$S_I], $a[$E_I]);
         # remove decimal point and trailing digits from coordinates
         # these should theoretically never happen but this protects against it
         $s =~ s/\..+//;
         $e =~ s/\..+//;
-   
+
         my $ncol=3;
         print "$chr\t$s\t$e\t";
         print join "|", @a[$ncol..$#a];
@@ -156,14 +156,14 @@ elif [[ "$MODE" == *"BED"* ]]; then
 
     # guard bad/empty ranges
     next if !defined $s || !defined $e || $e <= $s;
-    
+
     while ($s + $chunk_size < $e) {
         my $ce = $s + $chunk_size;
         print "$chr\t$s\t" . ($ce-1) . "\t$a[3]|SEGMENT_$seg_id\n";
 
         $s = $ce;                # no +1 for BED half-open
     }
-    
+
     print "$chr\t$s\t$e\t$a[3]|SEGMENT_$seg_id\n";   # remainder (only if $s < $e)
     $seg_id++;
   ' > "$OUTPUT_FILE.chunked" && rm $OUTPUT_FILE.nohead && rm $OUTPUT_FILE.collapsed
@@ -178,7 +178,7 @@ liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.l
 rm $OUTPUT_FILE.chunked
 
 # Now, split back all concatenated columns into the separate ones and rearrange back if it is SEG file
-# Also merge all segments that are adjacent and share the same values 
+# Also merge all segments that are adjacent and share the same values
 
 sort -k1,1 -k2,2n $OUTPUT_FILE.chunked.lift.bed  \
     | perl -s -F'\t' -ane ' # we pass some variables into the script at the end of this code block
@@ -187,12 +187,12 @@ sort -k1,1 -k2,2n $OUTPUT_FILE.chunked.lift.bed  \
 
     # If there is a header (first field literally "ID"), print & skip
     if ($. == 1 && $F[0] eq "ID") { print join("\t", @F); next; }
-    
+
     my $n = @F;                          # number of columns
-    
+
     my ($chr,$s,$e) = @F[0,1,2];
 
-    
+
     my $lastcol = @F[$#F];  #all the concatenated fields from original file
 
     if (!defined $cur_id) {
@@ -272,7 +272,7 @@ if [[ "$HEADER" == *"YES"* ]]; then
       if [[ "$HAS_CHR" == "1" ]]; then
         sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
         | perl -ane 'print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[7..$#F]), "\n";' \
-        > $OUTPUT_FILE.sort.noheader 
+        > $OUTPUT_FILE.sort.noheader
       else
         sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
         | perl -ane '$F[0] =~ s/chr//; print "$F[3]\t$F[0]\t$F[1]\t$F[2]\t"  , join("\t", @F[7..$#F]), "\n";' \
@@ -280,7 +280,7 @@ if [[ "$HEADER" == *"YES"* ]]; then
       fi
     else
         sort -k1,1 -k2,2n $OUTPUT_FILE.merged_noheader \
-        > $OUTPUT_FILE.sort.noheader 
+        > $OUTPUT_FILE.sort.noheader
     fi
     rm $OUTPUT_FILE.merged_noheader
     cat $OUTPUT_FILE.header $OUTPUT_FILE.sort.noheader > $OUTPUT_FILE \

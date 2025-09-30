@@ -12,7 +12,7 @@
 # bash fill_segments.sh src/chromArm.hg19.bed TCRBOA7-T-WEX-test--matched.igv.seg src/blacklisted.hg19.bed TCRBOA7-T-WEX-test--matched.igv.filled.seg TCRBOA7-T-WEX SEG
 #
 
-set -Eeuo pipefail
+set -eu
 
 # Read variables to store the arguments from command line
 ARM_BED_PATH="$1"
