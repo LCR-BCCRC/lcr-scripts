@@ -50,7 +50,7 @@ if [[ "$ARM_IS_PREFIXED" == *"chr"* && ! "$INPUT_IS_PREFIXED" == *"chr"* ]]; the
     echo "Normalizing chr prefix in SEG file to match that of provided arm file..."
     # add chr prefix
     cat $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[0] =~ s/^/chr/;print join "\t", @a;' > $RESULTS_PATH.normalized.bed
-    # replace the headerless fiel with this normalized one
+    # replace the headerless file with this normalized one
     cat $RESULTS_PATH.normalized.bed > $RESULTS_PATH.headerless.bed
     rm $RESULTS_PATH.normalized.bed
     echo "Done normalizing! Continuing filling segments..."
@@ -67,7 +67,7 @@ fi
 
 
 # Run bedtools substract to find regions that are missing from seg file.
-# The perl pipe part will assign the neutral segment log.ratio and LOH_flag of NA for the missing segments.
+# The perl pipe part will assign the neutral segment log.ratio, LOH_flag of NA, and num_markers of NA for the missing segments.
 # For the missing segments, +1 is added to start position and 1 is substracted from the end position
 # to ensure they do not overlap with original segments of seg file by 1 position.
 # Filled segments are given normal copy number values and are tracked by the dummy_segment column.
@@ -112,7 +112,7 @@ if [[ "$MODE" == *"SEG"* ]]; then
     MODULE=$(cut -f4 $RESULTS_PATH.headerless.bed | sort | uniq)
     export MODULE
     cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[$#F-1] == 99 && $F[$#F] == 99) ? 1 : 0))'\
-     | perl -lane '@a=split; if($a[4]=="99") {$a[4]=$ENV{MODULE}}; if($a[5]=="99") {$a[5]="NA"}; if($a[6]=="99") {$a[6]="2"}; if($a[7]=="99") {$a[7]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH.allchrms.seg
+     | perl -lane '@a=split; if($a[4]=="99") {$a[4]=$ENV{MODULE}}; if($a[5]=="99") {$a[5]="NA"}; if($a[6]=="99") {$a[6]="2"}; if($a[7]=="99") {$a[7]="0.0"}; if($a[8]=="99") {$a[8]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH.allchrms.seg
 elif [[ "$MODE" == *"sequenza"* ]] ; then
     # Sequenza txt file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
