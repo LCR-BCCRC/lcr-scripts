@@ -89,11 +89,11 @@ class PurecnParser(Parser):
 
     def parse_segment(self, line, logr_type, mode):
         t = line.rstrip('\n').split('\t')
-        line_sample, chrm, start, end = t[0:4]
+        line_sample, chrm, start, end, num_markers = t[0:5]
         cn = t[6]
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else t[5]
         sample_id = self.resolve_sample(line_sample)
-        return Segment(chrm, start, end, cn, logr, sample_id, mode)
+        return Segment(chrm, start, end, cn, num_markers, logr, sample_id, mode)
 
 class CNVKitParser(Parser):
     def __init__(self, stream, sample, mode, loh_type, logr_type):
@@ -123,7 +123,8 @@ class CNVKitParser(Parser):
         cn2 =  None if _line[8] == '' else _line[8]
         loh_flag = self.get_loh_flag(cn, cn1, cn2)
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else _line[4]
-        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
+        num_markers = _line[10]
+        return(Segment(chrm, start, end, cn, num_markers, logr, self.sample, mode, loh_flag))
 
     def get_loh_flag(self, cn, cn1, cn2):
         cn = int(cn)
@@ -170,6 +171,7 @@ class SequenzaParser(Parser):
             chrm = chrm[0:-1]
         cn, a, b = _line[9:12]
         depth_ratio = float(_line[6])
+        num_markers = _line[4]
         # Follow what is done for battenberg: replace NAs with zero
         # will set logr = -10 in "corrected mode"
         if cn == 'NA':
@@ -183,7 +185,7 @@ class SequenzaParser(Parser):
             logr = self.calculate_logratio(cn)
         else:
             logr = str(math.log(depth_ratio, 2))
-        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
+        return(Segment(chrm, start, end, cn, num_markers, logr, self.sample, mode, loh_flag))
 
     def get_loh_flag(self, cn, a, b):
         cn = int(cn)
@@ -215,7 +217,7 @@ class BattenbergParser(Parser):
 
     def parse_segment(self, line, logr_type, mode):
         _line = line.split('\t')
-        chrm, start, end, BAF, pval, orig_logr, cn_orig, nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A = _line[0:13]
+        chrm, start, end, BAF, pval, num_markers, orig_logr, cn_orig, nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A = _line[0:14]
         if not chrm.startswith("chr"):
             chrm = "chr"+ str(chrm)
         loh_flag = self.get_loh_flag(nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A)
@@ -223,7 +225,7 @@ class BattenbergParser(Parser):
         basename = os.path.basename(self.filename)
         self.sample = basename.replace("_subclones.txt", "")
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else orig_logr
-        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
+        return(Segment(chrm, start, end, cn, num_markers, logr, self.sample, mode, loh_flag))
 
     #actually use the LOH information from Battenberg, The column is nMin1_A (if < 1, LOH)
     def get_loh_flag(self, nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A):
@@ -322,7 +324,7 @@ class ControlfreecParser(Parser):
 
     def parse_segment(self, line, mode, logr_type):
         _line = line.rstrip('\n').split('\t')
-        chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval, log2 = _line[0:12]
+        chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval, num_markers, log2 = _line[0:13]
         if not chrm.startswith("chr"):
             chrm = "chr"+ str(chrm)
         # if both alleles are not present in genotype, it indicates LOH event
@@ -338,17 +340,18 @@ class ControlfreecParser(Parser):
             logr = str(log2)
         else:
             logr = str(0.0)
-        return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
+        return(Segment(chrm, start, end, cn, num_markers, logr, self.sample, mode, loh_flag))
 
 
 class Segment:
-    def __init__(self, chrm, start, end, cn, logr, sample, mode, loh_flag = 'NA'):
+    def __init__(self, chrm, start, end, cn, num_markers, logr, sample, mode, loh_flag = 'NA'):
         self.chrm     = str(chrm)
         self.start    = str(int(float(start)))
         self.end      = str(int(float(end)))
         self.loh      = str(loh_flag)
         self.cn       = str(cn)
         self.cn_state = self.get_cnv_state()
+        self.num_markers = str(num_markers)
         self.logr     = str(logr)
         self.sample   = str(sample)
         self.mode   = str(mode)
@@ -373,15 +376,10 @@ class Segment:
             return chrm
         return chrm if str(chrm).startswith("chr") else "chr" + str(chrm)
 
-    def to_full(self, prepend):
-        ch = self._maybe_chr(prepend, self.chrm)
-        return '\t'.join([self.sample, ch, str(self.start), str(self.end),
-                          self.mode, self.loh, self.cn, self.logr])
-
     def to_igv(self, prepend):
         ch = self._maybe_chr(prepend, self.chrm)
         return '\t'.join([self.sample, ch, str(self.start), str(self.end),
-                          self.mode, self.loh, self.cn, self.logr])
+                          self.mode, self.loh, self.cn, self.num_markers, self.logr])
 
     def to_oncocircos(self, prepend):
         ch = self._maybe_chr(prepend, self.chrm)
@@ -442,7 +440,7 @@ def main():
     elif mode == 'controlfreec':
         parser = ControlfreecParser(seg_file, sample, mode, loh_type, logr_type)
 
-    header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tlog.ratio'
+    header = 'ID\tchrom\tstart\tend\tmodule\tLOH_flag\tCN\tnum_markers\tlog.ratio'
     if not oncocircos:
         print(header)
 
@@ -453,8 +451,6 @@ def main():
 
         if oncocircos:
             print(seg.to_oncocircos(prepend))
-        elif preserve:
-            print(seg.to_full(prepend))
         else:
             print(seg.to_igv(prepend))
 

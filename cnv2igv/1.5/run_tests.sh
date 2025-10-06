@@ -32,8 +32,8 @@ echo "testing sample_id override"
 ./cnv2igv.py  --mode purecn_cnvkit --sample DLBCL-RICOVER_258-Tumor $in_dir/DLBCL-RICOVER_258-Tumor_dnacopy.seg > $out_dir/DLBCL-RICOVER_258-Tumor_dnacopy_explicit_sample.seg
 
 echo "testing battenberg mode"
-./cnv2igv.py --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.seg
-./cnv2igv.py --preserve_log_ratio --mode battenberg $in_dir/SP116712_subclones.txt > $out_dir/SP116712_subclones.preserved.seg
+./cnv2igv.py --mode battenberg $in_dir/SP116701_subclones.markers.txt > $out_dir/SP116701_subclones.markers.seg
+./cnv2igv.py --preserve_log_ratio --mode battenberg $in_dir/SP116701_subclones.markers.txt > $out_dir/SP116701_subclones.markers.preserved.seg
 
 echo "testing controlfreec mode"
 ./cnv2igv.py --mode controlfreec $in_dir/controlfreec_grch37_withlog2.txt > $out_dir/controlfreec_grch37_withlog2.seg
