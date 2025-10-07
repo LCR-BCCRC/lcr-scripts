@@ -222,8 +222,6 @@ class BattenbergParser(Parser):
             chrm = "chr"+ str(chrm)
         loh_flag = self.get_loh_flag(nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A)
         cn = self.calculate_cn_battenberg(nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A)
-        basename = os.path.basename(self.filename)
-        self.sample = basename.replace("_subclones.txt", "")
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else orig_logr
         return(Segment(chrm, start, end, cn, num_markers, logr, self.sample, mode, loh_flag))
 
