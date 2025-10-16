@@ -218,8 +218,6 @@ class BattenbergParser(Parser):
     def parse_segment(self, line, logr_type, mode):
         _line = line.split('\t')
         chrm, start, end, BAF, pval, num_markers, orig_logr, cn_orig, nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A = _line[0:14]
-        if not chrm.startswith("chr"):
-            chrm = "chr"+ str(chrm)
         loh_flag = self.get_loh_flag(nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A)
         cn = self.calculate_cn_battenberg(nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A)
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else orig_logr
@@ -323,8 +321,6 @@ class ControlfreecParser(Parser):
     def parse_segment(self, line, mode, logr_type):
         _line = line.rstrip('\n').split('\t')
         chrm, start, end, cn, status, genotype, uncert, somgerm, pgerml, wilk, pval, num_markers, log2 = _line[0:13]
-        if not chrm.startswith("chr"):
-            chrm = "chr"+ str(chrm)
         # if both alleles are not present in genotype, it indicates LOH event
         alleles = ["A", "B"]
         if all(x in genotype for x in alleles):
