@@ -162,7 +162,7 @@ class SequenzaParser(Parser):
         else:
             return False
 
-    # sequenza outputs are 1-based, so converting to 0-based here
+    # assuming sequenza outputs are 0-based
     def parse_segment(self, line, logr_type, mode):
         _line = line.split('\t')
         chrm, start, end = _line[0:3]
@@ -170,7 +170,6 @@ class SequenzaParser(Parser):
             chrm = chrm[1:]
         if chrm.endswith('"'):
             chrm = chrm[0:-1]
-        start = str(int(start)-1)
         cn, a, b = _line[9:12]
         depth_ratio = float(_line[6])
         num_markers = _line[4]
@@ -217,11 +216,10 @@ class BattenbergParser(Parser):
         chrm = line.split('\t', 1)[0]
         return True if chrm == "chr" else False
 
-    # battenberg outputs are 1-based, so converting to 0-based here
+    # battenberg outputs are assumed to be 0-based
     def parse_segment(self, line, logr_type, mode):
         _line = line.split('\t')
         chrm, start, end, BAF, pval, num_markers, orig_logr, cn_orig, nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A = _line[0:14]
-        start = str(int(start)-1)
         loh_flag = self.get_loh_flag(nMaj1_A, nMin1_A, nMin2_A, frac1_A, frac2_A)
         cn = self.calculate_cn_battenberg(nMaj1_A, nMin1_A, frac1_A, nMaj2_A, nMin2_A, frac2_A)
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else orig_logr
