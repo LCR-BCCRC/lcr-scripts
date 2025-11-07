@@ -6,12 +6,13 @@
 # The argument 'chain' is expecting the path to liftOver chain file.
 # The optional argument 'header' accepts 'YES' or 'NO' to indicate whether header is present in the input file. It defaults to 'NO'
 # The optional argument <minmatch> expects a float in the range 0..1 to pass to the liftover minMatch parameter. It defaults to 0.95
+# The argument 'blacklist' is expecting the path to blacklist bed file for the input file's projection
 # The optional CREATE_LOG enables the tracking of the cumulative segment size before and after liftover (currently only for SEG mode). Defaults to 'NO'
 
 # Usage:
-# bash liftover.sh <mode> <input file> <output file> <chain> [header] [minmatch] [create_log]
+# bash liftover.sh <mode> <input file> <output file> <chain> [header] [minmatch] <blacklist> [create_log]
 # Example:
-# bash liftover.sh SEG some_hg19_file.seg lifted_hg38_file.seg /some/path/hg19ToHg38.over.chain.gz YES 0.9775 YES
+# bash liftover.sh SEG some_hg19_file.seg lifted_hg38_file.seg /some/path/hg19ToHg38.over.chain.gz YES 0.9775 src/blacklisted.grch37.prefixed.bed YES
 #
 
 # KNOWN LIMITATIONS:
@@ -38,7 +39,8 @@ OUTPUT_FILE="$3"
 CHAIN="$4"
 HEADER={$5:-"NO"}
 MINMATCH="${6:-0.95}"
-CREATE_LOG=${7:-"NO"}
+BLACKLIST="$7"
+CREATE_LOG=${8:-"NO"}
 
 # If the input file has header, save it temporarily in a separate file
 if [[ "$HEADER" == *"YES"* ]]; then
@@ -159,10 +161,14 @@ else
     exit 1 # terminate and indicate error
 fi
 
+# Deblacklist before lifting
+bedtools subtract -a $OUTPUT_FILE.chunked -b $BLACKLIST > $OUTPUT_FILE.chunked.debalcklisted
+
 UNMAPPED="${OUTPUT_FILE%.*}.unmapped.bed"
 
-liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED 2> /dev/null
+liftOver -minMatch=$MINMATCH $OUTPUT_FILE.chunked.debalcklisted  $CHAIN $OUTPUT_FILE.chunked.lift.bed $UNMAPPED 2> /dev/null
 rm $OUTPUT_FILE.chunked
+rm $OUTPUT_FILE.chunked.debalcklisted
 
 
 # Merge adjacent segments with the same collapsed column value, which includes the SEGMENT_# made for each segment above.
