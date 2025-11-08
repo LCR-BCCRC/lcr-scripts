@@ -76,19 +76,19 @@ if [[ "$MODE" == *"SEG"* ]]; then
     # Make variable available to use within perl
     export THIS_SAMPLE_ID
     export NUM_COLUMNS
-    bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; foreach my $column (3..$ENV{NUM_COLUMNS}) {$a[$column]="99"}; $a[$#a]=$ENV{THIS_SAMPLE_ID}; print join "\t", @a;' > $RESULTS_PATH.temp
+    bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed | perl -lane '@a=split; foreach my $column (3..$ENV{NUM_COLUMNS}) {$a[$column]="99"}; $a[$#a]=$ENV{THIS_SAMPLE_ID}; print join "\t", @a;' > $RESULTS_PATH.temp
 
 elif [[ "$MODE" == *"subclones"* ]]; then
     # Make variable available to use within perl
     export NUM_COLUMNS
     bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed \
-    | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; $a[3]="0.5"; $a[4]="1.0"; $a[5]="0.00"; $a[6]="2.0"; foreach my $column (7..8) {$a[$column]="1.0"}; $a[9]="99"; foreach my $column (10..$ENV{NUM_COLUMNS}) {$a[$column]="NA"}; print join "\t", @a;' > $RESULTS_PATH.temp
+    | perl -lane '@a=split; $a[3]="0.5"; $a[4]="1.0"; $a[5]="0.00"; $a[6]="2.0"; foreach my $column (7..8) {$a[$column]="1.0"}; $a[9]="99"; foreach my $column (10..$ENV{NUM_COLUMNS}) {$a[$column]="NA"}; print join "\t", @a;' > $RESULTS_PATH.temp
 
 elif [[ "$MODE" == *"sequenza"* ]]; then
     # Make variable available to use within perl
     export NUM_COLUMNS
     bedtools subtract -a $ARM_BED_PATH -b $RESULTS_PATH.headerless.bed \
-    | perl -lane '@a=split;$a[1] = ++$a[1];$a[2] = --$a[2]; foreach my $column (3..5) {$a[$column]="NA"}; $a[6]="1"; foreach my $column (7..8) {$a[$column]="NA"}; $a[9]="99"; foreach my $column (10..11) {$a[$column]="1"}; $a[$ENV{NUM_COLUMNS}]="NA"; print join "\t", @a;' > $RESULTS_PATH.temp
+    | perl -lane '@a=split; foreach my $column (3..5) {$a[$column]="NA"}; $a[6]="1"; foreach my $column (7..8) {$a[$column]="NA"}; $a[9]="99"; foreach my $column (10..11) {$a[$column]="1"}; $a[$ENV{NUM_COLUMNS}]="NA"; print join "\t", @a;' > $RESULTS_PATH.temp
 
 fi
 
@@ -112,7 +112,7 @@ if [[ "$MODE" == *"SEG"* ]]; then
     MODULE=$(cut -f4 $RESULTS_PATH.headerless.bed | sort | uniq)
     export MODULE
     cat $RESULTS_PATH.deblacklisted.seg | perl -F"\t" -lane 'print join("\t", @F, (($F[$#F-1] == 99 && $F[$#F] == 99) ? 1 : 0))'\
-     | perl -lane '@a=split; if($a[4]=="99") {$a[4]=$ENV{MODULE}}; if($a[5]=="99") {$a[5]="NA"}; if($a[6]=="99") {$a[6]="2"}; if($a[7]=="99") {$a[7]="0"}; if($a[8]=="99") {$a[8]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH.allchrms.seg
+     | perl -lane '@a=split; if($a[4]=="99") {$a[4]=$ENV{MODULE}}; if($a[5]=="99") {$a[5]="NA"}; if($a[6]=="99") {$a[6]="2"}; if($a[7]=="99") {$a[7]="0.0"}; print join "\t", @a;' >> $RESULTS_PATH.allchrms.seg
 elif [[ "$MODE" == *"sequenza"* ]] ; then
     # Sequenza txt file already has first 3 columns as bed-like and does not need column rearrangement
     bedtools subtract -a $RESULTS_PATH.merged.seg -b $BLACKLIST_PATH | perl -lane 'print if ($F[2]-$F[1])>1;' > $RESULTS_PATH.deblacklisted.seg
