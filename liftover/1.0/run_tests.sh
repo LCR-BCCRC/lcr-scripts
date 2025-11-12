@@ -30,21 +30,19 @@ report_change () {
     echo "$(echo "100*($2 - $4)/$2"|bc)% change"
 }
 
-grch37_blacklist="src/blacklisted.grch37.prefixed.bed"
-hg38_blacklist="src/blacklisted.hg38.bed"
 
 # test SEG mode lifting both directions (no-header mode)
 IN="tests/input/test.grch37.seg"
 OUT="tests/output/test.grch37.to_hg38.seg"
-./liftover.sh SEG $IN $OUT $grch37_chain NO 0.95 $grch37_blacklist
+./liftover.sh SEG $IN $OUT $grch37_chain NO 0.95
 IN="tests/input/test.hg38.seg"
 OUT="tests/output/test.hg38.to_grch37.seg"
-./liftover.sh SEG $IN $OUT $hg38_chain NO 0.95 $hg38_blacklist
+./liftover.sh SEG $IN $OUT $hg38_chain NO 0.95
 
 
 IN="tests/input/test.grch37.withheader.seg"
 OUT="tests/output/test.grch37.withheader.to_hg38.seg"
-./liftover.sh SEG $IN $OUT $grch37_chain YES 0.95 $grch37_blacklist
+./liftover.sh SEG $IN $OUT $grch37_chain YES 0.95
 
 IN_SIZE=`cat $IN | perl -ane '$size = $F[3]-$F[2];$total+=$size;END{print "$total\n";}'`
 OUT_SIZE=`cat $OUT | perl -ane '$size = $F[3]-$F[2];$total+=$size;END{print "$total\n";}'`
@@ -53,7 +51,7 @@ report_change $IN $IN_SIZE $OUT $OUT_SIZE
 
 IN="tests/input/test.hg38.withheader.seg"
 OUT="tests/output/test.hg38.withheader.to_grch37.seg"
-./liftover.sh SEG $IN $OUT $hg38_chain YES 0.95 $hg38_blacklist
+./liftover.sh SEG $IN $OUT $hg38_chain YES 0.95
 
 IN_SIZE=`cat $IN | perl -ane '$size = $F[3]-$F[2];$total+=$size;END{print "$total\n";}'`
 OUT_SIZE=`cat $OUT | perl -ane '$size = $F[3]-$F[2];$total+=$size;END{print "$total\n";}'`
@@ -62,7 +60,7 @@ report_change $IN $IN_SIZE $OUT $OUT_SIZE
 
 IN="tests/input/cnvkit_hg38.seg"
 OUT="tests/output/cnvkit_hg38.to_grch37.seg"
-./liftover.sh SEG $IN $OUT $hg38_chain YES 0.95 $hg38_blacklist
+./liftover.sh SEG $IN $OUT $hg38_chain YES 0.95
 
 IN_SIZE=`cat $IN | perl -ane '$size = $F[3]-$F[2];$total+=$size;END{print "$total\n";}'`
 OUT_SIZE=`cat $OUT | perl -ane '$size = $F[3]-$F[2];$total+=$size;END{print "$total\n";}'`
@@ -71,7 +69,7 @@ report_change $IN $IN_SIZE $OUT $OUT_SIZE
 
 IN="tests/input/test.grch37.bed"
 OUT="tests/output/test.grch37.to_hg38.bed"
-./liftover.sh BED $IN $OUT $grch37_chain NO 0.95 $grch37_blacklist
+./liftover.sh BED $IN $OUT $grch37_chain NO 0.95
 
 IN_SIZE=`cat $IN | perl -ane '$size = $F[2]-$F[1];$total+=$size;END{print "$total\n";}'`
 OUT_SIZE=`cat $OUT | perl -ane '$size = $F[2]-$F[1];$total+=$size;END{print "$total\n";}'`
@@ -79,11 +77,11 @@ OUT_SIZE=`cat $OUT | perl -ane '$size = $F[2]-$F[1];$total+=$size;END{print "$to
 report_change $IN $IN_SIZE $OUT $OUT_SIZE
 
 #reverse the process
-./liftover.sh BED $OUT tests/output/test.grch37.roundtrip.bed $hg38_chain NO 0.95 $hg38_blacklist
+./liftover.sh BED $OUT tests/output/test.grch37.roundtrip.bed $hg38_chain NO 0.95
 
 IN="tests/input/battenberg_hg38_with_header.bed"
 OUT="tests/output/battenberg_hg38_with_header.to_grch37.bed"
-./liftover.sh BED $IN $OUT $hg38_chain YES 0.95 $hg38_blacklist
+./liftover.sh BED $IN $OUT $hg38_chain YES 0.95
 
 # cleanup downloaded ref files
 rm hg38ToHg19.over.chain.gz

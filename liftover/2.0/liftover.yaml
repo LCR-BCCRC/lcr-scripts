@@ -1,17 +1,1 @@
-name: liftover
-channels:
-  - bioconda
-  - conda-forge
-  - defaults
-dependencies:
-  - ucsc-liftover=377
-  - _libgcc_mutex=0.1
-  - _openmp_mutex=4.5
-  - bedtools=2.29.2
-  - bzip2=1.0.8
-  - libgcc-ng=9.2.0
-  - libgomp=9.2.0
-  - libstdcxx-ng=9.2.0
-  - xz=5.2.5
-  - zlib=1.2.11
-prefix: /home/dreval/miniconda3/envs/liftover
+../1.0/liftover.yaml
