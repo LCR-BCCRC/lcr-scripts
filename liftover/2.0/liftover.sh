@@ -85,7 +85,7 @@ if [[ "$MODE" == *"SEG"* ]]; then
     cat $OUTPUT_FILE.collapsed \
        | perl -ne '
        # split [start,end) into chunks of size <= $chunk_size (BED semantics)
-       BEGIN { $chunk_size = 150000;our $segid = 1; }
+       BEGIN { $chunk_size = 250000;our $segid = 1; }
        chomp; @a = split /\t/;
        my ($chr,$s,$e) = @a[0,1,2];
 
@@ -100,7 +100,7 @@ if [[ "$MODE" == *"SEG"* ]]; then
         $s = $ce;                # no +1 for BED half-open
         $chunk++;
     }
-    print "$chr\t$s\t$e\t$a[3]|SEGMENT_$segid\n";   # remainder, where $ce+150000 > $e, but $ce < $e still
+    print "$chr\t$s\t$e\t$a[3]|SEGMENT_$segid\n";   # remainder, where $ce+250000 > $e, but $ce < $e still
     $segid++;
   ' > "$OUTPUT_FILE.chunked" && rm $OUTPUT_FILE.nohead && rm $OUTPUT_FILE.collapsed
 elif [[ "$MODE" == *"BED"* ]]; then
@@ -136,7 +136,7 @@ elif [[ "$MODE" == *"BED"* ]]; then
   cat $OUTPUT_FILE.collapsed \
   | perl -ne '
     # split [start,end) into chunks of size <= $chunk_size (BED semantics)
-    BEGIN {$| = 1; $chunk_size = 150000; our $segid = 1;}
+    BEGIN {$| = 1; $chunk_size = 250000; our $segid = 1;}
     chomp; @a = split /\t/;
     my ($chr,$s,$e) = @a[0,1,2];
     my $chunk = 1;
@@ -151,7 +151,7 @@ elif [[ "$MODE" == *"BED"* ]]; then
         $s = $ce;                # no +1 for BED half-open
         $chunk++;
     }
-    print "$chr\t$s\t$e\t$a[3]|SEGMENT_$segid\n";   # remainder, where $ce+150000 > $e, but $ce < $e still
+    print "$chr\t$s\t$e\t$a[3]|SEGMENT_$segid\n";   # remainder, where $ce+250000 > $e, but $ce < $e still
     $segid++;
   ' > "$OUTPUT_FILE.chunked" && rm $OUTPUT_FILE.nohead && rm $OUTPUT_FILE.collapsed
 else
