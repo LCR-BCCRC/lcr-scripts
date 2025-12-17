@@ -38,14 +38,18 @@ option_list <- list(
 opt <- parse_args(OptionParser(option_list=option_list))
 
 test_features_path <- opt$test_features
-output_dir <- opt$output_dir
+test_features <- read_tsv(test_features_path) %>%
+    column_to_rownames("sample_id")
+
 model_path <- opt$model_path
+if (model_path == "GAMBLR.predict"){
+    model_path = system.file("extdata",package = "GAMBLR.predict")
+}
+
+output_dir <- opt$output_dir
 model_prefix <- opt$model_prefix
 fill_missing <- opt$fill_missing
 drop_extra <- opt$drop_extra
-
-test_features <- read_tsv(test_features_path) %>%
-    column_to_rownames("sample_id")
 
 # Processing stored DLBCLone model object----------------------------------
 
