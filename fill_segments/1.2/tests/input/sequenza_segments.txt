@@ -1,0 +1,1 @@
+../../../../cnv2igv/1.5/tests/input/sequenza_segments.txt
