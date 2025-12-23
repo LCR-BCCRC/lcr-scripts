@@ -1,0 +1,3 @@
+NameErrorin line 158 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+name 'ACCESSIONS' is not defined
+  File "/mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk", line 158, in <module>

@@ -1,0 +1,80 @@
+Building DAG of jobs...
+Your conda installation is not configured to use strict channel priorities. This is however crucial for having robust and correct environments (for details, see https://conda-forge.org/docs/user/tipsandtricks.html). Please consider to configure strict priorities by executing 'conda config --set channel_priority strict'.
+Creating conda environment sra-tools.yaml...
+Downloading and installing remote packages.
+Environment for /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra-tools.yaml created (location: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_)
+Using shell: /usr/bin/bash
+Provided cores: 12
+Rules claiming more threads will be scaled down.
+Job stats:
+job           count    min threads    max threads
+----------  -------  -------------  -------------
+index_bam         1              1              1
+prefetch          1              1              1
+sam_dump          1              1              1
+sam_to_bam        1              8              8
+total             4              1              8
+
+Select jobs to execute...
+
+[Fri Mar 28 11:37:25 2025]
+rule prefetch:
+    output: SRR32271474
+    log: SRR32271474.log
+    jobid: 3
+    reason: Missing output files: SRR32271474
+    wildcards: accession=SRR32271474
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+[Fri Mar 28 11:37:52 2025]
+Finished job 3.
+1 of 4 steps (25%) done
+Select jobs to execute...
+[Fri Mar 28 11:37:52 2025]
+
+group job 4f39da99-f7c5-4645-8ba9-42c738c0bd71 (jobs in lexicogr. order):
+
+    [Fri Mar 28 11:37:52 2025]
+    rule sam_dump:
+        input: SRR32271474
+        output: SRR32271474.sam (pipe)
+        jobid: 2
+        reason: Missing output files: SRR32271474.sam; Input files updated by another job: SRR32271474
+        wildcards: accession=SRR32271474
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 11:37:52 2025]
+    rule sam_to_bam:
+        input: SRR32271474.sam
+        output: SRR32271474.hg19.bam, SRR32271474.complete
+        jobid: 1
+        reason: Missing output files: SRR32271474.hg19.bam; Input files updated by another job: SRR32271474.sam
+        wildcards: accession=SRR32271474
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 11:37:52 2025]
+Error in group job 4f39da99-f7c5-4645-8ba9-42c738c0bd71:
+    [Fri Mar 28 11:37:52 2025]
+        Error in rule sam_to_bam:
+            jobid: 1
+            output: SRR32271474.hg19.bam, SRR32271474.complete
+            conda-env: /mnt/c/Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271474.sam > SRR32271474.hg19.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 11:37:52 2025]
+        Error in rule sam_dump:
+            jobid: 2
+            output: SRR32271474.sam (pipe)
+            conda-env: /mnt/c/Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271474 > SRR32271474.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2025-03-28T112511.434059.snakemake.log

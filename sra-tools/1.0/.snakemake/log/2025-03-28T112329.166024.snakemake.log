@@ -1,0 +1,12 @@
+Building DAG of jobs...
+Your conda installation is not configured to use strict channel priorities. This is however crucial for having robust and correct environments (for details, see https://conda-forge.org/docs/user/tipsandtricks.html). Please consider to configure strict priorities by executing 'conda config --set channel_priority strict'.
+Creating conda environment sra-tools.yaml...
+Downloading and installing remote packages.
+CreateCondaEnvironmentException:
+Could not create conda environment from /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra-tools.yaml:
+Command:
+mamba env create --quiet --file "/mnt/c/Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_.yaml" --prefix "/mnt/c/Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_"
+Output:
+error    libmamba Non-conda folder exists at prefix
+critical libmamba Aborting.
+

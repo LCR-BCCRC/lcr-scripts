@@ -1,0 +1,3 @@
+ModuleNotFoundErrorin line 1 of C:\Users\lukeg\Documents\Morin_Lab\lcr-scripts\sra-tools\1.0\sra_dump.smk:
+No module named 'pandas'
+  File "C:\Users\lukeg\Documents\Morin_Lab\lcr-scripts\sra-tools\1.0\sra_dump.smk", line 1, in <module>

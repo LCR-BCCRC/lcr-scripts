@@ -1,0 +1,11 @@
+FileNotFoundErrorin line 7 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+[Errno 2] No such file or directory: 'C:/Users/lukeg/Documents/Morin_Lab/accessions.txt'
+  File "/mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk", line 7, in <module>
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/util/_decorators.py", line 311, in wrapper
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 586, in read_csv
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 482, in _read
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 811, in __init__
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/io/parsers/readers.py", line 1040, in _make_engine
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/io/parsers/c_parser_wrapper.py", line 51, in __init__
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/io/parsers/base_parser.py", line 222, in _open_handles
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/pandas/io/common.py", line 702, in get_handle

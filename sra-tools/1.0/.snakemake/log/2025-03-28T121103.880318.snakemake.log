@@ -1,0 +1,202 @@
+Building DAG of jobs...
+Your conda installation is not configured to use strict channel priorities. This is however crucial for having robust and correct environments (for details, see https://conda-forge.org/docs/user/tipsandtricks.html). Please consider to configure strict priorities by executing 'conda config --set channel_priority strict'.
+Using shell: /usr/bin/bash
+Provided cores: 12
+Rules claiming more threads will be scaled down.
+Job stats:
+job           count    min threads    max threads
+----------  -------  -------------  -------------
+all               1              1              1
+index_bam        21              1              1
+prefetch         20              1              1
+sam_dump         20              1              1
+sam_to_bam       21              8              8
+total            83              1              8
+
+Select jobs to execute...
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271477
+    log: SRR32271477.log
+    jobid: 42
+    reason: Missing output files: SRR32271477
+    wildcards: accession=SRR32271477
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271468
+    log: SRR32271468.log
+    jobid: 12
+    reason: Missing output files: SRR32271468
+    wildcards: accession=SRR32271468
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271473
+    log: SRR32271473.log
+    jobid: 57
+    reason: Missing output files: SRR32271473
+    wildcards: accession=SRR32271473
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271481
+    log: SRR32271481.log
+    jobid: 33
+    reason: Missing output files: SRR32271481
+    wildcards: accession=SRR32271481
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271467
+    log: SRR32271467.log
+    jobid: 18
+    reason: Missing output files: SRR32271467
+    wildcards: accession=SRR32271467
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271483
+    log: SRR32271483.log
+    jobid: 3
+    reason: Missing output files: SRR32271483
+    wildcards: accession=SRR32271483
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271469
+    log: SRR32271469.log
+    jobid: 63
+    reason: Missing output files: SRR32271469
+    wildcards: accession=SRR32271469
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271476
+    log: SRR32271476.log
+    jobid: 45
+    reason: Missing output files: SRR32271476
+    wildcards: accession=SRR32271476
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271475
+    log: SRR32271475.log
+    jobid: 51
+    reason: Missing output files: SRR32271475
+    wildcards: accession=SRR32271475
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:09 2025]
+rule prefetch:
+    output: SRR32271480
+    log: SRR32271480.log
+    jobid: 36
+    reason: Missing output files: SRR32271480
+    wildcards: accession=SRR32271480
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:10 2025]
+rule prefetch:
+    output: SRR32271466
+    log: SRR32271466.log
+    jobid: 21
+    reason: Missing output files: SRR32271466
+    wildcards: accession=SRR32271466
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 12:11:10 2025]
+rule prefetch:
+    output: SRR32271482
+    log: SRR32271482.log
+    jobid: 6
+    reason: Missing output files: SRR32271482
+    wildcards: accession=SRR32271482
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+[Fri Mar 28 12:11:13 2025]
+Error in rule prefetch:
+    jobid: 3
+    output: SRR32271483
+    log: SRR32271483.log (check log file(s) for error message)
+    conda-env: /mnt/c/Documents and Settings/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+    shell:
+        prefetch -X 300000   SRR32271483 > SRR32271483.log 2>&1
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271473 completed successfully, but some output files are missing. 57
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271469 completed successfully, but some output files are missing. 63
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271467 completed successfully, but some output files are missing. 18
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271476 completed successfully, but some output files are missing. 45
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271468 completed successfully, but some output files are missing. 12
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271477 completed successfully, but some output files are missing. 42
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271481 completed successfully, but some output files are missing. 33
+Waiting at most 5 seconds for missing files.
+MissingOutputException in rule prefetch in line 34 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+Job Missing files after 5 seconds. This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait:
+SRR32271482 completed successfully, but some output files are missing. 6
+[Fri Mar 28 12:12:02 2025]
+Finished job 51.
+1 of 83 steps (1%) done
+[Fri Mar 28 12:12:15 2025]
+Finished job 36.
+2 of 83 steps (2%) done
+[Fri Mar 28 12:12:17 2025]
+Finished job 21.
+3 of 83 steps (4%) done
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: .snakemake/log/2025-03-28T121103.880318.snakemake.log

@@ -18,6 +18,7 @@
 message("Loading packages...")
 suppressPackageStartupMessages({
   library(GAMBLR.predict)
+  library(optparse)
   library(tibble)
   library(dplyr)
   library(readr)
@@ -51,7 +52,7 @@ model_prefix <- opt$model_prefix
 fill_missing <- opt$fill_missing
 drop_extra <- opt$drop_extra
 
-# Processing stored DLBCLone model object----------------------------------
+# Processing stored DLBCLone model object ---------------------------------
 
 # Run GAMBLR.predict::DLBCLone_load_optimized()
 loaded_model <- DLBCLone_load_optimized( 
@@ -65,7 +66,7 @@ active_model <- DLBCLone_activate(
     force = TRUE
 )
 
-# Run GAMBLR.predict::DLBCLone_predict()-----------------------------
+# Run GAMBLR.predict::DLBCLone_predict() ----------------------------
 predictions <- DLBCLone_predict(
     mutation_status = test_features, 
     optimized_model = active_model,
@@ -73,7 +74,7 @@ predictions <- DLBCLone_predict(
     drop_extra = drop_extra
 )
 
-# Output --------------------------------------------------------------------------------------
+# Output ------------------------------------------------------------
 
 message("Writing DLBCLone predictions to file...")
 write_tsv(predictions$prediction, output_dir)

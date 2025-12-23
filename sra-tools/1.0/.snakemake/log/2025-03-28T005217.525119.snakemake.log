@@ -1,0 +1,7 @@
+all
+fastq_dump
+gzip_fastq
+index_bam
+prefetch
+sam_dump
+sam_to_bam

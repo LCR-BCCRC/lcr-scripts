@@ -1,0 +1,54 @@
+Building DAG of jobs...
+Your conda installation is not configured to use strict channel priorities. This is however crucial for having robust and correct environments (for details, see https://conda-forge.org/docs/user/tipsandtricks.html). Please consider to configure strict priorities by executing 'conda config --set channel_priority strict'.
+Creating conda environment sra-tools.yaml...
+Downloading and installing remote packages.
+CreateCondaEnvironmentException:
+Could not create conda environment from /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra-tools.yaml:
+Command:
+mamba env create --quiet --file "/mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/.snakemake/conda/186669d0aab726d016cfcc966ed9525a_.yaml" --prefix "/mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/.snakemake/conda/186669d0aab726d016cfcc966ed9525a_"
+Output:
+info     libmamba ****************** Backtrace Start ******************
+debug    libmamba Loading configuration
+trace    libmamba Compute configurable 'create_base'
+trace    libmamba Compute configurable 'no_env'
+trace    libmamba Compute configurable 'no_rc'
+trace    libmamba Compute configurable 'rc_files'
+trace    libmamba Compute configurable 'root_prefix'
+trace    libmamba Get RC files configuration from locations up to HomeDir
+trace    libmamba Configuration not found at '/home/lukeg/.mambarc'
+trace    libmamba Configuration not found at '/home/lukeg/.mamba/mambarc.d'
+trace    libmamba Configuration not found at '/home/lukeg/.mamba/mambarc'
+trace    libmamba Configuration not found at '/home/lukeg/.mamba/.mambarc'
+trace    libmamba Configuration not found at '/home/lukeg/.config/mamba/mambarc.d'
+trace    libmamba Configuration not found at '/home/lukeg/.config/mamba/mambarc'
+trace    libmamba Configuration not found at '/home/lukeg/.config/mamba/.mambarc'
+trace    libmamba Configuration not found at '/home/lukeg/miniconda3/envs/atlantis-real/condarc.d'
+trace    libmamba Configuration not found at '/home/lukeg/miniconda3/envs/atlantis-real/condarc'
+trace    libmamba Configuration not found at '/home/lukeg/miniconda3/envs/atlantis-real/.condarc'
+trace    libmamba Configuration not found at '/home/lukeg/.condarc'
+trace    libmamba Configuration not found at '/home/lukeg/.conda/condarc.d'
+trace    libmamba Configuration not found at '/home/lukeg/.conda/condarc'
+trace    libmamba Configuration not found at '/home/lukeg/.conda/.condarc'
+trace    libmamba Configuration not found at '/home/lukeg/.config/conda/condarc.d'
+trace    libmamba Configuration not found at '/home/lukeg/.config/conda/condarc'
+trace    libmamba Configuration not found at '/home/lukeg/.config/conda/.condarc'
+trace    libmamba Configuration not found at '/home/lukeg/miniconda3/.mambarc'
+trace    libmamba Configuration not found at '/home/lukeg/miniconda3/condarc.d'
+trace    libmamba Configuration not found at '/home/lukeg/miniconda3/condarc'
+trace    libmamba Configuration found at '/home/lukeg/miniconda3/.condarc'
+trace    libmamba Configuration not found at '/var/lib/conda/.mambarc'
+trace    libmamba Configuration not found at '/var/lib/conda/condarc.d/'
+trace    libmamba Configuration not found at '/var/lib/conda/condarc'
+trace    libmamba Configuration not found at '/var/lib/conda/.condarc'
+trace    libmamba Configuration not found at '/etc/conda/.mambarc'
+trace    libmamba Configuration not found at '/etc/conda/condarc.d/'
+trace    libmamba Configuration not found at '/etc/conda/condarc'
+trace    libmamba Configuration not found at '/etc/conda/.condarc'
+trace    libmamba Update configurable 'no_env'
+trace    libmamba Compute configurable 'envs_dirs'
+trace    libmamba Compute configurable 'file_specs'
+debug    libmamba No env 'name' specified in YAML spec file '/mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/.snakemake/conda/186669d0aab726d016cfcc966ed9525a_.yaml'
+trace    libmamba Compute configurable 'spec_file_env_name'
+critical libmamba An unexpected file-system separator was found in environment name: '/projects/rmorin_scratch/conda_environments/sra-tools'
+info     libmamba ****************** Backtrace End ********************
+

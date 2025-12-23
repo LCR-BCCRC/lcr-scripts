@@ -1,0 +1,196 @@
+Building DAG of jobs...
+Your conda installation is not configured to use strict channel priorities. This is however crucial for having robust and correct environments (for details, see https://conda-forge.org/docs/user/tipsandtricks.html). Please consider to configure strict priorities by executing 'conda config --set channel_priority strict'.
+Using shell: /usr/bin/bash
+Provided cores: 12
+Rules claiming more threads will be scaled down.
+Job stats:
+job           count    min threads    max threads
+----------  -------  -------------  -------------
+all               1              1              1
+index_bam        20              1              1
+prefetch         12              1              1
+sam_dump         19              1              1
+sam_to_bam       20              8              8
+total            72              1              8
+
+Select jobs to execute...
+[Fri Mar 28 14:42:12 2025]
+
+group job 1bab428d-326a-4fa4-b63a-c59ca58d8d29 (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:42:12 2025]
+    rule sam_dump:
+        input: SRR32271464
+        output: SRR32271464.sam (pipe)
+        jobid: 26
+        reason: Missing output files: SRR32271464.sam
+        wildcards: accession=SRR32271464
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:42:12 2025]
+    rule sam_to_bam:
+        input: SRR32271464.sam
+        output: SRR32271464.bam, SRR32271464.complete
+        jobid: 25
+        reason: Missing output files: SRR32271464.bam, SRR32271464.complete; Input files updated by another job: SRR32271464.sam
+        wildcards: accession=SRR32271464
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271468
+    log: SRR32271468.log
+    jobid: 12
+    reason: Missing output files: SRR32271468
+    wildcards: accession=SRR32271468
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+[Fri Mar 28 14:42:12 2025]
+Error in group job 1bab428d-326a-4fa4-b63a-c59ca58d8d29:
+    [Fri Mar 28 14:42:12 2025]
+        Error in rule sam_to_bam:
+            jobid: 25
+            output: SRR32271464.bam, SRR32271464.complete
+            conda-env: /home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+            shell:
+        samtools view -bS -@ 8 SRR32271464.sam > SRR32271464.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:42:12 2025]
+        Error in rule sam_dump:
+            jobid: 26
+            output: SRR32271464.sam (pipe)
+            conda-env: /home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+            shell:
+        sam-dump -u -r SRR32271464 > SRR32271464.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271471
+    log: SRR32271471.log
+    jobid: 15
+    reason: Missing output files: SRR32271471
+    wildcards: accession=SRR32271471
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271465
+    log: SRR32271465.log
+    jobid: 24
+    reason: Missing output files: SRR32271465
+    wildcards: accession=SRR32271465
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+Select jobs to execute...
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271477
+    log: SRR32271477.log
+    jobid: 42
+    reason: Missing output files: SRR32271477
+    wildcards: accession=SRR32271477
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271473
+    log: SRR32271473.log
+    jobid: 57
+    reason: Missing output files: SRR32271473
+    wildcards: accession=SRR32271473
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271481
+    log: SRR32271481.log
+    jobid: 33
+    reason: Missing output files: SRR32271481
+    wildcards: accession=SRR32271481
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271467
+    log: SRR32271467.log
+    jobid: 18
+    reason: Missing output files: SRR32271467
+    wildcards: accession=SRR32271467
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271469
+    log: SRR32271469.log
+    jobid: 63
+    reason: Missing output files: SRR32271469
+    wildcards: accession=SRR32271469
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271470
+    log: SRR32271470.log
+    jobid: 9
+    reason: Missing output files: SRR32271470
+    wildcards: accession=SRR32271470
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271476
+    log: SRR32271476.log
+    jobid: 45
+    reason: Missing output files: SRR32271476
+    wildcards: accession=SRR32271476
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271463
+    log: SRR32271463.log
+    jobid: 30
+    reason: Missing output files: SRR32271463
+    wildcards: accession=SRR32271463
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+
+[Fri Mar 28 14:42:12 2025]
+rule prefetch:
+    output: SRR32271482
+    log: SRR32271482.log
+    jobid: 6
+    reason: Missing output files: SRR32271482
+    wildcards: accession=SRR32271482
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../../../../../../../home/lukeg/conda_env_folder/33b1af817923f32fea1a1d68f07417fd_
+Waiting at most 240 seconds for missing files.
+Terminating processes on user request, this might take some time.
+Complete log: .snakemake/log/2025-03-28T144206.532610.snakemake.log

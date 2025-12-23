@@ -1,0 +1,843 @@
+Building DAG of jobs...
+Your conda installation is not configured to use strict channel priorities. This is however crucial for having robust and correct environments (for details, see https://conda-forge.org/docs/user/tipsandtricks.html). Please consider to configure strict priorities by executing 'conda config --set channel_priority strict'.
+Using shell: /usr/bin/bash
+Provided cores: 12
+Rules claiming more threads will be scaled down.
+Job stats:
+job           count    min threads    max threads
+----------  -------  -------------  -------------
+all               1              1              1
+index_bam        20              1              1
+prefetch         12              1              1
+sam_dump         20              1              1
+sam_to_bam       20              8              8
+total            73              1              8
+
+Resources before job selection: {'_cores': 12, '_nodes': 9223372036854775807}
+Ready jobs (20):
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72d1c777-bf16-4ef9-9c88-f36938a4a73b,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(421d3c06-c11c-4c71-bef7-982c9aa84b28,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(5f2240b2-6b64-4c69-866f-85f9197376f7,frozenset({sam_dump, sam_to_bam}))
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(1f0c3ffb-f61b-45ba-b764-5e4305350b7b,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(e9c04a0d-8fa7-4c76-8dff-13179155634c,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(4e228bc3-84b5-4f75-b0fb-6076e50b3fae,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+Select jobs to execute...
+Selected jobs (4):
+	JobGroup(5f2240b2-6b64-4c69-866f-85f9197376f7,frozenset({sam_dump, sam_to_bam}))
+	prefetch
+	prefetch
+	prefetch
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:56 2025]
+
+group job 5f2240b2-6b64-4c69-866f-85f9197376f7 (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:56 2025]
+    rule sam_dump:
+        input: SRR32271483
+        output: SRR32271483.sam (pipe)
+        jobid: 2
+        reason: Missing output files: SRR32271483.sam
+        wildcards: accession=SRR32271483
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:56 2025]
+    rule sam_to_bam:
+        input: SRR32271483.sam
+        output: SRR32271483.bam, SRR32271483.complete
+        jobid: 1
+        reason: Missing output files: SRR32271483.bam, SRR32271483.complete; Input files updated by another job: SRR32271483.sam
+        wildcards: accession=SRR32271483
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+
+[Fri Mar 28 14:31:56 2025]
+rule prefetch:
+    output: SRR32271468
+    log: SRR32271468.log
+    jobid: 12
+    reason: Missing output files: SRR32271468
+    wildcards: accession=SRR32271468
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+[Fri Mar 28 14:31:56 2025]
+Error in group job 5f2240b2-6b64-4c69-866f-85f9197376f7:
+    [Fri Mar 28 14:31:56 2025]
+        Error in rule sam_dump:
+            jobid: 2
+            output: SRR32271483.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271483 > SRR32271483.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:56 2025]
+        Error in rule sam_to_bam:
+            jobid: 1
+            output: SRR32271483.bam, SRR32271483.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271483.sam > SRR32271483.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:56 2025]
+rule prefetch:
+    output: SRR32271471
+    log: SRR32271471.log
+    jobid: 15
+    reason: Missing output files: SRR32271471
+    wildcards: accession=SRR32271471
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:56 2025]
+rule prefetch:
+    output: SRR32271465
+    log: SRR32271465.log
+    jobid: 24
+    reason: Missing output files: SRR32271465
+    wildcards: accession=SRR32271465
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (16):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(72d1c777-bf16-4ef9-9c88-f36938a4a73b,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	JobGroup(1f0c3ffb-f61b-45ba-b764-5e4305350b7b,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(421d3c06-c11c-4c71-bef7-982c9aa84b28,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	prefetch
+	JobGroup(4e228bc3-84b5-4f75-b0fb-6076e50b3fae,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(e9c04a0d-8fa7-4c76-8dff-13179155634c,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+Select jobs to execute...
+Selected jobs (1):
+	JobGroup(421d3c06-c11c-4c71-bef7-982c9aa84b28,frozenset({sam_to_bam, sam_dump}))
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:56 2025]
+
+group job 421d3c06-c11c-4c71-bef7-982c9aa84b28 (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:56 2025]
+    rule sam_dump:
+        input: SRR32271479
+        output: SRR32271479.sam (pipe)
+        jobid: 47
+        reason: Missing output files: SRR32271479.sam
+        wildcards: accession=SRR32271479
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:56 2025]
+    rule sam_to_bam:
+        input: SRR32271479.sam
+        output: SRR32271479.bam, SRR32271479.complete
+        jobid: 46
+        reason: Missing output files: SRR32271479.complete, SRR32271479.bam; Input files updated by another job: SRR32271479.sam
+        wildcards: accession=SRR32271479
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 14:31:56 2025]
+Error in group job 421d3c06-c11c-4c71-bef7-982c9aa84b28:
+    [Fri Mar 28 14:31:56 2025]
+        Error in rule sam_to_bam:
+            jobid: 46
+            output: SRR32271479.bam, SRR32271479.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271479.sam > SRR32271479.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:56 2025]
+        Error in rule sam_dump:
+            jobid: 47
+            output: SRR32271479.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271479 > SRR32271479.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (15):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(72d1c777-bf16-4ef9-9c88-f36938a4a73b,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	JobGroup(1f0c3ffb-f61b-45ba-b764-5e4305350b7b,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	prefetch
+	JobGroup(e9c04a0d-8fa7-4c76-8dff-13179155634c,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(4e228bc3-84b5-4f75-b0fb-6076e50b3fae,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+Select jobs to execute...
+Selected jobs (1):
+	JobGroup(1f0c3ffb-f61b-45ba-b764-5e4305350b7b,frozenset({sam_to_bam, sam_dump}))
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:56 2025]
+
+group job 1f0c3ffb-f61b-45ba-b764-5e4305350b7b (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:56 2025]
+    rule sam_dump:
+        input: SRR32271472
+        output: SRR32271472.sam (pipe)
+        jobid: 59
+        reason: Missing output files: SRR32271472.sam
+        wildcards: accession=SRR32271472
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:56 2025]
+    rule sam_to_bam:
+        input: SRR32271472.sam
+        output: SRR32271472.bam, SRR32271472.complete
+        jobid: 58
+        reason: Missing output files: SRR32271472.complete, SRR32271472.bam; Input files updated by another job: SRR32271472.sam
+        wildcards: accession=SRR32271472
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 14:31:56 2025]
+Error in group job 1f0c3ffb-f61b-45ba-b764-5e4305350b7b:
+    [Fri Mar 28 14:31:56 2025]
+        Error in rule sam_to_bam:
+            jobid: 58
+            output: SRR32271472.bam, SRR32271472.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271472.sam > SRR32271472.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:56 2025]
+        Error in rule sam_dump:
+            jobid: 59
+            output: SRR32271472.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271472 > SRR32271472.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (14):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(72d1c777-bf16-4ef9-9c88-f36938a4a73b,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(e9c04a0d-8fa7-4c76-8dff-13179155634c,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(4e228bc3-84b5-4f75-b0fb-6076e50b3fae,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+Select jobs to execute...
+Selected jobs (1):
+	JobGroup(72d1c777-bf16-4ef9-9c88-f36938a4a73b,frozenset({sam_to_bam, sam_dump}))
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:57 2025]
+
+group job 72d1c777-bf16-4ef9-9c88-f36938a4a73b (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_dump:
+        input: SRR32271466
+        output: SRR32271466.sam (pipe)
+        jobid: 20
+        reason: Missing output files: SRR32271466.sam
+        wildcards: accession=SRR32271466
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_to_bam:
+        input: SRR32271466.sam
+        output: SRR32271466.bam, SRR32271466.complete
+        jobid: 19
+        reason: Missing output files: SRR32271466.complete, SRR32271466.bam; Input files updated by another job: SRR32271466.sam
+        wildcards: accession=SRR32271466
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 14:31:57 2025]
+Error in group job 72d1c777-bf16-4ef9-9c88-f36938a4a73b:
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_to_bam:
+            jobid: 19
+            output: SRR32271466.bam, SRR32271466.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271466.sam > SRR32271466.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_dump:
+            jobid: 20
+            output: SRR32271466.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271466 > SRR32271466.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (13):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(e9c04a0d-8fa7-4c76-8dff-13179155634c,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(4e228bc3-84b5-4f75-b0fb-6076e50b3fae,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+Select jobs to execute...
+Selected jobs (1):
+	JobGroup(e9c04a0d-8fa7-4c76-8dff-13179155634c,frozenset({sam_to_bam, sam_dump}))
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:57 2025]
+
+group job e9c04a0d-8fa7-4c76-8dff-13179155634c (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_dump:
+        input: SRR32271478
+        output: SRR32271478.sam (pipe)
+        jobid: 38
+        reason: Missing output files: SRR32271478.sam
+        wildcards: accession=SRR32271478
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_to_bam:
+        input: SRR32271478.sam
+        output: SRR32271478.bam, SRR32271478.complete
+        jobid: 37
+        reason: Missing output files: SRR32271478.complete, SRR32271478.bam; Input files updated by another job: SRR32271478.sam
+        wildcards: accession=SRR32271478
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 14:31:57 2025]
+Error in group job e9c04a0d-8fa7-4c76-8dff-13179155634c:
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_to_bam:
+            jobid: 37
+            output: SRR32271478.bam, SRR32271478.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271478.sam > SRR32271478.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_dump:
+            jobid: 38
+            output: SRR32271478.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271478 > SRR32271478.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (12):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(4e228bc3-84b5-4f75-b0fb-6076e50b3fae,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+Select jobs to execute...
+Selected jobs (1):
+	JobGroup(4e228bc3-84b5-4f75-b0fb-6076e50b3fae,frozenset({sam_to_bam, sam_dump}))
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:57 2025]
+
+group job 4e228bc3-84b5-4f75-b0fb-6076e50b3fae (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_dump:
+        input: SRR32271464
+        output: SRR32271464.sam (pipe)
+        jobid: 26
+        reason: Missing output files: SRR32271464.sam
+        wildcards: accession=SRR32271464
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_to_bam:
+        input: SRR32271464.sam
+        output: SRR32271464.bam, SRR32271464.complete
+        jobid: 25
+        reason: Missing output files: SRR32271464.bam, SRR32271464.complete; Input files updated by another job: SRR32271464.sam
+        wildcards: accession=SRR32271464
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 14:31:57 2025]
+Error in group job 4e228bc3-84b5-4f75-b0fb-6076e50b3fae:
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_to_bam:
+            jobid: 25
+            output: SRR32271464.bam, SRR32271464.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271464.sam > SRR32271464.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_dump:
+            jobid: 26
+            output: SRR32271464.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271464 > SRR32271464.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (11):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+Select jobs to execute...
+Selected jobs (1):
+	JobGroup(72c95c30-56d5-4577-bbe4-fb3fc574f21d,frozenset({sam_to_bam, sam_dump}))
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:57 2025]
+
+group job 72c95c30-56d5-4577-bbe4-fb3fc574f21d (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_dump:
+        input: SRR32271475
+        output: SRR32271475.sam (pipe)
+        jobid: 50
+        reason: Missing output files: SRR32271475.sam
+        wildcards: accession=SRR32271475
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_to_bam:
+        input: SRR32271475.sam
+        output: SRR32271475.bam, SRR32271475.complete
+        jobid: 49
+        reason: Missing output files: SRR32271475.bam, SRR32271475.complete; Input files updated by another job: SRR32271475.sam
+        wildcards: accession=SRR32271475
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 14:31:57 2025]
+Error in group job 72c95c30-56d5-4577-bbe4-fb3fc574f21d:
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_to_bam:
+            jobid: 49
+            output: SRR32271475.bam, SRR32271475.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271475.sam > SRR32271475.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:57 2025]
+        Error in rule sam_dump:
+            jobid: 50
+            output: SRR32271475.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271475 > SRR32271475.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (10):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+	prefetch
+Select jobs to execute...
+Selected jobs (1):
+	JobGroup(f3b8c358-34b4-4a8b-9d0b-46f727007ad9,frozenset({sam_to_bam, sam_dump}))
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775803}
+[Fri Mar 28 14:31:57 2025]
+
+group job f3b8c358-34b4-4a8b-9d0b-46f727007ad9 (jobs in lexicogr. order):
+
+    [Fri Mar 28 14:31:57 2025]
+    rule sam_dump:
+        input: SRR32271480
+        output: SRR32271480.sam (pipe)
+        jobid: 35
+        reason: Missing output files: SRR32271480.sam
+        wildcards: accession=SRR32271480
+        resources: tmpdir=/tmp, mem_mb=10000
+
+
+    [Fri Mar 28 14:31:58 2025]
+    rule sam_to_bam:
+        input: SRR32271480.sam
+        output: SRR32271480.bam, SRR32271480.complete
+        jobid: 34
+        reason: Missing output files: SRR32271480.bam, SRR32271480.complete; Input files updated by another job: SRR32271480.sam
+        wildcards: accession=SRR32271480
+        threads: 8
+        resources: tmpdir=/tmp, mem_mb=15000, disk_mb=250000
+
+[Fri Mar 28 14:31:58 2025]
+Error in group job f3b8c358-34b4-4a8b-9d0b-46f727007ad9:
+    [Fri Mar 28 14:31:58 2025]
+        Error in rule sam_to_bam:
+            jobid: 34
+            output: SRR32271480.bam, SRR32271480.complete
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        samtools view -bS -@ 8 SRR32271480.sam > SRR32271480.bam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+    [Fri Mar 28 14:31:58 2025]
+        Error in rule sam_dump:
+            jobid: 35
+            output: SRR32271480.sam (pipe)
+            conda-env: /mnt/c/Users/lukeg/Documents/Morin_Lab/conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+            shell:
+        sam-dump -u -r SRR32271480 > SRR32271480.sam
+        (one of the commands exited with non-zero exit code; note that snakemake uses bash strict mode!)
+    
+Full Traceback (most recent call last):
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 645, in _callback
+    raise ex
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in run_group_job
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 581, in <listcomp>
+    futures = [self.run_single_job(j) for j in job]
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 567, in run_single_job
+    self.cached_or_run, job, run_wrapper, *self.job_args_and_prepare(job)
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/executors/__init__.py", line 519, in job_args_and_prepare
+    job.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/jobs.py", line 805, in prepare
+    f.prepare()
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/site-packages/snakemake/io.py", line 666, in prepare
+    os.mkfifo(self._file)
+OSError: [Errno 95] Operation not supported
+
+Resources before job selection: {'_cores': 9, '_nodes': 9223372036854775804}
+Ready jobs (9):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+Select jobs to execute...
+Selected jobs (9):
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+	prefetch
+Resources after job selection: {'_cores': 0, '_nodes': 9223372036854775795}
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271477
+    log: SRR32271477.log
+    jobid: 42
+    reason: Missing output files: SRR32271477
+    wildcards: accession=SRR32271477
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271473
+    log: SRR32271473.log
+    jobid: 57
+    reason: Missing output files: SRR32271473
+    wildcards: accession=SRR32271473
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271481
+    log: SRR32271481.log
+    jobid: 33
+    reason: Missing output files: SRR32271481
+    wildcards: accession=SRR32271481
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271467
+    log: SRR32271467.log
+    jobid: 18
+    reason: Missing output files: SRR32271467
+    wildcards: accession=SRR32271467
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271469
+    log: SRR32271469.log
+    jobid: 63
+    reason: Missing output files: SRR32271469
+    wildcards: accession=SRR32271469
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271470
+    log: SRR32271470.log
+    jobid: 9
+    reason: Missing output files: SRR32271470
+    wildcards: accession=SRR32271470
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271476
+    log: SRR32271476.log
+    jobid: 45
+    reason: Missing output files: SRR32271476
+    wildcards: accession=SRR32271476
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271463
+    log: SRR32271463.log
+    jobid: 30
+    reason: Missing output files: SRR32271463
+    wildcards: accession=SRR32271463
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+
+[Fri Mar 28 14:31:58 2025]
+rule prefetch:
+    output: SRR32271482
+    log: SRR32271482.log
+    jobid: 6
+    reason: Missing output files: SRR32271482
+    wildcards: accession=SRR32271482
+    resources: tmpdir=/tmp, mem_mb=15000, disk_mb=300000
+
+Activating conda environment: ../../../conda_env_folder/398a65d603e57f31137e36efeb953a1a_
+Waiting at most 120 seconds for missing files.
+Terminating processes on user request, this might take some time.
+Complete log: .snakemake/log/2025-03-28T143150.457623.snakemake.log
+unlocking
+removing lock
+removing lock
+removed all locks

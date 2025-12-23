@@ -1,0 +1,3 @@
+AttributeErrorin line 38 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+'Rules' object has no attribute 'sam_to_bam'
+  File "/mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk", line 38, in <module>

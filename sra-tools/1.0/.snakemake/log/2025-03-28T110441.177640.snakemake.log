@@ -1,0 +1,4 @@
+SystemExitin line 9 of /mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk:
+None
+  File "/mnt/c/Users/lukeg/Documents/Morin_Lab/lcr-scripts/sra-tools/1.0/sra_dump.smk", line 9, in <module>
+  File "/home/lukeg/miniconda3/envs/atlantis-real/lib/python3.10/_sitebuiltins.py", line 26, in __call__
