@@ -44,7 +44,7 @@ test_features <- read_tsv(test_features_path) %>%
 
 model_path <- opt$model_path
 if (model_path == "GAMBLR.predict"){
-    model_path = system.file("extdata",package = "GAMBLR.predict")
+    model_path = system.file("extdata/models",package = "GAMBLR.predict")
 }
 
 output_dir <- opt$output_dir
