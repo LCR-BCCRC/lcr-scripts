@@ -22,7 +22,7 @@ suppressPackageStartupMessages({
 option_list <- list(
     make_option(c("-m", "--metadata"), type = "character", help = "path to test metadata file"),
     make_option(c("-a", "--metadata_sample_id_colname"), type = "character", help = "Column name in metadata file for sample IDs"),
-    make_option(c("-b", "--truth_column_colname"), type = "character", help = "Column name in metadata file with truth labels")
+    make_option(c("-b", "--truth_column_colname"), type = "character", help = "Column name in metadata file with truth labels"),
     make_option(c("-c", "--sv_from_metadata"), type = "character", help = "A named vector that specifies the columns containing the oncogene translocation status for any SV that is annotated in the metadata"),
     make_option(c("-d", "--translocation_status"), type = "character", help = "A named vector that specifies the values corresponding to positive translocation, negative translocation, and NA for any SV that is annotated in the metadata"),    
     make_option(c("-f", "--maf"), type = "character", help = "path to test maf file"),
@@ -46,17 +46,20 @@ opt <- parse_args(OptionParser(option_list=option_list))
 metadata <- opt$metadata
 metadata_sample_id_colname <- opt$metadata_sample_id_colname
 truth_column_colname <- opt$truth_column_colname
-sv_from_metadata <- strsplit(opt$sv_from_metadata, ",")[[1]] 
+sv_from_metadata <- eval(parse(text = opt$sv_from_metadata))
+print(sv_from_metadata)
 trans_raw <- eval(parse(text = opt$translocation_status))
 if ("NA_STATUS" %in% names(trans_raw)) { # Convert special placeholder to actual NA
     names(trans_raw)[names(trans_raw) == "NA_STATUS"] <- NA
 }
 value_map <- setNames(names(trans_raw), unlist(trans_raw)) # Build reverse map: e.g. "yes" -> "POS", "no" -> "NEG", "Not Available" -> NA
+print(value_map)
 
 maf <- opt$maf
 maf_sample_id_colname <- opt$maf_sample_id_colname
 
 # formatting meta/maf files to standard column names -----------------------------
+sv_cols <- unlist(sv_from_metadata, use.names = FALSE)
 test_metadata <- readr::read_tsv(
         metadata
     ) %>%
@@ -65,9 +68,9 @@ test_metadata <- readr::read_tsv(
         lymphgen = truth_column_colname
     ) %>%
     mutate(across( # Assign POS, NEG, NA values
-        all_of(sv_from_metadata),   
-        ~ dplyr::recode(.x, !!!value_map, .default = .x)  
-    ))
+        all_of(sv_cols),
+        ~ dplyr::recode(.x, !!!value_map, .default = .x)
+    ))  
 
 test_maf <- readr::read_tsv(
         maf
@@ -79,19 +82,17 @@ test_maf <- readr::read_tsv(
 # command line options; assemble mutation matrix ---------------------------------
 output_matrix_dir <- opt$output_matrix_dir
 
-if (is.null(opt$synon_genes)) {
-    synon_genes <- NULL
-} else {
-    synon_genes <- strsplit(opt$synon_genes, ",")[[1]]
-    synon_genes <- trimws(synon_genes)
+parse_nullable <- function(x) {
+    if (x == "None") {
+        return(NULL)
+    }
+    eval(parse(text = x))
 }
-if (is.null(opt$hotspot_genes)) {
-    hotspot_genes <- NULL
-} else {
-    hotspot_genes <- strsplit(opt$hotspot_genes, ",")[[1]]
-    hotspot_genes <- trimws(hotspot_genes)
-}
-if (is.null(opt$genes)) {
+
+synon_genes <- parse_nullable(opt$synon_genes)
+hotspot_genes <- parse_nullable(opt$hotspot_genes)
+genes <- parse_nullable(opt$genes)
+if (is.null(genes)) {
     genes <- c(
         "TNFRSF14","TP73","CCDC27","NOL9","MTOR","SPEN","ID3","ARID1A","ZC3H12A","RRAGC",
         "BCL10","CD58","NOTCH2","HIST2H2BE","CTSS","SEMA4A","FCGR2B","FCRLA","PRRC2C","SMG7",
@@ -111,16 +112,14 @@ if (is.null(opt$genes)) {
         "TBCC","NFKBIE","EEF1A1","TMEM30A","ZNF292","BACH2","PRDM1","SGK1","TNFAIP3","INTS1","CARD11",
         "ACTB","PIK3CG","LRRN3","POT1","BRAF","EZH2","KMT2C","ATP6V1B2","PRKDC","LYN","TOX","PABPC1",
         "UBR5","MYC","CD274","CDKN2A","GRHPR","NOTCH1","TRAF2","P2RY8","TMSB4X","DDX3X","PIM2","TAF1",
-        "BTK","UBE2A","PHF6","VMA21","ATP6AP1","MYD88HOTSPOT","BCL2_SV","MYC_SV","BCL6_SV"
+        "BTK","UBE2A","PHF6","VMA21","ATP6AP1"#,"MYD88HOTSPOT","BCL2_SV","MYC_SV","BCL6_SV"
     )
-} else {
-    genes <- eval(parse(text=opt$genes))
 }
 sv_value <- opt$sv_value
 synon_value <- opt$synon_value
 coding_value <- opt$coding_value
 include_ashm <- opt$include_ashm
-annotated_sv <- opt$annotated_sv
+annotated_sv <- parse_nullable(opt$annotated_sv)
 include_GAMBL_sv <- opt$include_GAMBL_sv
 
 # assemble mutation matrix -------------------------------------------------------

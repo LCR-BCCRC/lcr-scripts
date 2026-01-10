@@ -43,7 +43,15 @@ opt_model_path <- opt$opt_model_path
 model_name_prefix <- opt$model_name_prefix
 core_features <- eval(parse(text=opt$core_features))
 core_feature_multiplier <- opt$core_feature_multiplier
-hidden_features <- if (!is.null(opt$hidden_features)) eval(parse(text = opt$hidden_features)) else NULL
+
+parse_nullable <- function(x) {
+    if (x == "None") {
+        return(NULL)
+    }
+    eval(parse(text = x))
+}
+hidden_features <- parse_nullable(opt$hidden_features)
+
 truth_classes <- eval(parse(text=opt$truth_classes))
 min_k <- opt$min_k
 max_k <- opt$max_k
