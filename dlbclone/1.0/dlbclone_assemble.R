@@ -42,19 +42,23 @@ option_list <- list(
 
 opt <- parse_args(OptionParser(option_list=option_list))
 
+parse_nullable <- function(x) {
+    if (x == "None") {
+        return(NULL)
+    }
+    eval(parse(text = x))
+}
+
 # command line options; formatting meta/maf files to standard column names -------
 metadata <- opt$metadata
 metadata_sample_id_colname <- opt$metadata_sample_id_colname
 truth_column_colname <- opt$truth_column_colname
-sv_from_metadata <- eval(parse(text = opt$sv_from_metadata))
-print(sv_from_metadata)
-trans_raw <- eval(parse(text = opt$translocation_status))
+sv_from_metadata <- parse_nullable(opt$sv_from_metadata)
+trans_raw <- parse_nullable(opt$translocation_status)
 if ("NA_STATUS" %in% names(trans_raw)) { # Convert special placeholder to actual NA
     names(trans_raw)[names(trans_raw) == "NA_STATUS"] <- NA
 }
 value_map <- setNames(names(trans_raw), unlist(trans_raw)) # Build reverse map: e.g. "yes" -> "POS", "no" -> "NEG", "Not Available" -> NA
-print(value_map)
-
 maf <- opt$maf
 maf_sample_id_colname <- opt$maf_sample_id_colname
 
@@ -81,14 +85,6 @@ test_maf <- readr::read_tsv(
 
 # command line options; assemble mutation matrix ---------------------------------
 output_matrix_dir <- opt$output_matrix_dir
-
-parse_nullable <- function(x) {
-    if (x == "None") {
-        return(NULL)
-    }
-    eval(parse(text = x))
-}
-
 synon_genes <- parse_nullable(opt$synon_genes)
 hotspot_genes <- parse_nullable(opt$hotspot_genes)
 genes <- parse_nullable(opt$genes)

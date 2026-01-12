@@ -39,19 +39,18 @@ option_list <- list(
 
 opt <- parse_args(OptionParser(option_list=option_list))
 
-opt_model_path <- opt$opt_model_path
-model_name_prefix <- opt$model_name_prefix
-core_features <- eval(parse(text=opt$core_features))
-core_feature_multiplier <- opt$core_feature_multiplier
-
 parse_nullable <- function(x) {
     if (x == "None") {
         return(NULL)
     }
     eval(parse(text = x))
 }
-hidden_features <- parse_nullable(opt$hidden_features)
 
+opt_model_path <- opt$opt_model_path
+model_name_prefix <- opt$model_name_prefix
+core_features <- parse_nullable(opt$core_features)
+core_feature_multiplier <- opt$core_feature_multiplier
+hidden_features <- parse_nullable(opt$hidden_features)
 truth_classes <- eval(parse(text=opt$truth_classes))
 min_k <- opt$min_k
 max_k <- opt$max_k
