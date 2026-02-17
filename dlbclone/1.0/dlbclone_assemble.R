@@ -22,7 +22,7 @@ suppressPackageStartupMessages({
 option_list <- list(
     make_option(c("-m", "--metadata"), type = "character", help = "path to test metadata file"),
     make_option(c("-a", "--metadata_sample_id_colname"), type = "character", help = "Column name in metadata file for sample IDs"),
-    make_option(c("-b", "--truth_column_colname"), type = "character", help = "Column name in metadata file with truth labels"),
+    #make_option(c("-b", "--truth_column_colname"), type = "character", help = "Column name in metadata file with truth labels"),
     make_option(c("-c", "--sv_from_metadata"), type = "character", help = "A named vector that specifies the columns containing the oncogene translocation status for any SV that is annotated in the metadata"),
     make_option(c("-d", "--translocation_status"), type = "character", help = "A named vector that specifies the values corresponding to positive translocation, negative translocation, and NA for any SV that is annotated in the metadata"),    
     make_option(c("-f", "--maf"), type = "character", help = "path to test maf file"),
@@ -52,8 +52,9 @@ parse_nullable <- function(x) {
 # command line options; formatting meta/maf files to standard column names -------
 metadata <- opt$metadata
 metadata_sample_id_colname <- opt$metadata_sample_id_colname
-truth_column_colname <- opt$truth_column_colname
+#truth_column_colname <- opt$truth_column_colname
 sv_from_metadata <- parse_nullable(opt$sv_from_metadata)
+
 trans_raw <- parse_nullable(opt$translocation_status)
 if ("NA_STATUS" %in% names(trans_raw)) { # Convert special placeholder to actual NA
     names(trans_raw)[names(trans_raw) == "NA_STATUS"] <- NA
@@ -68,8 +69,8 @@ test_metadata <- readr::read_tsv(
         metadata
     ) %>%
     rename(
-        sample_id = metadata_sample_id_colname,
-        lymphgen = truth_column_colname
+        sample_id = metadata_sample_id_colname#,
+        #lymphgen = truth_column_colname
     ) %>%
     mutate(across( # Assign POS, NEG, NA values
         all_of(sv_cols),
