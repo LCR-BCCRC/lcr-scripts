@@ -128,6 +128,8 @@ subset_samples <- function(categories, meta) {
 # Get sample ids of the sample_set
 this_subset_samples <- subset_samples(subsetting_values, metadata)
 
+cat(colnames(this_subset_samples))
+
 # Load master input files and get variants for the sample set-------------------
 if ("maf" %in% names(snakemake@input)){
   input_files <- snakemake@input[["maf"]]
@@ -142,8 +144,6 @@ if (mode == "rainstorm"){
     stop("Please supply a maf with ONLY genome data and seq_type only genome in the sample subsetting categories.")
   }
 }
-
-  print(colnames(this_subset_samples))
 
 # Read in only minimally necessary columns
 relevant_maf_columns <- c("Hugo_Symbol", "Tumor_Sample_Barcode", "NCBI_Build", "Chromosome", "Start_Position", "End_Position", "Strand", "Variant_Classification", "Variant_Type", "Reference_Allele", "Tumor_Seq_Allele2", "HGVSp_Short", "Transcript_ID", "Protein_position")
@@ -243,6 +243,7 @@ if (!dir.exists(file.path(output_dir))){
   cat("Output directory for sample_set and launch date combo exists.\n")
   cat(output_dir,"\n")
 }
+
 
 # Report missing samples and calculate the md5sum-------------------
 if ("maf" %in% names(snakemake@input)){
