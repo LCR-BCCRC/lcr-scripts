@@ -376,6 +376,12 @@ if (mode == "dlbclass" && "maf" %in% names(snakemake@input)) {
   sentinel <- "maf.done"
 }
 
+if (mode == "dlbclone") {
+  grouping_column <- "sample_id"
+
+  subset_input <- subset_input %>% unique()
+}
+
 if (mode == "HotMAPS") {
   if (grepl("38", subset_input$NCBI_Build[1])) {
     cat("Requested mode is HotMAPS, but the supplied file is in the hg38-based coordinates.\n")
