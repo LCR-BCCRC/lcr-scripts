@@ -5,5 +5,6 @@
 ##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the structural variant described in this record">
 ##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##contig=<ID=chr1>
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	TUMOUR_PLACEHOLDER
 chr1	10000	MantaDEL:0:0:0:0:0:0	N	<DEL>	.	PASS	END=20000;SVLEN=-10000;SVTYPE=DEL	PR:SR	5,3:2,1

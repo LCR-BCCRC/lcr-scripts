@@ -35,9 +35,9 @@ echo "Test 3: somaticSV with BED regions — verify REGIONS INFO field"
 python $SCRIPT \
     --tumour_id TUMOUR_SAMPLE \
     --normal_id NORMAL_SAMPLE \
-    --bed_regions ${IN}/regions.bed \
     ${IN}/somaticSV.vcf \
-    ${OUT}/somaticSV.with_regions.augmented.vcf
+    ${OUT}/somaticSV.with_regions.augmented.vcf \
+    --bed_regions ${IN}/regions.bed
 
 echo "All tests completed successfully."
 echo "Verify outputs are unchanged: git diff tests/output/"
