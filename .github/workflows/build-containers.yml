@@ -54,7 +54,6 @@ jobs:
           echo "script=$SCRIPT" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "image=${{ env.REGISTRY }}/${{ env.REPO }}/${SCRIPT}:${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "context=$(dirname ${{ matrix.dockerfile }})" >> "$GITHUB_OUTPUT"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -69,7 +68,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          context: ${{ steps.meta.outputs.context }}
+          context: .
+          file: ${{ matrix.dockerfile }}
           push: ${{ github.ref == 'refs/heads/master' }}
           tags: ${{ steps.meta.outputs.image }}
           cache-from: type=gha,scope=${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
