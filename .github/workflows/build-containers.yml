@@ -71,6 +71,31 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: ${{ github.ref == 'refs/heads/master' }}
+          load: ${{ github.ref != 'refs/heads/master' }}
           tags: ${{ steps.meta.outputs.image }}
           cache-from: type=gha,scope=${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
           cache-to: type=gha,mode=max,scope=${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
+
+      - name: Run tests
+        if: github.ref != 'refs/heads/master'
+        run: |
+          SCRIPT="${{ steps.meta.outputs.script }}"
+          VERSION="${{ steps.meta.outputs.version }}"
+          if [ -f "${SCRIPT}/${VERSION}/run_tests.sh" ]; then
+            echo "Running tests for ${SCRIPT}/${VERSION}"
+            docker run --rm \
+              -v "${{ github.workspace }}:/repo" \
+              -w "/repo/${SCRIPT}/${VERSION}" \
+              ${{ steps.meta.outputs.image }} \
+              bash run_tests.sh
+          else
+            echo "No run_tests.sh found for ${SCRIPT}/${VERSION}, skipping."
+          fi
+
+      - name: Upload test outputs as artifacts
+        if: github.ref != 'refs/heads/master'
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-outputs-${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
+          path: ${{ steps.meta.outputs.script }}/${{ steps.meta.outputs.version }}/tests/output/
+          if-no-files-found: ignore
