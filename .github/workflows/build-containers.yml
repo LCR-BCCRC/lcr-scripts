@@ -86,6 +86,7 @@ jobs:
             docker run --rm \
               -v "${{ github.workspace }}:/repo" \
               -w "/repo/${SCRIPT}/${VERSION}" \
+              --user "$(id -u):$(id -g)" \
               ${{ steps.meta.outputs.image }} \
               bash run_tests.sh tests/docker_output
           else
