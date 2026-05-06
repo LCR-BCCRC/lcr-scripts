@@ -5,6 +5,10 @@ on:
     paths:
       - '**/Dockerfile'
       - '.github/workflows/build-containers.yml'
+  pull_request:
+    paths:
+      - '**/Dockerfile'
+      - '.github/workflows/build-containers.yml'
   workflow_dispatch:
 
 env:
