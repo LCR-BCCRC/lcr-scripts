@@ -61,11 +61,13 @@ it is a fully-pinned export that may be incompatible with the Python version in 
 Scripts can include a `run_tests.sh` that runs the script on small curated inputs and writes outputs
 to `tests/output/`. This follows a **golden-file** pattern:
 
-1. **Establish a baseline (once):** Run `./run_tests.sh` from the script's version directory, then
-   commit the files written to `tests/output/`. These become the expected outputs.
+1. **Establish a baseline (once):** Activate the conda environment for the script, run
+   `./run_tests.sh` from the script's version directory, then commit the files written to
+   `tests/output/`. These are the golden files — generated from the conda environment, which is
+   the source of truth.
 
-2. **Detect regressions (every subsequent run):** Run `./run_tests.sh` again — it overwrites
-   `tests/output/`. Then check for unexpected changes with:
+2. **Detect regressions (every subsequent run):** Run `./run_tests.sh` again in the conda
+   environment — it overwrites `tests/output/`. Then check for unexpected changes with:
 
    ```bash
    git diff tests/output/
@@ -86,12 +88,13 @@ to `tests/output/`. This follows a **golden-file** pattern:
 When a `Dockerfile` is present alongside a `run_tests.sh`, the CI workflow automatically:
 
 1. Builds the Docker image from the `Dockerfile`.
-2. Runs `run_tests.sh` **inside the container** — this validates that the container environment
-   actually works, not just that the script runs locally.
-3. Uploads the generated `tests/output/` files as workflow artifacts.
+2. Runs `run_tests.sh` inside the container, writing outputs to `tests/docker_output/`.
+3. Diffs the Docker outputs against the committed golden files in `tests/output/`, ignoring
+   environment-specific header lines (`##cmdline`, `##regions_bed`).
+4. Fails the build if any output differs from the golden file.
 
-To lock in the baseline after the first successful CI run, download the artifacts, place the files
-in `tests/output/`, and commit them.
+This means Docker is tested against a conda-generated baseline — not against itself. If no golden
+files are committed yet, the comparison step is skipped with a warning.
 
 ### Adding tests for a new script
 

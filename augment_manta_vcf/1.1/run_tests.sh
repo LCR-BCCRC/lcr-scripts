@@ -1,22 +1,31 @@
 #!/usr/bin/env bash
 # Run unit tests for augment_manta_vcf.py to check for unexpected changes.
-# Usage: run from the directory containing this script:
-#   ./run_tests.sh
 #
-# After the first run, commit tests/output/ to establish the baseline.
-# On subsequent runs, verify nothing changed with:
+# Usage: run from the directory containing this script:
+#   ./run_tests.sh [output_dir]
+#
+# output_dir defaults to tests/output (used for generating the golden baseline).
+# Pass a different directory to compare against the committed baseline without
+# overwriting it (used by CI to validate the Docker container):
+#   ./run_tests.sh tests/docker_output
+#
+# Generating the golden baseline:
+#   Activate the conda environment for this script, then run:
+#     ./run_tests.sh
+#   Inspect the outputs, then commit tests/output/ as the reference.
+#
+# On subsequent local runs, verify nothing changed with:
 #   git diff tests/output/
 #
-# Variable header lines (##cmdline, ##regions_bed) will always differ
-# across environments — compare only the variant records if doing a
-# strict diff:
-#   grep -v "^##cmdline\|^##regions_bed" tests/output/file.vcf | diff - <expected>
+# Note: ##cmdline and ##regions_bed header lines embed absolute paths and
+# will always differ across environments. The CI comparison filters them out.
 
 set -euo pipefail
 
 SCRIPT="./augment_manta_vcf.py"
 IN="tests/input"
-OUT="tests/output"
+OUT="${1:-tests/output}"
+mkdir -p "$OUT"
 
 echo "Test 1: somaticSV — augment fields and rename sample IDs"
 python $SCRIPT \

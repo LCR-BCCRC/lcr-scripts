@@ -76,7 +76,7 @@ jobs:
           cache-from: type=gha,scope=${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
           cache-to: type=gha,mode=max,scope=${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
 
-      - name: Run tests
+      - name: Run tests in container
         if: github.ref != 'refs/heads/master'
         run: |
           SCRIPT="${{ steps.meta.outputs.script }}"
@@ -87,15 +87,39 @@ jobs:
               -v "${{ github.workspace }}:/repo" \
               -w "/repo/${SCRIPT}/${VERSION}" \
               ${{ steps.meta.outputs.image }} \
-              bash run_tests.sh
+              bash run_tests.sh tests/docker_output
           else
             echo "No run_tests.sh found for ${SCRIPT}/${VERSION}, skipping."
           fi
 
-      - name: Upload test outputs as artifacts
+      - name: Compare Docker outputs against golden files
         if: github.ref != 'refs/heads/master'
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-outputs-${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
-          path: ${{ steps.meta.outputs.script }}/${{ steps.meta.outputs.version }}/tests/output/
-          if-no-files-found: ignore
+        run: |
+          SCRIPT="${{ steps.meta.outputs.script }}"
+          VERSION="${{ steps.meta.outputs.version }}"
+          GOLDEN="${SCRIPT}/${VERSION}/tests/output"
+          DOCKER="${SCRIPT}/${VERSION}/tests/docker_output"
+          if [ ! -d "$GOLDEN" ] || [ -z "$(ls -A $GOLDEN 2>/dev/null)" ]; then
+            echo "No golden files committed yet — skipping comparison."
+            echo "Generate them by running ./run_tests.sh in the conda environment and committing tests/output/."
+            exit 0
+          fi
+          PASS=true
+          for golden_file in "$GOLDEN"/*.vcf; do
+            name=$(basename "$golden_file")
+            docker_file="$DOCKER/$name"
+            if [ ! -f "$docker_file" ]; then
+              echo "FAIL: $name missing from Docker output"
+              PASS=false
+              continue
+            fi
+            if diff \
+              <(grep -v "^##cmdline\|^##regions_bed" "$golden_file") \
+              <(grep -v "^##cmdline\|^##regions_bed" "$docker_file"); then
+              echo "PASS: $name"
+            else
+              echo "FAIL: $name differs from golden file"
+              PASS=false
+            fi
+          done
+          $PASS
