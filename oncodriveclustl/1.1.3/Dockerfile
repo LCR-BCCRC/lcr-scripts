@@ -7,5 +7,5 @@ RUN mamba create --yes --name env \
         "oncodriveclustl=1.1.3" \
     && mamba clean --all --yes
 ENV PATH=/opt/conda/envs/env/bin:$PATH
-ENV HOME=/root
+ENV HOME=/tmp
 CMD ["/bin/bash"]
