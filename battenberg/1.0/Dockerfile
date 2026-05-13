@@ -5,7 +5,7 @@ RUN mamba install --yes --name base \
         --channel conda-forge \
         --channel bioconda \
         --channel r \
-        "r-base=3.6.3" \
+        r-base \
         r-devtools \
         r-optparse \
         r-biocmanager \
