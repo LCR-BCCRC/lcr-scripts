@@ -6,6 +6,8 @@ RUN mamba install --yes --name base \
         --channel conda-forge \
         ucsc-liftover \
         perl \
+        curl \
+        bc \
     && rm -rf /opt/conda/pkgs/*
 
 CMD ["/bin/bash"]
