@@ -8,10 +8,13 @@ PASS=true
 check() {
     local desc="$1"
     local cmd="$2"
-    if eval "$cmd" > /dev/null 2>&1; then
+    local output
+    output=$(eval "$cmd" 2>&1)
+    if [ $? -eq 0 ]; then
         echo "PASS: $desc"
     else
         echo "FAIL: $desc"
+        echo "$output" | sed 's/^/  /'
         PASS=false
     fi
 }
