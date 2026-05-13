@@ -4,20 +4,10 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 RUN mamba install --yes --name base \
         --channel conda-forge \
         --channel bioconda \
-        --channel r \
         r-base \
         r-devtools \
-        r-optparse \
-        r-biocmanager \
-        r-ggplot2 \
-        r-doparallel \
-        r-foreach \
-        r-gridextra \
-        r-reshape2 \
-        r-gtools \
-        r-rcolorbrewer \
         "impute2=2.3.2" \
-        "cancerit-allelecount=4.0.2" \
+        cancerit-allelecount \
         parallel \
         perl \
     && rm -rf /opt/conda/pkgs/*
