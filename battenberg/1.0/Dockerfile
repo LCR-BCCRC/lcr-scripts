@@ -5,14 +5,14 @@ RUN mamba install --yes --name base \
         --channel conda-forge \
         --channel bioconda \
         r-base \
-        r-devtools \
+        r-remotes \
         "impute2=2.3.2" \
         cancerit-allelecount \
         parallel \
         perl \
     && rm -rf /opt/conda/pkgs/*
 
-RUN R --vanilla -q -e 'devtools::install_github("morinlab/ascat/ASCAT", dependencies = TRUE, upgrade = "never")' \
-    && R --vanilla -q -e 'devtools::install_github("morinlab/battenberg", dependencies = FALSE, upgrade = "never")'
+RUN R --vanilla -q -e 'remotes::install_github("morinlab/ascat/ASCAT", dependencies = TRUE, upgrade = "never")' \
+    && R --vanilla -q -e 'remotes::install_github("morinlab/battenberg", dependencies = FALSE, upgrade = "never")'
 
 CMD ["/bin/bash"]
