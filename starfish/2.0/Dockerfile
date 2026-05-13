@@ -10,4 +10,6 @@ RUN mamba install --yes --name base \
         rtg-tools \
     && rm -rf /opt/conda/pkgs/*
 
+RUN pip install pyvenn
+
 CMD ["/bin/bash"]
