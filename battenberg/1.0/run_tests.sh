@@ -22,8 +22,8 @@ check() {
 check "alleleCounter is available"       "command -v alleleCounter"
 check "impute2 is available"             "command -v impute2"
 check "Rscript is available"             "command -v Rscript"
-check "R package Battenberg loads"       "Rscript --vanilla -q -e 'library(Battenberg)'"
-check "R package ASCAT loads"            "Rscript --vanilla -q -e 'library(ASCAT)'"
-check "R package optparse loads"         "Rscript --vanilla -q -e 'library(optparse)'"
+check "R package Battenberg loads"       "Rscript --vanilla -e 'library(Battenberg)'"
+check "R package ASCAT loads"            "Rscript --vanilla -e 'library(ASCAT)'"
+check "R package optparse loads"         "Rscript --vanilla -e 'library(optparse)'"
 
 $PASS
