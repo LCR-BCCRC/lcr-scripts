@@ -6,6 +6,7 @@ RUN mamba install --yes --name base \
         --channel bioconda \
         r-base \
         r-remotes \
+        r-optparse \
         "impute2=2.3.2" \
         cancerit-allelecount \
         parallel \
