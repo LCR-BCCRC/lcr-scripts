@@ -7,6 +7,7 @@ RUN mamba install --yes --name base \
         r-base \
         r-remotes \
         r-optparse \
+        "r-readr=1.3.1" \
         "impute2=2.3.2" \
         cancerit-allelecount \
         parallel \
