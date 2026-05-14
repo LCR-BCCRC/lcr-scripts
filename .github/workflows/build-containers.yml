@@ -106,8 +106,10 @@ jobs:
             exit 0
           fi
           PASS=true
-          for golden_file in "$GOLDEN"/*.vcf; do
+          for golden_file in "$GOLDEN"/*; do
+            [ -f "$golden_file" ] || continue
             name=$(basename "$golden_file")
+            [[ "$name" == *.log ]] && continue
             docker_file="$DOCKER/$name"
             if [ ! -f "$docker_file" ]; then
               echo "FAIL: $name missing from Docker output"
