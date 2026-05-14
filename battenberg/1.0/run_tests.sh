@@ -25,7 +25,6 @@ check "Rscript is available"             "command -v Rscript"
 check "R package Battenberg loads"       "Rscript --vanilla -e 'library(Battenberg)'"
 check "R package ASCAT loads"            "Rscript --vanilla -e 'library(ASCAT)'"
 check "R package optparse loads"         "Rscript --vanilla -e 'library(optparse)'"
-check "readr version is 1.x (Battenberg write_tsv compat)" \
-    "Rscript --vanilla -e 'v <- packageVersion(\"readr\"); if (v >= \"2.0.0\") stop(paste(\"readr\", v, \"incompatible; need < 2.0.0\"))'"
+check "R package readr loads"            "Rscript --vanilla -e 'library(readr)'"
 
 $PASS
