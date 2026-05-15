@@ -21,7 +21,8 @@ hg38_blacklist="src/blacklisted.hg38.bed"
 grch37_blacklist="src/blacklisted.grch37.bed"
 
 in_dir="tests/input"
-out_dir="tests/output"
+out_dir="${1:-tests/output}"
+mkdir -p "$out_dir"
 
 echo "testing seg mode"
 ./fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments.seg $hg38_blacklist $out_dir/sequenza_segments.filled.seg Sequenza_SAMPLE1 SEG
