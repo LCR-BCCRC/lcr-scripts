@@ -25,10 +25,10 @@ out_dir="${1:-tests/output}"
 mkdir -p "$out_dir"
 
 echo "testing seg mode"
-./fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments.seg $hg38_blacklist $out_dir/sequenza_segments.filled.seg Sequenza_SAMPLE1 SEG
+bash fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments.seg $hg38_blacklist $out_dir/sequenza_segments.filled.seg Sequenza_SAMPLE1 SEG
 
 echo "testing subclones mode"
-./fill_segments.sh $hg38_chrArms $in_dir/SP116712_subclones.txt $hg38_blacklist $out_dir/SP116712_subclones.filled.txt SP116712 subclones
+bash fill_segments.sh $hg38_chrArms $in_dir/SP116712_subclones.txt $hg38_blacklist $out_dir/SP116712_subclones.filled.txt SP116712 subclones
 
 echo "testing sequenza mode"
-./fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments_with_NA.txt  $hg38_blacklist $out_dir/sequenza_segments_with_NA.filled.txt Sequenza_SAMPLE2 subclones
+bash fill_segments.sh $hg38_chrArms $in_dir/sequenza_segments_with_NA.txt  $hg38_blacklist $out_dir/sequenza_segments_with_NA.filled.txt Sequenza_SAMPLE2 subclones
