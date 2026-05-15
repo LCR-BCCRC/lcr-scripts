@@ -14,6 +14,6 @@ RUN mamba install --yes --name base \
     && rm -rf /opt/conda/pkgs/*
 
 RUN R --vanilla -q -e 'remotes::install_github("morinlab/ascat/ASCAT", lib="/opt/conda/lib/R/library", dependencies = TRUE, upgrade = "never")' \
-    && R --vanilla -q -e 'remotes::install_github("morinlab/battenberg@db2fbb7", lib="/opt/conda/lib/R/library", dependencies = TRUE, upgrade = "never")'
+    && R --vanilla -q -e 'remotes::install_github("morinlab/battenberg@7a74124", lib="/opt/conda/lib/R/library", dependencies = TRUE, upgrade = "never")'
 
 CMD ["/bin/bash"]
