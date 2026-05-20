@@ -1,7 +1,7 @@
 FROM condaforge/mambaforge:latest
 LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
-RUN mamba install --yes --name base \
+RUN mamba create --yes --name env \
         --channel bioconda \
         --channel conda-forge \
         "python=3.8" \
@@ -10,7 +10,8 @@ RUN mamba install --yes --name base \
         "bioconductor-dss=2.48.0" \
         "r-base=4.3.3" \
         "r-sys" \
-    && pip install nanomethphase==1.0 \
-    && rm -rf /opt/conda/pkgs/*
-
+        "pip" \
+    && mamba clean --all --yes \
+    && /opt/conda/envs/env/bin/pip install --no-cache-dir nanomethphase==1.0
+ENV PATH=/opt/conda/envs/env/bin:$PATH
 CMD ["/bin/bash"]
