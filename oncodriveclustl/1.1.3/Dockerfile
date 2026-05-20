@@ -7,6 +7,7 @@ RUN mamba create --yes --name env \
         "python=3.6" \
         "oncodriveclustl=1.1.3" \
         "libgomp" \
+        "libtiff" \
     && mamba clean --all --yes
 ENV PATH=/opt/conda/envs/env/bin:$PATH
 ENV HOME=/tmp
