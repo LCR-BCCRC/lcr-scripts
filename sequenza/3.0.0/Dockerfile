@@ -5,6 +5,7 @@ RUN mamba install --yes --name base \
         --channel bioconda \
         --channel conda-forge \
         "r-sequenza=3.0.0" \
+        "r-iotools=0.3_1" \
         r-remotes \
     && rm -rf /opt/conda/pkgs/*
 
