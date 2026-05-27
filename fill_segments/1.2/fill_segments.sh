@@ -139,13 +139,13 @@ fi
 # Prefix of output is set to match that of the chrom arms file earlier in this script
 # so we can use $ARM_IS_PREFIXED as a way to tell if the output is prefixed
 if [[ "$MODE" == *"SEG"* && "$ARM_IS_PREFIXED" == *"chr"* ]]; then
-    awk -F"\t" -v OFS="\t" '$2 ~ /^chrom$|^chr[0-9]{1,2}$|^chr(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
+    awk -F"\t" -v OFS="\t" '$2 ~ /^chrom$|^chr[0-9][0-9]?$|^chr(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
 elif [[ "$MODE" == *"SEG"* && ! "$ARM_IS_PREFIXED" == *"chr"* ]]; then
-    awk -F"\t" -v OFS="\t" '$2 ~ /^chrom$|^[0-9]{1,2}$|^(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
+    awk -F"\t" -v OFS="\t" '$2 ~ /^chrom$|^[0-9][0-9]?$|^(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
 elif [[ ! "$MODE" == *"SEG"* && "$ARM_IS_PREFIXED" == *"chr"* ]]; then
-    awk -F"\t" -v OFS="\t" '$1 ~ /^chromosome$|^chr$|^chr[0-9]{1,2}$|^chr(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
+    awk -F"\t" -v OFS="\t" '$1 ~ /^chromosome$|^chr$|^chr[0-9][0-9]?$|^chr(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
 elif [[ ! "$MODE" == *"SEG"* && ! "$ARM_IS_PREFIXED" == *"chr"* ]]; then
-    awk -F"\t" -v OFS="\t" '$1 ~ /^chromosome$|^chr$|^[0-9]{1,2}$|^(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
+    awk -F"\t" -v OFS="\t" '$1 ~ /^chromosome$|^chr$|^[0-9][0-9]?$|^(X|Y)$/ {print}' $RESULTS_PATH.allchrms.seg > $RESULTS_PATH
 fi
 
 
