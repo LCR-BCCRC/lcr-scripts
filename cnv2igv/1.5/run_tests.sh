@@ -25,6 +25,7 @@ echo "testing sequenza mode"
 
 echo "testing purecn mode"
 ./cnv2igv.py  --mode purecn $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.seg
+./cnv2igv.py  --mode purecn $in_dir/purecn_grch37_dnacopy.seg > $out_dir/purecn_grch37_dnacopy.seg
 ./cnv2igv.py  --mode purecn --preserve_log_ratio $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.preserved.seg
 
 echo "testing sample_id override"

@@ -82,14 +82,32 @@ class PurecnParser(Parser):
         super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
-        toks = line.rstrip('\n').split('\t')
-        # expect header like: ID    chromosome  start  end ...
-        return len(toks) > 1 and (toks[0].lower() in ('id', 'sample')
-                                  or toks[1].lower().startswith('chrom'))
+        # expect header: ID chrom loc.start loc.end num.mark seg.mean C
+        line_sample = line.split('\t', 1)[0]
+        if line_sample.startswith('"'):
+            line_sample = line_sample[1:]
+        if line_sample.endswith('"'):
+            line_sample = line_sample[0:-1]
+        if line_sample == "ID":
+            return True
+        else:
+            return False
 
     def parse_segment(self, line, logr_type, mode):
         t = line.rstrip('\n').split('\t')
         line_sample, chrm, start, end = t[0:4]
+        
+        # PureCN enumerates chroms - change them back to X and Y
+        chrm = str(chrm)
+        if chrm == "chr23":
+            chrm = "chrX"
+        elif chrm == "23":
+            chrm = "X"
+        elif chrm == "chr24":
+            chrm = "chrY"
+        elif chrm == "24":
+            chrm = "Y"
+        
         cn = t[6]
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else t[5]
         sample_id = self.resolve_sample(line_sample)
