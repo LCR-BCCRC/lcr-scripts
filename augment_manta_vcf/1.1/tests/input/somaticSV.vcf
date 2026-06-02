@@ -1,0 +1,13 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=PR,Number=.,Type=Integer,Description="Spanning paired-read support for the ref and alt alleles in the order listed">
+##FORMAT=<ID=SR,Number=.,Type=Integer,Description="Split reads for the ref and alt alleles in the order listed">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the structural variant described in this record">
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=MATEID,Number=.,Type=String,Description="ID of mate breakend">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NORMAL_PLACEHOLDER	TUMOUR_PLACEHOLDER
+chr1	10000	MantaDEL:0:0:0:0:0:0	N	<DEL>	.	PASS	END=20000;SVLEN=-10000;SVTYPE=DEL	PR:SR	10,0:5,0	5,3:2,1
+chr1	50000	MantaBND:1:0:1:0:0:0:0	N	N[chr2:60000[	.	PASS	SVTYPE=BND;END=50000;MATEID=MantaBND:1:0:1:0:0:0:1	PR:SR	15,0:8,0	3,5:1,2

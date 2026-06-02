@@ -1,0 +1,19 @@
+##fileformat=VCFv4.1
+##FILTER=<ID=PASS,Description="All filters passed">
+##FORMAT=<ID=PR,Number=.,Type=Integer,Description="Spanning paired-read support for the ref and alt alleles in the order listed">
+##FORMAT=<ID=SR,Number=.,Type=Integer,Description="Split reads for the ref and alt alleles in the order listed">
+##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the structural variant described in this record">
+##INFO=<ID=SVLEN,Number=.,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">
+##INFO=<ID=MATEID,Number=.,Type=String,Description="ID of mate breakend">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##FORMAT=<ID=TR,Number=.,Type=Float,Description="Total read support (SR + PR) for the ref and alt alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Float,Description="Total read support (SR + PR) for the ref and first alt allele combined">
+##FORMAT=<ID=VAF,Number=1,Type=Float,Description="Variant allele fraction for the first alt allele">
+##INFO=<ID=REGIONS,Number=.,Type=String,Description="Overlapping regions from the given BED files (see `##regions_bed` header lines)">
+##regions_bed=/home/rmorin/lcr-scripts/augment_manta_vcf/1.1/tests/input/regions.bed
+##cmdline=/home/rmorin/lcr-scripts/augment_manta_vcf/1.1/augment_manta_vcf.py --tumour_id TUMOUR_SAMPLE --normal_id NORMAL_SAMPLE tests/input/somaticSV.vcf tests/output/somaticSV.with_regions.augmented.vcf --bed_regions tests/input/regions.bed
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	NORMAL_SAMPLE	TUMOUR_SAMPLE
+chr1	10000	MantaDEL:0:0:0:0:0:0	N	<DEL>	.	PASS	END=20000;SVLEN=-10000;SVTYPE=DEL;REGIONS=BCL2,BCL6	PR:SR:TR:DP:VAF	10,0:5,0:15,0:15:0	5,3:2,1:7,4:11:0.364
+chr1	50000	MantaBND:1:0:1:0:0:0:0	N	N[chr2:60000[	.	PASS	SVTYPE=BND;END=50000;MATEID=MantaBND:1:0:1:0:0:0:1;REGIONS=IGH	PR:SR:TR:DP:VAF	15,0:8,0:23,0:23:0	3,5:1,2:4,7:11:0.636
