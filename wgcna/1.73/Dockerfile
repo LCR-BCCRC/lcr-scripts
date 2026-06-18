@@ -1,8 +1,10 @@
-FROM condaforge/mambaforge:latest
+FROM condaforge/miniforge3:latest
 LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 RUN mamba install --yes --name base \
         --channel bioconda \
         --channel conda-forge \
+        --channel defaults \
+        --strict-channel-priority \
         r-base \
         r-readr \
         r-dplyr \
