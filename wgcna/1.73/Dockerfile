@@ -1,10 +1,8 @@
-FROM condaforge/miniforge3:latest
+FROM condaforge/mambaforge:latest
 LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 RUN mamba install --yes --name base \
         --channel bioconda \
         --channel conda-forge \
-        --channel defaults \
-        --strict-channel-priority \
         r-base \
         r-readr \
         r-dplyr \
@@ -13,12 +11,15 @@ RUN mamba install --yes --name base \
         r-tidyr \
         r-matrixstats \
         r-remotes \
+    && mamba clean --all --yes
+RUN mamba install --yes --name base \
+        --channel bioconda \
+        --channel conda-forge \
         bioconductor-deseq2 \
         bioconductor-limma \
         bioconductor-biocparallel \
         bioconductor-wgcna \
     && mamba clean --all --yes
-
 ARG GITHUB_PAT=""
 RUN Rscript -e "remotes::install_github('morinlab/GAMBLR.helpers', ref = 'master', upgrade = 'never')"
 CMD ["/bin/bash"]
