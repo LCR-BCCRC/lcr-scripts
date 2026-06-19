@@ -17,9 +17,9 @@ RUN micromamba install --yes --name base \
         r-ggthemes \
         r-magrittr \
         r-stringr \
-        bioconductor-deseq2 = 1.46.0 \
+        bioconductor-deseq2=1.46.0 \
         bioconductor-limma \
-        bioconductor-biocparallel = 1.40.0 \
+        bioconductor-biocparallel=1.40.0 \
         r-wgcna=1.73 \
         git \
         make \
