@@ -33,17 +33,16 @@ RUN micromamba install --yes --name base \
         pkg-config \
     && micromamba clean --all --yes
     
-RUN Rscript -e "BiocManager::install( \
+RUN micromamba run --name base Rscript -e "BiocManager::install( \
         'motifbreakR', \
         version = '3.20', \
         ask = FALSE, \
         update = FALSE \
-    )"    
-
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
+    )"
 
 ARG GAMBLR_DATA_REF=master
-RUN Rscript -e "remotes::install_github( \
+
+RUN micromamba run --name base Rscript -e "remotes::install_github( \
         'morinlab/GAMBLR.data', \
         ref = '${GAMBLR_DATA_REF}', \
         dependencies = NA, \
