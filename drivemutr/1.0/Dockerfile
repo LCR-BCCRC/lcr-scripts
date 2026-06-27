@@ -17,12 +17,12 @@ RUN micromamba install --yes --name base \
         r-pre \
         r-remotes \
         r-rlang \
+        r-biocmanager \
         bioconductor-biocparallel=1.40.0 \
         bioconductor-biostrings=2.74.0 \
         bioconductor-bsgenome.hsapiens.ucsc.hg19=1.4.3 \
         bioconductor-genomicranges \
         bioconductor-iranges \
-        bioconductor-motifbreakr=2.20.0 \
         bioconductor-motifdb \
         bioconductor-rtracklayer \
         git \
@@ -32,6 +32,13 @@ RUN micromamba install --yes --name base \
         fortran-compiler \
         pkg-config \
     && micromamba clean --all --yes
+    
+RUN Rscript -e "BiocManager::install( \
+        'motifbreakR', \
+        version = '3.20', \
+        ask = FALSE, \
+        update = FALSE \
+    )"    
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
