@@ -17,8 +17,8 @@ RUN micromamba install --yes --name base \
         r-pre \
         r-remotes \
         r-rlang \
-        bioconductor-biocparallel \
-        bioconductor-biostrings \
+        bioconductor-biocparallel=1.40.0 \
+        bioconductor-biostrings=2.74.0 \
         bioconductor-bsgenome.hsapiens.ucsc.hg19 \
         bioconductor-genomicranges \
         bioconductor-iranges \
