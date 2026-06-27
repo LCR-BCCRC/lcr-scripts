@@ -19,10 +19,10 @@ RUN micromamba install --yes --name base \
         r-rlang \
         bioconductor-biocparallel=1.40.0 \
         bioconductor-biostrings=2.74.0 \
-        bioconductor-bsgenome.hsapiens.ucsc.hg19 \
+        bioconductor-bsgenome.hsapiens.ucsc.hg19=1.4.3 \
         bioconductor-genomicranges \
         bioconductor-iranges \
-        bioconductor-motifbreakr \
+        bioconductor-motifbreakr=2.20.0 \
         bioconductor-motifdb \
         bioconductor-rtracklayer \
         git \
