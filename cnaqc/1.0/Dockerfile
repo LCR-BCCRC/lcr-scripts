@@ -12,6 +12,26 @@ RUN mamba install --yes --name base \
         r-data.table \
         r-ggpubr \
         r-biocmanager \
+        r-sass \
+        r-tidyr \
+        r-stringr \
+        r-purrr \
+        r-cowplot \
+        r-patchwork \
+        r-scales \
+        r-magrittr \
+        r-htmltools \
+        r-knitr \
+        r-rmarkdown \
+        r-curl \
+        r-httr \
+        r-xml2 \
+        r-jsonlite \
+        r-crayon \
+        r-cli \
+        r-glue \
+        r-fs \
+        r-withr \
         zlib \
         libuv \
         libcurl \
