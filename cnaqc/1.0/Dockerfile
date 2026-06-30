@@ -7,31 +7,35 @@ RUN mamba install --yes --name base \
         "r-base=4.3" \
         r-remotes \
         r-optparse \
+        r-crayon \
+        r-ggpubr \
+        r-ggrepel \
+        r-vcfr \
+        r-clisymbols \
+        r-rcolorbrewer \
+        r-gtools \
+        r-magrittr \
         r-dplyr \
         r-ggplot2 \
+        r-cli \
+        r-tibble \
+        r-tidyr \
+        r-akima \
+        r-cowplot \
+        r-ggsci \
+        r-progress \
+        r-readr \
+        r-r.utils \
+        r-scales \
         r-data.table \
-        r-ggpubr \
         r-biocmanager \
         r-sass \
-        r-tidyr \
-        r-stringr \
-        r-purrr \
-        r-cowplot \
-        r-patchwork \
-        r-scales \
-        r-magrittr \
-        r-htmltools \
-        r-knitr \
-        r-rmarkdown \
-        r-curl \
-        r-httr \
-        r-xml2 \
-        r-jsonlite \
-        r-crayon \
-        r-cli \
-        r-glue \
-        r-fs \
-        r-withr \
+        bioconductor-rhtslib \
+        bioconductor-rsamtools \
+        bioconductor-genomicranges \
+        bioconductor-variantannotation \
+        bioconductor-annotationdbi \
+        bioconductor-complexheatmap \
         zlib \
         libuv \
         libcurl \
