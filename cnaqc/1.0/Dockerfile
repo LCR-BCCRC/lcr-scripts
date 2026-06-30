@@ -12,6 +12,7 @@ RUN mamba install --yes --name base \
         r-data.table \
         r-ggpubr \
         r-biocmanager \
+        zlib \
     && rm -rf /opt/conda/pkgs/*
 
 RUN R --vanilla -q -e 'remotes::install_github("caravagnalab/CNAqc", lib="/opt/conda/lib/R/library", dependencies = TRUE, upgrade = "never")'
