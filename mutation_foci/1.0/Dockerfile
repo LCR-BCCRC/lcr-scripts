@@ -3,7 +3,7 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 RUN mamba install --yes --name base \
         --channel conda-forge \
         --channel bioconda \
-        'r-base>=4.1' \
+        'r-base=4.3' \
         r-readr \
         r-dplyr \
         r-purrr \
