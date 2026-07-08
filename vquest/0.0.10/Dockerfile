@@ -10,7 +10,7 @@ RUN mamba create --yes --name env \
         "pip" \
     && mamba clean --all --yes \
     && /opt/conda/envs/env/bin/pip install \
-        "vquest" \
+        "git+https://github.com/shawhahnlab/vquest.git@0c01f498ba01f4f289e58155c198f16dc7a277ac" \
         "lxml_html_clean"
 ENV PATH=/opt/conda/envs/env/bin:$PATH
 CMD ["/bin/bash"]
