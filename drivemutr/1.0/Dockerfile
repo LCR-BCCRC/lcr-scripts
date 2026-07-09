@@ -18,6 +18,11 @@ RUN micromamba install --yes --name base \
         r-remotes \
         r-rlang \
         r-biocmanager \
+        r-devtools \
+        r-dt \
+        bioconductor-variantannotation \
+        bioconductor-motifstack \
+        bioconductor-gviz \
         bioconductor-biocparallel=1.40.0 \
         bioconductor-biostrings=2.74.0 \
         bioconductor-bsgenome.hsapiens.ucsc.hg19=1.4.3 \
@@ -34,8 +39,16 @@ RUN micromamba install --yes --name base \
         pkg-config \
     && micromamba clean --all --yes
     
-RUN micromamba run --name base R --vanilla -q -e 'BiocManager::install("motifbreakR", version = "3.20", ask = FALSE, update = FALSE)'
+RUN micromamba run --name base R --vanilla -q -e 'devtools::install_github( \
+    "Simon-Coetzee/motifBreakR", \
+    dependencies = FALSE, \
+    upgrade = "never" \
+)'
 
-RUN micromamba run --name base R --vanilla -q -e 'remotes::install_github("morinlab/GAMBLR.data", lib="/opt/conda/lib/R/library", dependencies = TRUE, upgrade = "never")'
+RUN micromamba run --name base R --vanilla -q -e 'options(timeout = 3600); devtools::install_github( \
+    "morinlab/GAMBLR.data", \
+    dependencies = FALSE, \
+    upgrade = "never" \
+)'
 
 CMD ["/bin/bash"]
