@@ -26,6 +26,7 @@ RUN micromamba install --yes --name base \
         bioconductor-motifdb \
         bioconductor-rtracklayer \
         git \
+        jq \
         make \
         c-compiler \
         cxx-compiler \

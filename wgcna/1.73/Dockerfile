@@ -22,6 +22,7 @@ RUN micromamba install --yes --name base \
         bioconductor-biocparallel=1.40.0 \
         r-wgcna=1.73 \
         git \
+        jq \
         make \
         c-compiler \
         cxx-compiler \
