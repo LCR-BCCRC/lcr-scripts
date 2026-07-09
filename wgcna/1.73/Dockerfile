@@ -30,16 +30,5 @@ RUN micromamba install --yes --name base \
         pkg-config \
     && micromamba clean --all --yes
 
-# Activate the base Conda environment during subsequent RUN instructions.
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
-
-# Pinning a commit is more reproducible than using master.
-ARG GAMBLR_HELPERS_REF=fdde14c
-
-RUN Rscript -e "remotes::install_github( \
-        'morinlab/GAMBLR.helpers', \
-        ref = '${GAMBLR_HELPERS_REF}', \
-        dependencies = NA, \
-        upgrade = 'never' \
-    )"
+RUN micromamba run --name base R --vanilla -q -e 'remotes::install_github("morinlab/GAMBLR.helpers@fdde14c", lib="/opt/conda/lib/R/library", dependencies = TRUE, upgrade = "never")'
 CMD ["/bin/bash"]
