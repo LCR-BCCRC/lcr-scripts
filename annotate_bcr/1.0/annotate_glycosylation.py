@@ -132,10 +132,10 @@ FIELDS = [
 
 
 def _sites_str(sites):
-    return ",".join(s[0] for s in sites) if sites else "N/A"
+    return ",".join(s[0] for s in sites) if sites else "NA"
 
 def _motifs_str(sites):
-    return ",".join(s[1] for s in sites) if sites else "N/A"
+    return ",".join(s[1] for s in sites) if sites else "NA"
 
 
 def main():
@@ -160,16 +160,16 @@ def main():
 
             if not entry:
                 writer.writerow({
-                    "sequence_id": seq_id, "aa_sequence": "N/A",
+                    "sequence_id": seq_id, "aa_sequence": "NA",
                     "num_glycosylation_sites": 0,
-                    "glycosylation_imgt_positions": "N/A",
-                    "glycosylation_motifs": "N/A",
+                    "glycosylation_imgt_positions": "NA",
+                    "glycosylation_motifs": "NA",
                     "num_acquired_glycosylation_sites": 0,
-                    "acquired_glycosylation_imgt_positions": "N/A",
-                    "germline_aa_sequence": "N/A",
+                    "acquired_glycosylation_imgt_positions": "NA",
+                    "germline_aa_sequence": "NA",
                     "num_germline_glycosylation_sites": 0,
-                    "germline_glycosylation_imgt_positions": "N/A",
-                    "germline_glycosylation_motifs": "N/A",
+                    "germline_glycosylation_imgt_positions": "NA",
+                    "germline_glycosylation_motifs": "NA",
                 })
                 continue
 
@@ -191,7 +191,7 @@ def main():
                 "glycosylation_motifs": _motifs_str(query_sites),
                 "num_acquired_glycosylation_sites": len(acquired_sites),
                 "acquired_glycosylation_imgt_positions": _sites_str(acquired_sites),
-                "germline_aa_sequence": gl_seq if gl_seq else "N/A",
+                "germline_aa_sequence": gl_seq if gl_seq else "NA",
                 "num_germline_glycosylation_sites": len(germline_sites),
                 "germline_glycosylation_imgt_positions": _sites_str(germline_sites),
                 "germline_glycosylation_motifs": _motifs_str(germline_sites),

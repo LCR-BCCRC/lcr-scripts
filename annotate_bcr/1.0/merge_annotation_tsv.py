@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
 Left-join an annotation TSV onto a base TSV by a shared key column.
-Rows in the base table that have no match in the annotation table get 'N/A'
+Rows in the base table that have no match in the annotation table get 'NA'
 for every annotation column.
 
-When --base_key and --annot_key differ, the base key value is passed through
-_extract_mixcr_clone_id before the annotation lookup. This handles the case
-where the base uses an AIRR sequence_id (which for MiXCR inputs encodes the
-cloneId in compound format "cloneId_N_readFraction_F_readCount_C") while the
-annotation uses the bare cloneId column. For non-MiXCR sequence_ids the
-function is a no-op.
+When --base_key and --annot_key differ, _extract_mixcr_clone_id is applied
+to BOTH the annotation key (when building the lookup dict) and the base key
+(at query time). This normalises MiXCR compound AIRR sequence_ids of the form
+"cloneId_N_readFraction_F_readCount_C" to the bare cloneId integer regardless
+of which side of the join carries the compound key. For non-MiXCR ids the
+function is a no-op so igseqr inputs are unaffected.
 
 When --sample_id is supplied, sample_id is injected as the first column (if
 absent) and all columns are reordered into a harmonised schema that is
@@ -182,9 +182,11 @@ def main():
                         help="Sample ID wildcard value; triggers column reordering when supplied")
     args = parser.parse_args()
 
-    # When key columns differ, transform the base key value at lookup time so
-    # a compound AIRR sequence_id resolves to the annotation's bare cloneId.
-    transform_base_key = args.base_key != args.annot_key
+    # When key columns differ, normalise both sides via _extract_mixcr_clone_id
+    # so that compound AIRR sequence_ids and bare cloneIds resolve to the same
+    # key regardless of which table carries the compound form.
+    transform_keys = args.base_key != args.annot_key
+    key_fn = _extract_mixcr_clone_id if transform_keys else (lambda x: x)
 
     # Read annotation fully, keeping all non-key columns.
     annot, all_annot_cols = {}, []
@@ -198,7 +200,7 @@ def main():
             )
         all_annot_cols = [c for c in reader.fieldnames if c != args.annot_key]
         for row in reader:
-            annot[row[args.annot_key]] = {c: row[c] for c in all_annot_cols}
+            annot[key_fn(row[args.annot_key])] = {c: row[c] for c in all_annot_cols}
 
     with open(args.base) as fh_in, open(args.output, "w", newline="") as fh_out:
         reader = csv.DictReader(fh_in, delimiter="\t")
@@ -247,13 +249,12 @@ def main():
                                 extrasaction="ignore")
         writer.writeheader()
         for row in reader:
-            lookup = (_extract_mixcr_clone_id(row[args.base_key])
-                      if transform_base_key else row[args.base_key])
+            lookup = key_fn(row[args.base_key])
             matched = annot.get(lookup)
             row.update(
                 {c: matched[c] for c in annot_cols}
                 if matched is not None
-                else {c: "N/A" for c in annot_cols}
+                else {c: "NA" for c in annot_cols}
             )
             if args.sample_id is not None:
                 row.setdefault("sample_id", args.sample_id)
