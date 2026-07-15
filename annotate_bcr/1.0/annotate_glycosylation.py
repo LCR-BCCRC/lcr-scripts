@@ -96,6 +96,23 @@ def classify_sites(query_sites, germline_sites):
     return [(pos, motif) for pos, motif in query_sites if pos not in germline_positions]
 
 
+def _make_lookup_fn(seq_lookup):
+    """
+    Return a lookup callable for seq_lookup that handles V-QUEST's fixed-length ID
+    truncation. V-QUEST truncates input FASTA headers to 49 characters in AIRR output;
+    if all TSV keys are the same length, fall back to truncating the query ID on a miss.
+    """
+    if not seq_lookup:
+        return seq_lookup.get
+    lengths = {len(k) for k in seq_lookup}
+    if len(lengths) == 1:
+        trunc = next(iter(lengths))
+        def _lookup(seq_id, _d=seq_lookup, _t=trunc):
+            return _d.get(seq_id) or _d.get(seq_id[:_t])
+        return _lookup
+    return seq_lookup.get
+
+
 # ── I/O ───────────────────────────────────────────────────────────────────────
 
 def read_fasta(path):
@@ -150,13 +167,14 @@ def main():
 
     fasta_seqs  = read_fasta(args.fasta)
     seq_lookup  = load_sequences_by_id(args.source_tsv)
+    lookup      = _make_lookup_fn(seq_lookup)
 
     with open(args.output, "w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=FIELDS, delimiter="\t")
         writer.writeheader()
 
         for seq_id in fasta_seqs:
-            entry = seq_lookup.get(seq_id)
+            entry = lookup(seq_id)
 
             if not entry:
                 writer.writerow({
