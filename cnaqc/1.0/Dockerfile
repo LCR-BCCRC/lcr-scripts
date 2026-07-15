@@ -42,6 +42,7 @@ RUN mamba install --yes --name base \
         openssl \
         libxml2 \
         libgit2 \
+        jq \
     && rm -rf /opt/conda/pkgs/*
 
 RUN R --vanilla -q -e 'remotes::install_github("caravagnalab/CNAqc", lib="/opt/conda/lib/R/library", dependencies = TRUE, upgrade = "never")'
