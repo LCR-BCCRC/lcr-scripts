@@ -45,8 +45,8 @@ def load_sequences_by_id(tsv_path):
         reader = csv.DictReader(fh, delimiter="\t")
         for row in reader:
             seq_id = row["sequence_id"]
-            aa_seq  = row.get("sequence_alignment_aa",  "").strip().replace("-", "")
-            gl_seq  = row.get("germline_alignment_aa",  "").strip().replace("-", "")
+            aa_seq  = row.get("sequence_alignment_aa",  "").strip().replace("-", "").replace(".", "")
+            gl_seq  = row.get("germline_alignment_aa",  "").strip().replace("-", "").replace(".", "")
             if aa_seq:
                 data[seq_id] = {"seq": aa_seq, "germline": gl_seq}
     return data
