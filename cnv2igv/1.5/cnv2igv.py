@@ -82,14 +82,32 @@ class PurecnParser(Parser):
         super().__init__(stream, sample, mode, loh_type, logr_type)
 
     def is_header(self, line):
-        toks = line.rstrip('\n').split('\t')
-        # expect header like: ID    chromosome  start  end ...
-        return len(toks) > 1 and (toks[0].lower() in ('id', 'sample')
-                                  or toks[1].lower().startswith('chrom'))
+        # expect header: ID chrom loc.start loc.end num.mark seg.mean C
+        line_sample = line.split('\t', 1)[0]
+        if line_sample.startswith('"'):
+            line_sample = line_sample[1:]
+        if line_sample.endswith('"'):
+            line_sample = line_sample[0:-1]
+        if line_sample == "ID":
+            return True
+        else:
+            return False
 
     def parse_segment(self, line, logr_type, mode):
         t = line.rstrip('\n').split('\t')
         line_sample, chrm, start, end = t[0:4]
+        
+        # PureCN enumerates chroms - change them back to X and Y
+        chrm = str(chrm)
+        if chrm == "chr23":
+            chrm = "chrX"
+        elif chrm == "23":
+            chrm = "X"
+        elif chrm == "chr24":
+            chrm = "chrY"
+        elif chrm == "24":
+            chrm = "Y"
+        
         cn = t[6]
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else t[5]
         sample_id = self.resolve_sample(line_sample)
@@ -99,8 +117,14 @@ class CNVKitParser(Parser):
     def __init__(self, stream, sample, mode, loh_type, logr_type):
         super().__init__(stream, sample, mode, loh_type, logr_type)
 
+    # Expected columns can change based on whether allele-specific
+    # copy numbers could be inferred from the VCF
+    # if yes:
+    # chromosome  start  end  gene  log2  baf  cn  cn1  cn2  depth  probes  weight
+    # if no:
+    # chromosome  start  end  gene  log2  cn  depth  probes  weight
+
     def is_header(self, line):
-        # expect header like: chromosome, start, end, gene, log2, baf, cn, ...
         chrm = line.split('\t', 1)[0]
         if chrm.startswith('"'):
             chrm = chrm[1:]
@@ -118,11 +142,18 @@ class CNVKitParser(Parser):
             chrm = chrm[1:]
         if chrm.endswith('"'):
             chrm = chrm[0:-1]
-        cn = _line[6]
-        cn1 = None if _line[7] == '' else _line[7]
-        cn2 =  None if _line[8] == '' else _line[8]
-        loh_flag = self.get_loh_flag(cn, cn1, cn2)
-        logr = self.calculate_logratio(cn) if logr_type == "corrected" else _line[4]
+        if len(_line) == 12:
+            cn = _line[6]
+            cn1 = None if _line[7] == '' else _line[7]
+            cn2 =  None if _line[8] == '' else _line[8]
+            loh_flag = self.get_loh_flag(cn, cn1, cn2)
+            logr = self.calculate_logratio(cn) if logr_type == "corrected" else _line[4]
+        else:
+            cn = _line[5]
+            cn1 = None
+            cn2 =  None
+            loh_flag = self.get_loh_flag(cn, cn1, cn2)
+            logr = self.calculate_logratio(cn) if logr_type == "corrected" else _line[4]
         return(Segment(chrm, start, end, cn, logr, self.sample, mode, loh_flag))
 
     def get_loh_flag(self, cn, cn1, cn2):
