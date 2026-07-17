@@ -10,5 +10,5 @@ RUN mamba install --yes --name base \
         r-ggplot2 \
         "python>=3.9" \
         htslib \
-    && mamba clean --all --yes
+    && rm -rf /opt/conda/pkgs/*
 CMD ["/bin/bash"]
