@@ -65,7 +65,11 @@ def number_with_imgt(aa_seq):
     Align aa_seq to IG/TCR germline HMMs with ANARCI using the IMGT scheme.
     Returns [(pos_tuple, aa), ...] with gap positions removed, or None on failure.
     """
-    results, _, _ = anarci([("seq", aa_seq)], scheme="imgt", output=False)
+    try:
+        results, _, _ = anarci([("seq", aa_seq)], scheme="imgt", output=False)
+    except Exception as exc:
+        print(f"WARNING: ANARCI failed for sequence (len={len(aa_seq)}): {exc}", file=sys.stderr)
+        return None
     if results[0] is None:
         return None
     return [(pos, aa) for pos, aa in results[0][0][0] if aa != "-"]
@@ -108,7 +112,10 @@ def _make_lookup_fn(seq_lookup):
     if len(lengths) == 1:
         trunc = next(iter(lengths))
         def _lookup(seq_id, _d=seq_lookup, _t=trunc):
-            return _d.get(seq_id) or _d.get(seq_id[:_t])
+            hit = _d.get(seq_id)
+            if hit is None and len(seq_id) > _t:
+                hit = _d.get(seq_id[:_t])
+            return hit
         return _lookup
     return seq_lookup.get
 
