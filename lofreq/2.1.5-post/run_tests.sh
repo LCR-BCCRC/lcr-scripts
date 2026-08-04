@@ -32,6 +32,12 @@ mkdir -p "$OUTDIR"
 TMPDIR=$(mktemp -d)
 trap "rm -rf $TMPDIR" EXIT
 
+# lofreq call emits AF=0.300000 while bcftools (used by call-parallel) normalises
+# to AF=0.3. Strip trailing zeros so both paths produce identical output.
+normalize_af() {
+    sed -E 's/AF=([0-9]+\.[0-9]*[1-9])0+/AF=\1/g; s/AF=([0-9]+)\.0+/AF=\1/g'
+}
+
 # ── Build BAM ────────────────────────────────────────────────────────────────
 samtools sort -O BAM -o "$TMPDIR/reads.bam" "$SCRIPT_DIR/tests/input/reads.sam"
 samtools index "$TMPDIR/reads.bam"
@@ -47,7 +53,7 @@ lofreq call \
     -f "$SCRIPT_DIR/tests/input/ref.fa" \
     -o "$TMPDIR/single.vcf" \
     "$TMPDIR/reads_iq.bam"
-grep -v '^##' "$TMPDIR/single.vcf" > "$OUTDIR/single.vcf"
+grep -v '^##' "$TMPDIR/single.vcf" | normalize_af > "$OUTDIR/single.vcf"
 
 # ── Parallel call ─────────────────────────────────────────────────────────────
 echo "Testing parallel lofreq call (bcftools concat path from PR #109)..."
@@ -55,7 +61,7 @@ lofreq call-parallel --pp-threads 2 \
     -f "$SCRIPT_DIR/tests/input/ref.fa" \
     -o "$TMPDIR/parallel.vcf.gz" \
     "$TMPDIR/reads_iq.bam"
-zgrep -v '^##' "$TMPDIR/parallel.vcf.gz" > "$OUTDIR/parallel.vcf"
+zgrep -v '^##' "$TMPDIR/parallel.vcf.gz" | normalize_af > "$OUTDIR/parallel.vcf"
 
 # ── Internal consistency check ───────────────────────────────────────────────
 diff "$OUTDIR/single.vcf" "$OUTDIR/parallel.vcf" \
