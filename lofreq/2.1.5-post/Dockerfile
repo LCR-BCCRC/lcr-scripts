@@ -30,7 +30,7 @@ RUN mamba install --yes --name base \
 #   - bcftools-based VCF merging in lofreq call-parallel (fixes failures with
 #     multi-allelic variants) and masking of non-ACTG IUPAC reference bases
 #   - fix AF computation
-ARG LOFREQ_COMMIT=1528ca8
+ARG LOFREQ_COMMIT=2df3fca
 RUN git clone https://github.com/morinlab/lofreq.git /opt/lofreq_src \
     && cd /opt/lofreq_src \
     && git checkout ${LOFREQ_COMMIT} \
