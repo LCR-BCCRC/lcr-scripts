@@ -10,6 +10,7 @@ RUN mamba create --yes --name env \
         "samtools=1.16.1" \
         "trinity=2.13.2" \
         "git" \
+        "jq" \
     && mamba clean --all --yes \
     && /opt/conda/envs/env/bin/git clone --branch v1.0.1 --depth 1 \
         https://github.com/ForconiLab/IgSeqR.git /tmp/IgSeqR \
