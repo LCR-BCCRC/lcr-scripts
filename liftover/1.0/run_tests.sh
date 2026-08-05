@@ -17,14 +17,17 @@
 OUTDIR="${1:-tests/output}"
 mkdir -p "$OUTDIR"
 
-hg38_chain="data/hg38ToHg19.over.chain.gz"
-grch37_chain="data/hg19ToHg38.over.chain.gz"
-for chain in "$hg38_chain" "$grch37_chain"; do
-    if [ ! -f "$chain" ]; then
-        echo "missing chain file: $chain" >&2
-        exit 1
-    fi
-done
+hg38_chain="hg38ToHg19.over.chain.gz"
+grch37_chain="hg19ToHg38.over.chain.gz"
+if [ ! -f $hg38_chain ]; then
+    echo "downloading hg38ToHg19.over.chain.gz"
+    curl -o hg38ToHg19.over.chain.gz https://hgdownload.soe.ucsc.edu/goldenPath/hg38/liftOver/hg38ToHg19.over.chain.gz
+fi
+
+if [ ! -f $grch37_chain ]; then
+    echo "downloading hg19ToHg38.over.chain.gz"
+    curl -o hg19ToHg38.over.chain.gz https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz
+fi
 
 report_change () {
     echo "$1: $2"
@@ -84,3 +87,7 @@ report_change $IN $IN_SIZE $OUT $OUT_SIZE
 IN="tests/input/battenberg_hg38_with_header.bed"
 OUT="$OUTDIR/battenberg_hg38_with_header.to_grch37.bed"
 ./liftover.sh BED $IN $OUT $hg38_chain YES 0.95
+
+# cleanup downloaded ref files
+rm -f hg38ToHg19.over.chain.gz
+rm -f hg19ToHg38.over.chain.gz
