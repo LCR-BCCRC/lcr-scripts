@@ -22,16 +22,16 @@ RUN mamba install --yes --name base \
         "samtools" \
     && mamba clean -afy
 
-# Build lofreq from source at a specific post-v2.1.5 master commit.
-# This picks up patches that were never included in any tagged release:
-#   - PR #109: bcftools-based VCF merging in parallel mode (fixes failures
-#              with multi-allelic variants), and masking of non-ACTG IUPAC
-#              reference bases (e.g. 'W' at chr17:83129591 in hg38) as 'N'
-#   - PR #126: fix AF computation
-#   - PR #130: fix GSL include error
-#   - PR #155: handle large BAM headers
-ARG LOFREQ_COMMIT=46bd58d
-RUN git clone https://github.com/CSB5/lofreq.git /opt/lofreq_src \
+# Build lofreq from source using the morinlab fork of CSB5/lofreq.
+# This fork adds several fixes on top of v2.1.5 that were never released:
+#   - fixed --continue mode in lofreq somatic: pre-existing normal VCFs in
+#     the output directory are detected correctly without parsing log files
+#   - support for directory path with trailing slash as -o argument
+#   - bcftools-based VCF merging in lofreq call-parallel (fixes failures with
+#     multi-allelic variants) and masking of non-ACTG IUPAC reference bases
+#   - fix AF computation
+ARG LOFREQ_COMMIT=a53cafa
+RUN git clone https://github.com/morinlab/lofreq.git /opt/lofreq_src \
     && cd /opt/lofreq_src \
     && git checkout ${LOFREQ_COMMIT} \
     && ./bootstrap \
