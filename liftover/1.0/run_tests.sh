@@ -26,7 +26,7 @@ fi
 
 if [ ! -f $grch37_chain ]; then
     echo "downloading hg19ToHg38.over.chain.gz"
-    curl -o hg19ToHg38.over.chain.gz https://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/hg19ToHg38.over.chain.gz
+    curl -o hg19ToHg38.over.chain.gz https://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz
 fi
 
 report_change () {
@@ -89,5 +89,5 @@ OUT="$OUTDIR/battenberg_hg38_with_header.to_grch37.bed"
 ./liftover.sh BED $IN $OUT $hg38_chain YES 0.95
 
 # cleanup downloaded ref files
-rm hg38ToHg19.over.chain.gz
-rm hg19ToHg38.over.chain.gz
+rm -f hg38ToHg19.over.chain.gz
+rm -f hg19ToHg38.over.chain.gz

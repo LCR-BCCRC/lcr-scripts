@@ -202,15 +202,35 @@ def main():
             )
         all_annot_cols = [c for c in reader.fieldnames if c != args.annot_key]
         for row in reader:
-            annot[key_fn(row[args.annot_key])] = {c: row[c] for c in all_annot_cols}
+            k = key_fn(row[args.annot_key])
+            if k in annot:
+                print(
+                    f"WARNING: duplicate key '{k}' in {args.annotation}; later entry overwrites earlier.",
+                    file=sys.stderr,
+                )
+            annot[k] = {c: row[c] for c in all_annot_cols}
 
     with open(args.base) as fh_in, open(args.output, "w", newline="") as fh_out:
         reader = csv.DictReader(fh_in, delimiter="\t")
+
+        if args.base_key not in reader.fieldnames:
+            sys.exit(
+                f"ERROR: --base_key '{args.base_key}' not found in {args.base}.\n"
+                f"       Available columns: {', '.join(reader.fieldnames)}\n"
+                f"       Check options.base_id_column in your module config."
+            )
 
         # Only add annotation columns not already present in the base, preventing
         # duplicate column names (e.g. 'sequence' exists in both igseqr source_tsv
         # and AIRR output).
         base_col_set = set(reader.fieldnames)
+        dropped_cols = [c for c in all_annot_cols if c in base_col_set]
+        if dropped_cols:
+            print(
+                f"WARNING: annotation column(s) already present in base and will be skipped: "
+                f"{', '.join(dropped_cols)}",
+                file=sys.stderr,
+            )
         annot_cols = [c for c in all_annot_cols if c not in base_col_set]
 
         raw_header = list(reader.fieldnames) + annot_cols
