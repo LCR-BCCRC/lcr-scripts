@@ -1,20 +1,18 @@
 FROM quay.io/biocontainers/ensembl-vep:100.4--pl526hecda079_0
 LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
-# ensembl-vep=100 cannot be installed via modern conda: its bioconda recipe
-# has a broken Perl dep tree (perl=5.26 required by ensembl-vep conflicts
-# with perl>=5.32 required by perl-bioperl), independent of Python version.
-# Using this pre-built biocontainer (VEP 100.4, Perl 5.26) avoids the
-# conflict entirely.  vcf2maf is installed without its conda deps since VEP
-# and the required Perl modules are already present; samtools is added
-# separately.
-RUN conda install --yes --no-deps \
-        --channel bioconda \
-        "vcf2maf=1.6.18" \
-    && conda install --yes \
-        --channel bioconda \
-        --channel conda-forge \
-        "samtools" \
-    && conda clean -afy
+# VEP 100.4 + Perl 5.26 are pre-installed in this biocontainer.
+# The biocontainer is a minimal Debian image with no conda in PATH, so
+# vcf2maf is installed directly from source and samtools via apt-get.
+RUN curl -fsSL \
+        https://raw.githubusercontent.com/mskcc/vcf2maf/v1.6.18/vcf2maf.pl \
+        -o /usr/local/bin/vcf2maf.pl \
+    && curl -fsSL \
+        https://raw.githubusercontent.com/mskcc/vcf2maf/v1.6.18/maf2maf.pl \
+        -o /usr/local/bin/maf2maf.pl \
+    && chmod +x /usr/local/bin/vcf2maf.pl /usr/local/bin/maf2maf.pl \
+    && apt-get update -qq \
+    && apt-get install -y --no-install-recommends samtools \
+    && rm -rf /var/lib/apt/lists/*
 
 CMD ["/bin/bash"]
