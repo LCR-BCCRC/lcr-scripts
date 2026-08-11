@@ -4,6 +4,7 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 RUN mamba install --yes --name base \
         --channel bioconda \
         --channel conda-forge \
+        "python=3.9" \
         "pysam=0.18.0" \
         "pandas" \
     && pip install "oncopipe==1.0.11" \

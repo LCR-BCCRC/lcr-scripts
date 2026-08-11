@@ -5,6 +5,7 @@ RUN mamba install --yes --name base \
         --channel conda-forge \
         --channel bioconda \
         "vcf2maf=1.6.18" \
+        "ensembl-vep=100" \
         "samtools" \
     && mamba clean -afy
 
