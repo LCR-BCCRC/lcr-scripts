@@ -12,6 +12,7 @@ RUN mamba install --yes --name base \
         --channel conda-forge \
         "pysam>=0.18.0" \
         "pandas" \
+        "pyyaml" \
     && pip install "oncopipe==1.0.11" --no-deps \
     && mamba clean --all --yes
 

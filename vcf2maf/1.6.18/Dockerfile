@@ -1,4 +1,4 @@
-FROM quay.io/biocontainers/ensembl-vep:100.4--pl5262r4.0.3_1
+FROM quay.io/biocontainers/ensembl-vep:100.4--pl526hecda079_0
 LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
 # ensembl-vep=100 cannot be installed via modern conda: its bioconda recipe
