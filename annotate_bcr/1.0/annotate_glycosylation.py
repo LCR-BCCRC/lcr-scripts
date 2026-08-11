@@ -15,8 +15,17 @@ Output TSV columns:
   num_glycosylation_sites           Count of NxS/T motifs in query (x != Pro)
   glycosylation_imgt_positions      IMGT positions of N residues in query, comma-separated
   glycosylation_motifs              Corresponding NxS/T triplets in query, comma-separated
+  glycosylation_imgt_regions        IMGT FWR/CDR region of each query site, comma-separated
   num_acquired_glycosylation_sites  Sites in query absent from germline (SHM-acquired)
   acquired_glycosylation_imgt_positions  IMGT positions of acquired sites, comma-separated
+  acquired_glycosylation_imgt_regions    IMGT FWR/CDR region of each acquired site, comma-separated
+  num_acquired_glycosylation_sites_cdr   Acquired sites falling in CDR1/CDR2/CDR3
+  manntype_ags                      POS/NEG: >=1 acquired site in a CDR (Tatterton et al. 2025
+                                     AGS criterion). This is only the sequence-derived half of
+                                     manntype classification; combine with a genomic FL signature
+                                     (EZB LymphGen subtype or BCL2 translocation) downstream, as
+                                     GAMBLR.results::collate_tatterton does for the published
+                                     Tatterton cohort, to get the full manntype call.
   germline_aa_sequence              Germline amino acid sequence used for numbering
   num_germline_glycosylation_sites  Count of NxS/T motifs in germline
   germline_glycosylation_imgt_positions  IMGT positions of N residues in germline
@@ -60,6 +69,27 @@ def _imgt_pos_str(pos_tuple):
     return f"{num}{ins.strip()}" if ins.strip() else str(num)
 
 
+# IMGT unique numbering V-domain region boundaries (Lefranc et al.), inclusive.
+IMGT_REGION_BOUNDARIES = [
+    (1,   26,  "FWR1"),
+    (27,  38,  "CDR1"),
+    (39,  55,  "FWR2"),
+    (56,  65,  "CDR2"),
+    (66,  104, "FWR3"),
+    (105, 117, "CDR3"),
+    (118, 128, "FWR4"),
+]
+
+
+def _imgt_region(pos_tuple):
+    """Map an ANARCI IMGT position (number, insertion_letter) to its FWR/CDR region."""
+    num, _ = pos_tuple
+    for lo, hi, name in IMGT_REGION_BOUNDARIES:
+        if lo <= num <= hi:
+            return name
+    return "NA"
+
+
 def number_with_imgt(aa_seq):
     """
     Align aa_seq to IG/TCR germline HMMs with ANARCI using the IMGT scheme.
@@ -79,15 +109,15 @@ def find_glycosylation_sites(numbered):
     """
     Scan IMGT-numbered residues for N-linked glycosylation motifs (NxS/T, x != Pro).
 
-    Returns [(imgt_position_string, motif_string), ...] for each site.
+    Returns [(imgt_position_string, motif_string, region_string), ...] for each site.
     """
     sites = []
     for i in range(len(numbered) - 2):
-        _, n_aa  = numbered[i]
-        _, x_aa  = numbered[i + 1]
-        _, st_aa = numbered[i + 2]
+        n_pos, n_aa  = numbered[i]
+        _,     x_aa  = numbered[i + 1]
+        _,     st_aa = numbered[i + 2]
         if n_aa == "N" and x_aa != "P" and st_aa in ("S", "T"):
-            sites.append((_imgt_pos_str(numbered[i][0]), f"N{x_aa}{st_aa}"))
+            sites.append((_imgt_pos_str(n_pos), f"N{x_aa}{st_aa}", _imgt_region(n_pos)))
     return sites
 
 
@@ -96,8 +126,13 @@ def classify_sites(query_sites, germline_sites):
     Return the subset of query_sites whose IMGT position is absent in germline_sites.
     These are SHM-acquired glycosylation sites.
     """
-    germline_positions = {pos for pos, _ in germline_sites}
-    return [(pos, motif) for pos, motif in query_sites if pos not in germline_positions]
+    germline_positions = {pos for pos, _, _ in germline_sites}
+    return [site for site in query_sites if site[0] not in germline_positions]
+
+
+def sites_in_cdr(sites):
+    """Return the subset of sites (as returned by find_glycosylation_sites) in a CDR."""
+    return [site for site in sites if site[2].startswith("CDR")]
 
 
 def _make_lookup_fn(seq_lookup):
@@ -146,8 +181,12 @@ FIELDS = [
     "num_glycosylation_sites",
     "glycosylation_imgt_positions",
     "glycosylation_motifs",
+    "glycosylation_imgt_regions",
     "num_acquired_glycosylation_sites",
     "acquired_glycosylation_imgt_positions",
+    "acquired_glycosylation_imgt_regions",
+    "num_acquired_glycosylation_sites_cdr",
+    "manntype_ags",
     "germline_aa_sequence",
     "num_germline_glycosylation_sites",
     "germline_glycosylation_imgt_positions",
@@ -160,6 +199,9 @@ def _sites_str(sites):
 
 def _motifs_str(sites):
     return ",".join(s[1] for s in sites) if sites else "NA"
+
+def _regions_str(sites):
+    return ",".join(s[2] for s in sites) if sites else "NA"
 
 
 def main():
@@ -189,8 +231,12 @@ def main():
                     "num_glycosylation_sites": 0,
                     "glycosylation_imgt_positions": "NA",
                     "glycosylation_motifs": "NA",
+                    "glycosylation_imgt_regions": "NA",
                     "num_acquired_glycosylation_sites": 0,
                     "acquired_glycosylation_imgt_positions": "NA",
+                    "acquired_glycosylation_imgt_regions": "NA",
+                    "num_acquired_glycosylation_sites_cdr": 0,
+                    "manntype_ags": "NA",
                     "germline_aa_sequence": "NA",
                     "num_germline_glycosylation_sites": 0,
                     "germline_glycosylation_imgt_positions": "NA",
@@ -207,6 +253,7 @@ def main():
             query_sites    = find_glycosylation_sites(numbered)    if numbered    else []
             germline_sites = find_glycosylation_sites(gl_numbered) if gl_numbered else []
             acquired_sites = classify_sites(query_sites, germline_sites)
+            acquired_cdr_sites = sites_in_cdr(acquired_sites)
 
             writer.writerow({
                 "sequence_id": seq_id,
@@ -214,8 +261,12 @@ def main():
                 "num_glycosylation_sites": len(query_sites),
                 "glycosylation_imgt_positions": _sites_str(query_sites),
                 "glycosylation_motifs": _motifs_str(query_sites),
+                "glycosylation_imgt_regions": _regions_str(query_sites),
                 "num_acquired_glycosylation_sites": len(acquired_sites),
                 "acquired_glycosylation_imgt_positions": _sites_str(acquired_sites),
+                "acquired_glycosylation_imgt_regions": _regions_str(acquired_sites),
+                "num_acquired_glycosylation_sites_cdr": len(acquired_cdr_sites),
+                "manntype_ags": "POS" if acquired_cdr_sites else "NEG",
                 "germline_aa_sequence": gl_seq if gl_seq else "NA",
                 "num_germline_glycosylation_sites": len(germline_sites),
                 "germline_glycosylation_imgt_positions": _sites_str(germline_sites),
