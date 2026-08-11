@@ -14,7 +14,7 @@ RUN mamba install --yes --name base \
         "pandas" \
         "pyyaml" \
         "snakemake-minimal" \
-    && pip install "oncopipe==1.0.11" --no-deps \
+    && pip install "oncopipe==1.0.12" --no-deps \
     && mamba clean --all --yes
 
 CMD ["/bin/bash"]
