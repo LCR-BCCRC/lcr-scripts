@@ -182,11 +182,33 @@ def main():
                         help="Sample ID wildcard value; triggers column reordering when supplied")
     args = parser.parse_args()
 
-    # When key columns differ, normalise both sides via _extract_mixcr_clone_id
-    # so that compound AIRR sequence_ids and bare cloneIds resolve to the same
-    # key regardless of which table carries the compound form.
+    # When key columns differ, choose a normalisation function so both sides
+    # of the join resolve to the same key.
+    #
+    # igseqr inputs: the AIRR sequence_id is written as "{sample_id}_{transcript_id}"
+    # (the FASTA header format used by igseqr), but the source TSV key column
+    # ("transcript_id") carries only the bare transcript ID.  Strip the
+    # "{sample_id}_" prefix from annotation key values so the two sides match.
+    #
+    # MiXCR inputs: apply _extract_mixcr_clone_id to normalise compound
+    # "cloneId_N_readFraction_F_readCount_C" headers to bare cloneIds.
     transform_keys = args.base_key != args.annot_key
-    key_fn = _extract_mixcr_clone_id if transform_keys else (lambda x: x)
+
+    if transform_keys:
+        # Peek at base headers to detect igseqr vs MiXCR without consuming the file.
+        with open(args.base) as _fh:
+            _peek = csv.DictReader(_fh, delimiter="\t")
+            _base_fieldnames = list(_peek.fieldnames or [])
+        _is_igseqr_base = any(
+            c in _base_fieldnames for c in ("length", "eff_length", "est_counts", "tpm")
+        )
+        if _is_igseqr_base and args.sample_id:
+            _prefix = args.sample_id + "_"
+            key_fn = lambda x: (x[len(_prefix):] if x.startswith(_prefix) else x)
+        else:
+            key_fn = _extract_mixcr_clone_id
+    else:
+        key_fn = lambda x: x
 
     # Read annotation fully, keeping all non-key columns.
     annot, all_annot_cols = {}, []
