@@ -1,17 +1,20 @@
-FROM condaforge/mambaforge:latest
+FROM quay.io/biocontainers/ensembl-vep:100.4--pl5262r4.0.3_1
 LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
-# Remove the python 3.12.* pin so mamba can resolve a Python version
-# compatible with ensembl-vep=100 (which chains through t_coffee <=3.7).
-# vcf2maf, ensembl-vep, and samtools are all Perl/C so Python version
-# inside the container does not affect their runtime behaviour.
-RUN rm -f /opt/conda/conda-meta/pinned \
-    && mamba install --yes --name base \
-        --channel conda-forge \
+# ensembl-vep=100 cannot be installed via modern conda: its bioconda recipe
+# has a broken Perl dep tree (perl=5.26 required by ensembl-vep conflicts
+# with perl>=5.32 required by perl-bioperl), independent of Python version.
+# Using this pre-built biocontainer (VEP 100.4, Perl 5.26) avoids the
+# conflict entirely.  vcf2maf is installed without its conda deps since VEP
+# and the required Perl modules are already present; samtools is added
+# separately.
+RUN conda install --yes --no-deps \
         --channel bioconda \
         "vcf2maf=1.6.18" \
-        "ensembl-vep=100" \
+    && conda install --yes \
+        --channel bioconda \
+        --channel conda-forge \
         "samtools" \
-    && mamba clean -afy
+    && conda clean -afy
 
 CMD ["/bin/bash"]
