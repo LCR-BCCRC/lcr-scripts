@@ -90,8 +90,10 @@ def _ordered_columns(all_cols):
 
     # --- Glycosylation ---
     order += present("num_glycosylation_sites", "glycosylation_imgt_positions",
-                     "glycosylation_motifs",
+                     "glycosylation_motifs", "glycosylation_imgt_regions",
                      "num_acquired_glycosylation_sites", "acquired_glycosylation_imgt_positions",
+                     "acquired_glycosylation_imgt_regions", "num_acquired_glycosylation_sites_cdr",
+                     "manntype_ags",
                      "germline_aa_sequence",
                      "num_germline_glycosylation_sites", "germline_glycosylation_imgt_positions",
                      "germline_glycosylation_motifs")
