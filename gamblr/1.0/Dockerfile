@@ -35,11 +35,14 @@ RUN mamba install --yes --name base \
     && mamba clean --all --yes
 
 # Install GAMBLR from the commit SHA pinned in the vcf2maf 1.3 module config.
-# dependencies=FALSE because all conda-installable deps are already above.
+# dependencies=TRUE installs CRAN-only deps (g3viz, metaviz) that are not
+# available via conda.  The library() call makes the layer fail loudly if
+# the install silently completed with a non-zero R CMD INSTALL exit status.
 RUN R --vanilla -q -e \
     'remotes::install_github("morinlab/GAMBLR@d8d643face5b67bdfe850aabcbfe26f82254a825", \
         lib="/opt/conda/lib/R/library", \
-        dependencies=FALSE, \
-        upgrade="never")'
+        dependencies=TRUE, \
+        upgrade="never")' \
+    && R --vanilla -q -e 'library(GAMBLR)'
 
 CMD ["/bin/bash"]

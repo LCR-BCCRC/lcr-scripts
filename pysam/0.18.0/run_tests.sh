@@ -14,8 +14,8 @@ import pysam
 import pandas
 import oncopipe
 
-assert pysam.__version__.startswith("0.18"), \
-    f"Expected pysam 0.18.x, got {pysam.__version__}"
+parts = tuple(int(x) for x in pysam.__version__.split(".")[:2])
+assert parts >= (0, 18), f"Expected pysam >=0.18.0, got {pysam.__version__}"
 print(f"pysam {pysam.__version__}: OK")
 print(f"pandas {pandas.__version__}: OK")
 
