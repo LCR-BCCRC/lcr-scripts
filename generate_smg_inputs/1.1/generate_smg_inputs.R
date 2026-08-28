@@ -128,6 +128,8 @@ subset_samples <- function(categories, meta) {
 # Get sample ids of the sample_set
 this_subset_samples <- subset_samples(subsetting_values, metadata)
 
+cat(colnames(this_subset_samples))
+
 # Load master input files and get variants for the sample set-------------------
 if ("maf" %in% names(snakemake@input)){
   input_files <- snakemake@input[["maf"]]
@@ -241,6 +243,7 @@ if (!dir.exists(file.path(output_dir))){
   cat("Output directory for sample_set and launch date combo exists.\n")
   cat(output_dir,"\n")
 }
+
 
 # Report missing samples and calculate the md5sum-------------------
 if ("maf" %in% names(snakemake@input)){
@@ -374,6 +377,12 @@ if (mode == "dlbclass" && "maf" %in% names(snakemake@input)) {
 
   grouping_column <- "Tumor_Sample_Barcode"
   sentinel <- "maf.done"
+}
+
+if (mode == "dlbclone") {
+  grouping_column <- "sample_id"
+
+  subset_input <- subset_input %>% unique()
 }
 
 if (mode == "HotMAPS") {
