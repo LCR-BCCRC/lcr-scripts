@@ -1,0 +1,12 @@
+species: human
+receptorOrLocusType: IGH
+moleculeType: IG
+resultType: excel
+xv_outputtype: 3
+xv_summary: true
+xv_ntseq: true
+xv_IMGTgappedNt: true
+xv_IMGTgappedAA: true
+xv_AAseq: true
+xv_JUNCTION: true
+xv_parameters: true

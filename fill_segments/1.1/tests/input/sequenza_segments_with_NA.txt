@@ -1,0 +1,1 @@
+../../../1.2/tests/input/sequenza_segments_with_NA.txt

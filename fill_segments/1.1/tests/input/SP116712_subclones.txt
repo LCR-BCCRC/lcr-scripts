@@ -1,0 +1,1 @@
+../../../1.2/tests/input/SP116712_subclones.txt

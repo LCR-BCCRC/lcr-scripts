@@ -1,0 +1,6 @@
+Hugo_Symbol	Chromosome	Start_Position	Variant_Classification	Tumor_Sample_Barcode	group
+GENE_A	chr1	1000	5_UTR	sample1	1
+GENE_A	chr1	1003	5_UTR	sample2	1
+GENE_A	chr1	1005	5_UTR	sample1	1
+GENE_C	chr1	5000	5_UTR	sample1	2
+GENE_C	chr1	5010	5_UTR	sample2	2
