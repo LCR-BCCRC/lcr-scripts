@@ -27,6 +27,12 @@ echo "testing purecn mode"
 ./cnv2igv.py  --mode purecn $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.seg
 ./cnv2igv.py  --mode purecn --preserve_log_ratio $in_dir/DLBCL10538T_dnacopy.seg > $out_dir/DLBCL10538T_dnacopy.preserved.seg
 
+echo "testing purecn mode with LOH from _loh.csv"
+./cnv2igv.py  --mode purecn --purecn_loh $in_dir/DLBCL10897T_loh.csv $in_dir/DLBCL10897T_dnacopy.seg > $out_dir/DLBCL10897T_dnacopy.loh_any.seg
+./cnv2igv.py  --mode purecn --loh_type neutral --purecn_loh $in_dir/DLBCL10897T_loh.csv $in_dir/DLBCL10897T_dnacopy.seg > $out_dir/DLBCL10897T_dnacopy.loh_neutral.seg
+./cnv2igv.py  --mode purecn --loh_type deletion --purecn_loh $in_dir/DLBCL10897T_loh.csv $in_dir/DLBCL10897T_dnacopy.seg > $out_dir/DLBCL10897T_dnacopy.loh_deletion.seg
+./cnv2igv.py  --mode purecn $in_dir/DLBCL10897T_dnacopy.seg > $out_dir/DLBCL10897T_dnacopy.no_loh.seg
+
 echo "testing sample_id override"
 ./cnv2igv.py  --mode purecn_cnvkit $in_dir/DLBCL-RICOVER_258-Tumor_dnacopy.seg > $out_dir/DLBCL-RICOVER_258-Tumor_dnacopy.seg
 ./cnv2igv.py  --mode purecn_cnvkit --sample DLBCL-RICOVER_258-Tumor $in_dir/DLBCL-RICOVER_258-Tumor_dnacopy.seg > $out_dir/DLBCL-RICOVER_258-Tumor_dnacopy_explicit_sample.seg
