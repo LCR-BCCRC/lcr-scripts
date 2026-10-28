@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import csv
 import re
 import os
 import math
@@ -78,8 +79,26 @@ class Parser:
         return(str(logr))
 
 class PurecnParser(Parser):
-    def __init__(self, stream, sample, mode, loh_type, logr_type):
+    def __init__(self, stream, sample, mode, loh_type, logr_type, loh_file = None):
         super().__init__(stream, sample, mode, loh_type, logr_type)
+        # LOH regions from PureCN's callLOH (the _loh.csv written alongside
+        # _dnacopy.seg); without them the LOH flag is NA
+        self.loh_regions = self.read_loh_regions(loh_file) if loh_file else None
+
+    @staticmethod
+    def normalize_chrom(chrm):
+        chrm = str(chrm)
+        chrm = chrm[3:] if chrm.startswith('chr') else chrm
+        return {'23': 'X', '24': 'Y'}.get(chrm, chrm)
+
+    def read_loh_regions(self, loh_file):
+        ''' Regions from _loh.csv by chromosome, as (start, end, C, M, M.flagged). '''
+        regions = {}
+        with open(loh_file, 'r', newline = '') as handle:
+            for row in csv.DictReader(handle):
+                regions.setdefault(self.normalize_chrom(row['chr']), []).append(
+                    (float(row['start']), float(row['end']), row['C'], row['M'], row.get('M.flagged', 'FALSE')))
+        return regions
 
     def is_header(self, line):
         # expect header: ID chrom loc.start loc.end num.mark seg.mean C
@@ -111,7 +130,37 @@ class PurecnParser(Parser):
         cn = t[6]
         logr = self.calculate_logratio(cn) if logr_type == "corrected" else t[5]
         sample_id = self.resolve_sample(line_sample)
-        return Segment(chrm, start, end, cn, logr, sample_id, mode)
+        loh_flag = self.get_loh_flag(chrm, float(start), float(end))
+        return Segment(chrm, start, end, cn, logr, sample_id, mode, loh_flag)
+
+    def get_loh_flag(self, chrm, start, end):
+        ''' LOH flag from the _loh.csv region overlapping this segment the most.
+            NA without LOH regions, outside them, or where the minor copy number
+            is unknown (no informative SNPs) or flagged as unreliable. '''
+        if self.loh_regions is None:
+            return 'NA'
+        best, best_overlap = None, 0
+        for r_start, r_end, c, m, flagged in self.loh_regions.get(self.normalize_chrom(chrm), []):
+            overlap = min(end, r_end) - max(start, r_start)
+            if overlap > best_overlap:
+                best, best_overlap = (c, m, flagged), overlap
+        if best is None:
+            return 'NA'
+        c, m, flagged = best
+        if m == 'NA' or c == 'NA' or flagged == 'TRUE':
+            return 'NA'
+        c, m = int(float(c)), int(float(m))
+        loh_flag = '0'
+        if self.loh_type == 'neutral':
+            if c == 2 and m == 0:
+                loh_flag = '1'
+        elif self.loh_type == 'deletion':
+            if c == 1 and m == 0:
+                loh_flag = '1'
+        elif self.loh_type == 'any':
+            if c > 0 and m == 0:
+                loh_flag = '1'
+        return(loh_flag)
 
 class CNVKitParser(Parser):
     def __init__(self, stream, sample, mode, loh_type, logr_type):
@@ -423,6 +472,7 @@ def parse_arguments():
     parser.add_argument('--preserve_log_ratio', help = "Preserve the log ratio and report absolute CN as a separate column", action = 'store_true')
     parser.add_argument('--mode', help = 'Input file type.', choices = MODES, required = True)
     parser.add_argument('--sample', '--sequenza_sample', help = 'Sample name for IGV ID column.', dest = 'sample', default = 'SAMPLE', required = False)
+    parser.add_argument('--purecn_loh', help = 'PureCN _loh.csv for the same run, used to set the LOH flag in purecn and purecn_cnvkit modes. Without it the LOH flag is NA.', default = None)
     parser.add_argument('seg_file', help = 'Segmentation file to convert to IGV format.')
     return(parser.parse_args())
 
@@ -452,7 +502,7 @@ def main():
     if mode == 'sequenza':
         parser = SequenzaParser(seg_file, sample, mode, loh_type, logr_type)
     elif mode == 'purecn' or mode == 'purecn_cnvkit':
-        parser = PurecnParser(seg_file, sample, mode, loh_type, logr_type)
+        parser = PurecnParser(seg_file, sample, mode, loh_type, logr_type, args.purecn_loh)
     elif mode == 'sclust':
         parser = SClustParser(seg_file, sample, loh_type)
     elif mode == 'titan':
