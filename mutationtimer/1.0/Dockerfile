@@ -3,9 +3,11 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
 # Install system dependencies
 RUN apt-get update -q && apt-get install -y --no-install-recommends \
+    build-essential \
+    libcurl4-openssl-dev \
     libbz2 \
     liblzma \
-    libcurl
+    && rm -rf /var/lib/apt/lists/*
 
 # Install CRAN packages
 RUN install2.r --error \
