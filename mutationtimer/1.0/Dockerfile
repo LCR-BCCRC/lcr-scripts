@@ -3,10 +3,8 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
 # Install system dependencies
 RUN apt-get update -q && apt-get install -y --no-install-recommends \
-    htslib-test \
-    libhts-dev \
-    libhts3 \
-    tabix \
+    ibbz2-dev \
+    liblzma-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install CRAN packages
@@ -16,7 +14,8 @@ RUN install2.r --error \
     ggpubr
 
 # Install BioConductor packages
-RUN R -e "BiocManager::install('BSgenome')" \
+RUN R -e "BiocManager::install('Rhtslib')" \
+    && R -e "BiocManager::install('BSgenome')" \
     && R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg38')" \
     && R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg19')" \
     && R -e "BiocManager::install('VariantAnnotation')"
