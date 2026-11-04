@@ -7,7 +7,7 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 # Install CRAN packages
 RUN install2.r --error \
     data.table \
-    xml \
+    XML \
     ggpubr
 
 # Install BioConductor packages
