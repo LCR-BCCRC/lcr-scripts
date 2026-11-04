@@ -8,16 +8,18 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 RUN install2.r --error \
     data.table \
     xml \
-    ggpubr \
+    ggpubr
 
 # Install BioConductor packages
 RUN R -e "BiocManager::install('VariantAnnotation')" \
     && R -e "BiocManager::install('BSgenome')" \
     && R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg38')" \
-    && R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg19')" \
+    && R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg19')"
 
 # Install remote packages
 RUN R -e 'options(timeout=9999999); devtools::install_github("mg14/mg14", dependencies = TRUE, upgrade = "never")' \
     && R -e 'options(timeout=9999999); devtools::install_github("gerstung-lab/MutationTimeR@e4e266a", dependencies = TRUE, upgrade = "never")' \
     && R -e 'options(timeout=9999999); devtools::install_github("morinlab/GAMBLR.helpers@v1.3", dependencies = TRUE, upgrade = "never")' \
     && R -e 'options(timeout=9999999); install.packages("", dependencies = TRUE, upgrade = "never")'
+
+CMD ["/bin/bash"]
