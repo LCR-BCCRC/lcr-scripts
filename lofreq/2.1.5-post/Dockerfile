@@ -17,9 +17,9 @@ RUN apt-get update -q && apt-get install -y --no-install-recommends \
 RUN mamba install --yes --name base \
         --channel bioconda \
         --channel conda-forge \
-        "htslib" \
+        "htslib=1.24" \
         "bcftools" \
-        "samtools" \
+        "samtools=1.24" \
     && mamba clean -afy
 
 # Build lofreq from source using the morinlab fork of CSB5/lofreq.
