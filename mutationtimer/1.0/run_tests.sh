@@ -29,6 +29,5 @@ check "R package BSgenome.Hsapiens.UCSC.hg38 loads"         "Rscript --vanilla -
 check "R package GAMBLR.helpers loads"                      "Rscript --vanilla -e 'library(GAMBLR.helpers)'"
 check "R package ggpubr loads"                              "Rscript --vanilla -e 'library(ggpubr)'"
 
-## TEST
 
 $PASS
