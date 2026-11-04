@@ -3,7 +3,7 @@ LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
 # Install system dependencies
 RUN apt-get update -q && apt-get install -y --no-install-recommends \
-    ibbz2-dev \
+    libbz2-dev \
     liblzma-dev \
     && rm -rf /var/lib/apt/lists/*
 
