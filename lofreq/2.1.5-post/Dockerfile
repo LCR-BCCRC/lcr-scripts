@@ -1,4 +1,4 @@
-FROM condaforge/mambaforge:latest
+FROM condaforge/mambaforge:24.9.2-0
 LABEL org.opencontainers.image.source="https://github.com/LCR-BCCRC/lcr-scripts"
 
 # Build tools needed to compile lofreq from source
@@ -17,9 +17,9 @@ RUN apt-get update -q && apt-get install -y --no-install-recommends \
 RUN mamba install --yes --name base \
         --channel bioconda \
         --channel conda-forge \
-        "htslib" \
+        "htslib=1.24" \
         "bcftools" \
-        "samtools" \
+        "samtools=1.24" \
     && mamba clean -afy
 
 # Build lofreq from source using the morinlab fork of CSB5/lofreq.
