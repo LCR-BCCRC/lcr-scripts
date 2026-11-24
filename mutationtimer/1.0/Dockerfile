@@ -14,11 +14,11 @@ RUN install2.r --error \
     ggpubr
 
 # Install BioConductor packages
-RUN R -e "BiocManager::install('Rhtslib')" \
-    && R -e "BiocManager::install('BSgenome')" \
-    && R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg38')" \
-    && R -e "BiocManager::install('BSgenome.Hsapiens.UCSC.hg19')" \
-    && R -e "BiocManager::install('VariantAnnotation')"
+RUN R -e "options(timeout=9999999); BiocManager::install('Rhtslib')" \
+    && R -e "options(timeout=9999999); BiocManager::install('BSgenome')" \
+    && R -e "options(timeout=9999999); BiocManager::install('BSgenome.Hsapiens.UCSC.hg38')" \
+    && R -e "options(timeout=9999999); BiocManager::install('BSgenome.Hsapiens.UCSC.hg19')" \
+    && R -e "options(timeout=9999999); BiocManager::install('VariantAnnotation')"
 
 # Install remote packages
 RUN R -e 'options(timeout=9999999); devtools::install_github("mg14/mg14", dependencies = TRUE, upgrade = "never")' \
