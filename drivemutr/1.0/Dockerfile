@@ -41,6 +41,7 @@ RUN micromamba install --yes --name base \
     
 RUN micromamba run --name base R --vanilla -q -e 'devtools::install_github( \
     "Simon-Coetzee/motifBreakR", \
+    ref = "70cdbfd", \
     dependencies = NA, \
     upgrade = "never" \
 )'
