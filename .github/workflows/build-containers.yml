@@ -10,6 +10,11 @@ on:
       - '**/Dockerfile'
       - '.github/workflows/build-containers.yml'
   workflow_dispatch:
+    inputs:
+      dockerfiles:
+        description: "Dockerfiles to build, space-separated (e.g. battenberg/1.2/Dockerfile), or 'all'"
+        required: true
+        default: all
 
 env:
   REGISTRY: ghcr.io
@@ -20,20 +25,51 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.find.outputs.matrix }}
+      count: ${{ steps.find.outputs.count }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Find all Dockerfiles
+      # Build only the Dockerfiles this push or PR adds or changes. Rebuilding every image on every
+      # push overwrote unchanged tags with fresh builds (unpinned base images and dependencies drift)
+      # and ran ~30 builds at once, which hits GitHub's anonymous API rate limit in install_github.
+      #   pull_request:       Dockerfiles changed in the PR (PR builds only test, they never push)
+      #   push:               Dockerfiles changed since the previous push to the branch
+      #   workflow_dispatch:  the listed Dockerfiles, or all (use this to rebuild everything)
+      - name: Find Dockerfiles to build
         id: find
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          BEFORE: ${{ github.event.before }}
+          REQUESTED: ${{ github.event.inputs.dockerfiles }}
         run: |
-          matrix=$(find . -name Dockerfile -not -path './.git/*' \
-            | sed 's|^\./||' \
-            | jq -R '{dockerfile: .}' \
-            | jq -sc '{include: .}')
+          all() { find . -name Dockerfile -not -path './.git/*' | sed 's|^\./||'; }
+          changed() { git diff --name-only --diff-filter=d "$1" HEAD -- '**/Dockerfile' 'Dockerfile'; }
+          case "$EVENT" in
+            workflow_dispatch)
+              if [ "$REQUESTED" = "all" ]; then list=$(all); else list=$(printf '%s\n' $REQUESTED); fi ;;
+            pull_request)
+              list=$(changed "$(git merge-base "$PR_BASE" HEAD)") ;;
+            push)
+              if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+                 || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+                # New branch (or history rewritten): compare with master
+                list=$(changed "$(git merge-base origin/master HEAD)")
+              else
+                list=$(changed "$BEFORE")
+              fi ;;
+          esac
+          for f in $list; do [ -f "$f" ] || { echo "::error::No such Dockerfile: $f"; exit 1; }; done
+          echo "Dockerfiles to build:"; printf '  %s\n' $list
+          matrix=$(printf '%s\n' $list | sed '/^$/d' | jq -R '{dockerfile: .}' | jq -sc '{include: .}')
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "count=$(printf '%s\n' $list | sed '/^$/d' | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
 
   build:
     needs: discover
+    if: needs.discover.outputs.count != '0'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -75,6 +111,11 @@ jobs:
           tags: ${{ steps.meta.outputs.image }}
           cache-from: type=gha,scope=${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
           cache-to: type=gha,mode=max,scope=${{ steps.meta.outputs.script }}-${{ steps.meta.outputs.version }}
+          # Available to Dockerfiles as a BuildKit secret (never stored in the image). Mount it with
+          #   RUN --mount=type=secret,id=GITHUB_PAT ...
+          # so remotes::install_github makes authenticated GitHub API calls (5000/hour instead of 60).
+          secrets: |
+            GITHUB_PAT=${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests in container
         if: github.ref != 'refs/heads/master'
